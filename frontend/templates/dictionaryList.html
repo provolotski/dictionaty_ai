@@ -1,0 +1,1759 @@
+{% extends 'base.html' %}
+{% load form_filters %}
+
+{% block extra_css %}
+<style>
+/* Зеленоватая цветовая схема для страницы списка справочников */
+:root {
+    --primary-blue: #4f46e5;
+    --secondary-blue: #6366f1;
+    --light-blue: #818cf8;
+    --very-light-blue: #a5b4fc;
+    --accent-purple: #7c3aed;
+    --bg-light-blue: #f8fafc;
+    --border-blue: #e0e7ff;
+    --text-blue: #1e40af;
+    --hover-blue: #4338ca;
+    --success-teal: #14b8a6;
+    --warning-amber: #f59e0b;
+    --danger-rose: #f43f5e;
+    --surface-white: #ffffff;
+    --surface-gray: #f1f5f9;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+}
+
+/* Общие стили страницы */
+.container {
+    background: linear-gradient(135deg, var(--bg-light-blue) 0%, var(--surface-white) 100%);
+    min-height: 100vh;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue), var(--light-blue), var(--primary-blue));
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Заголовок с анимацией */
+h2 {
+    color: var(--primary-blue);
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(79, 70, 229, 0.2);
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    position: relative;
+    display: inline-block;
+    animation: slideInFromLeft 0.8s ease-out;
+}
+
+h2::before {
+    content: '📊';
+    margin-right: 12px;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+/* Динамические кнопки */
+.btn {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+}
+
+.btn:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.btn-create-animated {
+    position: relative;
+    overflow: hidden;
+    animation: createButtonPulse 2s ease-in-out infinite, buttonFloat 3s ease-in-out infinite;
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+}
+
+.btn-create-animated::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-create-animated:hover::before {
+    width: 400px;
+    height: 400px;
+}
+
+.btn-create-animated:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.6);
+    animation: none;
+}
+
+.btn-create-animated i {
+    animation: iconSpin 2s linear infinite;
+}
+
+@keyframes createButtonPulse {
+    0%, 100% { 
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.6);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes buttonFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-3px); }
+}
+
+@keyframes iconSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
+    50% { box-shadow: 0 4px 25px rgba(79, 70, 229, 0.5); }
+}
+
+.btn-info {
+    background: linear-gradient(135deg, var(--accent-purple) 0%, var(--light-blue) 100%);
+    border: none;
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--light-blue) 0%, var(--very-light-blue) 100%);
+    border: none;
+    color: white;
+}
+
+.btn-outline-primary {
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: white;
+    transform: translateY(-3px) scale(1.02);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning-amber) 0%, #ffdb4d 100%);
+    border: none;
+    color: #212529;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger-rose) 0%, #e74c3c 100%);
+    border: none;
+    color: white;
+}
+
+/* Динамическая таблица */
+.table {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+    overflow: hidden;
+    margin-top: 2rem;
+    border: none;
+    animation: slideInUp 0.8s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.table thead th {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: white;
+    border: none;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    padding: 16px 12px;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.table thead th::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.table thead:hover th::before {
+    left: 100%;
+}
+
+.table thead th:first-child {
+    border-top-left-radius: 16px;
+}
+
+.table thead th:last-child {
+    border-top-right-radius: 16px;
+}
+
+.table tbody tr {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeInRow 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInRow {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+        background-color: rgba(127, 176, 105, 0.1);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+        background-color: transparent;
+    }
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(127, 176, 105, 0.03);
+}
+
+.table-hover > tbody > tr:hover {
+    background: linear-gradient(135deg, rgba(127, 176, 105, 0.1) 0%, rgba(167, 201, 87, 0.05) 100%);
+    transform: scale(1.01);
+    box-shadow: 0 4px 15px rgba(45, 90, 39, 0.1);
+    border-radius: 8px;
+}
+
+/* Динамические ссылки */
+.dictionary-link {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--primary-blue) !important;
+    font-weight: 600;
+    position: relative;
+    text-decoration: none !important;
+}
+
+.dictionary-link::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue));
+    transition: width 0.3s ease;
+}
+
+.dictionary-link:hover {
+    color: var(--light-blue) !important;
+    transform: translateY(-2px);
+    text-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+.dictionary-link:hover::before {
+    width: 100%;
+}
+
+.dictionary-link:hover .bi-box-arrow-up-right {
+    transform: scale(1.2) rotate(15deg);
+    color: var(--light-blue);
+    transition: all 0.3s ease;
+}
+
+/* Динамические кнопки действий */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+}
+
+.action-btn:hover::before {
+    width: 120px;
+    height: 120px;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:active {
+    transform: translateY(0) scale(0.95);
+}
+
+.action-btn i {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
+}
+
+.action-btn:hover i {
+    transform: scale(1.1);
+}
+
+/* Цветовые варианты кнопок */
+.action-btn-info {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: white;
+}
+
+.action-btn-info:hover {
+    background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--light-blue) 100%);
+    color: white;
+}
+
+.action-btn-success {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: white;
+}
+
+.action-btn-success:hover {
+    background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--light-blue) 100%);
+    color: white;
+}
+
+.action-btn-primary {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: white;
+}
+
+.action-btn-primary:hover {
+    background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--light-blue) 100%);
+    color: white;
+}
+
+.action-btn-warning {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: white;
+}
+
+.action-btn-warning:hover {
+    background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--light-blue) 100%);
+    color: white;
+}
+
+.action-btn-danger {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: white;
+}
+
+.action-btn-danger:hover {
+    background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--light-blue) 100%);
+    color: white;
+}
+
+/* Адаптивность для кнопок */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: row;
+        gap: 6px;
+        justify-content: center;
+    }
+    
+    .action-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .action-btn i {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .action-btn {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .action-btn i {
+        font-size: 0.9rem;
+    }
+}
+
+/* Динамическое модальное окно */
+.modal-content {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(79, 70, 229, 0.3);
+    overflow: hidden;
+    animation: modalSlideIn 0.4s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+    opacity: 0.3;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.modal-title {
+    color: white;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+.btn-close {
+    filter: invert(1) brightness(1.5);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.btn-close:hover {
+    transform: scale(1.2) rotate(90deg);
+    filter: invert(1) brightness(2);
+}
+
+/* Динамические уведомления */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border-left: 4px solid var(--primary-blue);
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    max-width: 400px;
+    animation: slideInNotification 0.4s ease-out;
+}
+
+@keyframes slideInNotification {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification.success {
+    border-left-color: var(--success-teal);
+}
+
+.notification.error {
+    border-left-color: var(--danger-rose);
+}
+
+/* Динамические состояния загрузки */
+.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: loadingShimmer 1.5s infinite;
+}
+
+@keyframes loadingShimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Динамические эффекты для ячеек */
+.table tbody td {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.table tbody td::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(127, 176, 105, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.table tbody tr:hover td::before {
+    left: 100%;
+}
+
+/* Адаптивность с анимациями */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+        margin: 0;
+        border-radius: 0;
+    }
+    
+    h2 {
+        font-size: 2rem;
+        animation: slideInFromTop 0.8s ease-out;
+    }
+    
+    @keyframes slideInFromTop {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .table-responsive {
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(45, 90, 39, 0.15);
+        animation: slideInUp 0.6s ease-out;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .btn-group .btn {
+        margin: 0;
+        width: 100%;
+    }
+}
+
+/* Дополнительные динамические эффекты */
+.table tbody tr {
+    cursor: pointer;
+}
+
+.table tbody tr:focus {
+    outline: 2px solid var(--primary-blue);
+    outline-offset: 2px;
+}
+
+/* Анимация для пустого состояния */
+.table tbody tr:only-child td {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-blue);
+    font-style: italic;
+    animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Динамические тени */
+.table {
+    box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+    transition: box-shadow 0.3s ease;
+}
+
+.table:hover {
+    box-shadow: 0 12px 40px rgba(79, 70, 229, 0.2);
+}
+
+/* Эффект параллакса для фона */
+.container {
+    background-attachment: fixed;
+    background-size: 200% 200%;
+    animation: gradientShift 10s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Поиск по названию */
+.search-container {
+    margin-bottom: 2rem;
+    animation: slideInFromTop 0.6s ease-out;
+}
+
+.search-wrapper {
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.search-input {
+    width: 100%;
+    padding: 16px 50px 16px 50px;
+    border: 2px solid var(--border-blue);
+    border-radius: 25px;
+    font-size: 1rem;
+    background: var(--surface-white);
+    color: var(--text-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.2);
+    transform: translateY(-2px);
+}
+
+.search-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.search-input:focus + .search-icon {
+    color: var(--primary-blue);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.search-clear:hover {
+    color: var(--danger-rose);
+    background: rgba(244, 63, 94, 0.1);
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Анимация появления поиска */
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Адаптивность для поиска */
+@media (max-width: 768px) {
+    .search-wrapper {
+        max-width: 100%;
+    }
+    
+    .search-input {
+        padding: 14px 45px 14px 45px;
+        font-size: 0.95rem;
+    }
+    
+    .search-icon {
+        left: 16px;
+        font-size: 1rem;
+    }
+    
+    .search-clear {
+        right: 10px;
+        font-size: 1rem;
+    }
+}
+
+/* Фильтры и сортировка */
+.filters-container {
+    margin-bottom: 2rem;
+    animation: slideInFromTop 0.6s ease-out;
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.filters-header .btn {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface-gray);
+    border-radius: 10px;
+    border: 1px solid var(--border-blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.active-filters .badge {
+    background-color: var(--primary-blue);
+    color: white;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.filters-panel {
+    background: var(--surface-white);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+    padding: 20px;
+    margin-top: 1rem;
+    animation: slideInUp 0.6s ease-out;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.filter-select, .filter-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-blue);
+    border-radius: 12px;
+    font-size: 1rem;
+    background: var(--surface-white);
+    color: var(--text-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.filter-select:focus, .filter-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+    transform: translateY(-2px);
+}
+
+.filter-select option {
+    background-color: var(--surface-white);
+    color: var(--text-primary);
+}
+
+.filters-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.filters-actions .btn {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    border-radius: 10px;
+}
+
+.filters-actions .btn-outline-secondary {
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+    background: transparent;
+}
+
+.filters-actions .btn-outline-secondary:hover {
+    background: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: white;
+}
+
+/* Адаптивность для фильтров */
+@media (max-width: 768px) {
+    .filters-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .filters-header .btn {
+        width: 100%;
+    }
+
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .filters-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Контейнер для уведомлений -->
+    <div id="notifications"></div>
+    
+    <h2>Справочники</h2>
+
+    <div class="search-container">
+        <div class="search-wrapper">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input" 
+                   placeholder="Поиск по названию справочника..."
+                   autocomplete="off">
+            <button class="search-clear" id="searchClear" style="display: none;">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="filters-container">
+        <div class="filters-header">
+            <button class="btn btn-outline-primary btn-sm" onclick="toggleFilters()">
+                <i class="bi bi-funnel me-1"></i>
+                Фильтры и сортировка
+            </button>
+            <div class="active-filters" id="activeFilters"></div>
+        </div>
+        
+        <div class="filters-panel" id="filtersPanel" style="display: none;">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Сортировка по:</label>
+                    <select class="filter-select" id="sortField">
+                        <option value="">Без сортировки</option>
+                        <option value="name">Название</option>
+                        <option value="code">Код</option>
+                        <option value="description">Описание</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Порядок:</label>
+                    <select class="filter-select" id="sortOrder">
+                        <option value="asc">По возрастанию</option>
+                        <option value="desc">По убыванию</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Фильтр по коду:</label>
+                    <input type="text" class="filter-input" id="codeFilter" placeholder="Введите код...">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Фильтр по описанию:</label>
+                    <input type="text" class="filter-input" id="descriptionFilter" placeholder="Введите описание...">
+                </div>
+            </div>
+            
+            <div class="filters-actions">
+                <button class="btn btn-primary btn-sm" onclick="applyFilters()">
+                    <i class="bi bi-check-lg me-1"></i>
+                    Применить
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="clearAllFilters()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    Сбросить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-primary btn-create-animated" 
+            data-bs-toggle="modal" 
+            data-bs-target="#modalContainer"
+            onclick="loadModalForm('{% url 'dictionary_create' %}')">
+        <i class="bi bi-plus-circle me-2"></i>
+        Создать справочник
+    </button>
+    
+    <!-- Основное модальное окно -->
+    <div class="modal fade" id="modalContainer" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" id="modalContent">
+                <!-- Сюда будет загружена форма -->
+            </div>
+        </div>
+    </div>
+
+    <table class="table table-striped table-hover mt-3">
+        <thead>
+            <tr>
+                <th><i class="bi bi-book me-1"></i>Название</th>
+                <th><i class="bi bi-code me-1"></i>Код</th>
+                <th><i class="bi bi-info-circle me-1"></i>Описание</th>
+                <th><i class="bi bi-gear me-1"></i>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dict in dictionaries %}
+            <tr data-dictionary-id="{{ dict.id }}">
+                <td>
+                    <a href="/dictionary/api/v2/models/dictionary/{{ dict.id }}/" 
+                       target="_blank" 
+                       class="dictionary-link text-primary fw-medium">
+                        {{ dict.name }} 
+                        <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.8em;"></i>
+                    </a>
+                </td>
+                <td><code>{{ dict.code }}</code></td>
+                <td>{{ dict.description|truncatechars:50 }}</td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'dictionary_table' dict.id %}" 
+                           class="action-btn action-btn-info" 
+                           title="Таблица"
+                           data-bs-toggle="tooltip">
+                            <i class="bi bi-table"></i>
+                        </a>
+                        <a href="{% url 'dictionary_tree' dict.id %}" 
+                           class="action-btn action-btn-success" 
+                           title="Дерево"
+                           data-bs-toggle="tooltip">
+                            <i class="bi bi-diagram-3"></i>
+                        </a>
+                        <a href="{% url 'dictionary_detail' dict.id %}" 
+                           class="action-btn action-btn-primary" 
+                           title="Детали"
+                           data-bs-toggle="tooltip">
+                            <i class="bi bi-info-circle"></i>
+                        </a>
+                        <button class="action-btn action-btn-warning" 
+                                onclick="loadModalForm('{% url 'dictionary_edit' dict.id %}')"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalContainer" 
+                                title="Редактировать"
+                                data-bs-toggle="tooltip">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="action-btn action-btn-danger" 
+                                onclick="deleteDictionary({{ dict.id }})" 
+                                title="Удалить"
+                                data-bs-toggle="tooltip">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">
+                    <div class="py-4">
+                        <i class="bi bi-inbox display-4 text-muted"></i>
+                        <p class="mt-3 text-muted">Нет справочников</p>
+                        <button class="btn btn-primary mt-2" 
+                                onclick="loadModalForm('{% url 'dictionary_create' %}')"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalContainer">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Создать первый справочник
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Инициализация tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Добавляем анимации для строк таблицы
+    animateTableRows();
+    
+    // Инициализация поиска
+    initializeSearch();
+    
+    // Инициализация фильтров и сортировки
+    initializeFilters();
+});
+
+// Глобальные переменные для фильтров
+let currentFilters = {
+    search: '',
+    code: '',
+    description: '',
+    sortField: '',
+    sortOrder: 'asc'
+};
+
+function initializeFilters() {
+    // Обработчики для фильтров
+    document.getElementById('codeFilter').addEventListener('input', function() {
+        currentFilters.code = this.value.toLowerCase().trim();
+        applyFilters();
+    });
+    
+    document.getElementById('descriptionFilter').addEventListener('input', function() {
+        currentFilters.description = this.value.toLowerCase().trim();
+        applyFilters();
+    });
+    
+    document.getElementById('sortField').addEventListener('change', function() {
+        currentFilters.sortField = this.value;
+        applyFilters();
+    });
+    
+    document.getElementById('sortOrder').addEventListener('change', function() {
+        currentFilters.sortOrder = this.value;
+        applyFilters();
+    });
+}
+
+function toggleFilters() {
+    const panel = document.getElementById('filtersPanel');
+    const isVisible = panel.style.display !== 'none';
+    
+    if (isVisible) {
+        panel.style.display = 'none';
+        panel.style.animation = 'slideOutUp 0.3s ease-out';
+    } else {
+        panel.style.display = 'block';
+        panel.style.animation = 'slideInUp 0.3s ease-out';
+    }
+}
+
+function applyFilters() {
+    const tableRows = Array.from(document.querySelectorAll('tbody tr[data-dictionary-id]'));
+    let filteredRows = tableRows;
+    
+    // Применяем фильтры
+    filteredRows = filteredRows.filter(row => {
+        const name = row.querySelector('.dictionary-link').textContent.toLowerCase();
+        const code = row.querySelector('code').textContent.toLowerCase();
+        const description = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+        
+        // Фильтр по поиску
+        if (currentFilters.search && !name.includes(currentFilters.search) && 
+            !code.includes(currentFilters.search) && !description.includes(currentFilters.search)) {
+            return false;
+        }
+        
+        // Фильтр по коду
+        if (currentFilters.code && !code.includes(currentFilters.code)) {
+            return false;
+        }
+        
+        // Фильтр по описанию
+        if (currentFilters.description && !description.includes(currentFilters.description)) {
+            return false;
+        }
+        
+        return true;
+    });
+    
+    // Применяем сортировку
+    if (currentFilters.sortField) {
+        filteredRows.sort((a, b) => {
+            let aValue, bValue;
+            
+            switch (currentFilters.sortField) {
+                case 'name':
+                    aValue = a.querySelector('.dictionary-link').textContent.toLowerCase();
+                    bValue = b.querySelector('.dictionary-link').textContent.toLowerCase();
+                    break;
+                case 'code':
+                    aValue = a.querySelector('code').textContent.toLowerCase();
+                    bValue = b.querySelector('code').textContent.toLowerCase();
+                    break;
+                case 'description':
+                    aValue = a.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    bValue = b.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    break;
+                default:
+                    return 0;
+            }
+            
+            if (currentFilters.sortOrder === 'asc') {
+                return aValue.localeCompare(bValue);
+            } else {
+                return bValue.localeCompare(aValue);
+            }
+        });
+    }
+    
+    // Обновляем отображение
+    updateTableDisplay(filteredRows);
+    
+    // Обновляем активные фильтры
+    updateActiveFilters();
+}
+
+function updateTableDisplay(filteredRows) {
+    const tbody = document.querySelector('tbody');
+    const allRows = document.querySelectorAll('tbody tr[data-dictionary-id]');
+    
+    // Скрываем все строки
+    allRows.forEach(row => {
+        row.style.display = 'none';
+    });
+    
+    // Показываем отфильтрованные строки с анимацией
+    filteredRows.forEach((row, index) => {
+        row.style.display = 'table-row';
+        row.style.animation = `fadeInRow 0.3s ease-out ${index * 0.05}s`;
+    });
+    
+    // Показываем сообщение, если ничего не найдено
+    if (filteredRows.length === 0) {
+        showNoResultsMessage(true, currentFilters.search);
+    } else {
+        showNoResultsMessage(false);
+    }
+    
+    // Обновляем счетчик
+    updateResultsCounter(filteredRows.length, allRows.length);
+}
+
+function updateActiveFilters() {
+    const activeFiltersContainer = document.getElementById('activeFilters');
+    const activeFilters = [];
+    
+    if (currentFilters.search) {
+        activeFilters.push(`Поиск: "${currentFilters.search}"`);
+    }
+    if (currentFilters.code) {
+        activeFilters.push(`Код: "${currentFilters.code}"`);
+    }
+    if (currentFilters.description) {
+        activeFilters.push(`Описание: "${currentFilters.description}"`);
+    }
+    if (currentFilters.sortField) {
+        const sortLabels = {
+            'name': 'Название',
+            'code': 'Код',
+            'description': 'Описание'
+        };
+        const orderLabel = currentFilters.sortOrder === 'asc' ? '↑' : '↓';
+        activeFilters.push(`Сортировка: ${sortLabels[currentFilters.sortField]} ${orderLabel}`);
+    }
+    
+    if (activeFilters.length > 0) {
+        activeFiltersContainer.innerHTML = activeFilters.map(filter => 
+            `<span class="badge">${filter}</span>`
+        ).join('');
+        activeFiltersContainer.style.display = 'flex';
+    } else {
+        activeFiltersContainer.style.display = 'none';
+    }
+}
+
+function clearAllFilters() {
+    // Сбрасываем значения полей
+    document.getElementById('searchInput').value = '';
+    document.getElementById('codeFilter').value = '';
+    document.getElementById('descriptionFilter').value = '';
+    document.getElementById('sortField').value = '';
+    document.getElementById('sortOrder').value = 'asc';
+    document.getElementById('searchClear').style.display = 'none';
+    
+    // Сбрасываем фильтры
+    currentFilters = {
+        search: '',
+        code: '',
+        description: '',
+        sortField: '',
+        sortOrder: 'asc'
+    };
+    
+    // Применяем изменения
+    applyFilters();
+    
+    // Скрываем панель фильтров
+    document.getElementById('filtersPanel').style.display = 'none';
+}
+
+function initializeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+    
+    let searchTimeout;
+    
+    // Обработчик ввода в поле поиска
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        // Показываем/скрываем кнопку очистки
+        if (searchTerm.length > 0) {
+            searchClear.style.display = 'block';
+        } else {
+            searchClear.style.display = 'none';
+        }
+        
+        // Очищаем предыдущий таймаут
+        clearTimeout(searchTimeout);
+        
+        // Добавляем задержку для оптимизации производительности
+        searchTimeout = setTimeout(() => {
+            filterTableRows(searchTerm);
+        }, 300);
+    });
+    
+    // Обработчик кнопки очистки
+    searchClear.addEventListener('click', function() {
+        searchInput.value = '';
+        searchInput.focus();
+        this.style.display = 'none';
+        filterTableRows('');
+    });
+    
+    // Обработчик клавиши Escape
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            searchClear.style.display = 'none';
+            filterTableRows('');
+            this.blur();
+        }
+    });
+}
+
+function filterTableRows(searchTerm) {
+    currentFilters.search = searchTerm;
+    applyFilters();
+}
+
+function showNoResultsMessage(show, searchTerm) {
+    let noResultsRow = document.querySelector('.no-results-row');
+    
+    if (show) {
+        if (!noResultsRow) {
+            noResultsRow = document.createElement('tr');
+            noResultsRow.className = 'no-results-row';
+            noResultsRow.innerHTML = `
+                <td colspan="4" class="text-center">
+                    <div class="py-4">
+                        <i class="bi bi-search display-4 text-muted"></i>
+                        <p class="mt-3 text-muted">По запросу "${searchTerm}" ничего не найдено</p>
+                        <button class="btn btn-outline-primary mt-2" onclick="clearAllFilters()">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Очистить фильтры
+                        </button>
+                    </div>
+                </td>
+            `;
+            document.querySelector('tbody').appendChild(noResultsRow);
+        }
+        noResultsRow.style.display = 'table-row';
+        noResultsRow.style.animation = 'fadeInRow 0.5s ease-out';
+    } else {
+        if (noResultsRow) {
+            noResultsRow.style.display = 'none';
+        }
+    }
+}
+
+function updateResultsCounter(visible, total) {
+    let counter = document.querySelector('.results-counter');
+    
+    if (!counter) {
+        counter = document.createElement('div');
+        counter.className = 'results-counter';
+        counter.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--surface-white);
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            z-index: 1000;
+            animation: slideInFromLeft 0.3s ease-out;
+        `;
+        document.body.appendChild(counter);
+    }
+    
+    if (visible < total) {
+        counter.textContent = `Найдено: ${visible} из ${total}`;
+        counter.style.display = 'block';
+    } else {
+        counter.style.display = 'none';
+    }
+}
+
+function animateTableRows() {
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach((row, index) => {
+        row.style.animationDelay = `${index * 0.1}s`;
+    });
+}
+
+function loadModalForm(url) {
+    // Добавляем эффект загрузки
+    const modalContent = document.getElementById('modalContent');
+    modalContent.innerHTML = `
+        <div class="modal-header">
+            <h5 class="modal-title">Загрузка...</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body loading">
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+                <p class="mt-3">Загрузка формы...</p>
+            </div>
+        </div>
+    `;
+    
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки формы');
+        }
+        return response.text();
+    })
+    .then(html => {
+        // Анимация появления контента
+        modalContent.style.opacity = '0';
+        modalContent.innerHTML = html;
+        
+        setTimeout(() => {
+            modalContent.style.opacity = '1';
+            modalContent.style.transition = 'opacity 0.3s ease';
+        }, 100);
+        
+        // Если это форма создания, настраиваем обработчик
+        const createForm = document.getElementById('createDictionaryForm');
+        if (createForm) {
+            setupCreateFormHandler(createForm);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h5 class="modal-title">Ошибка</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Не удалось загрузить форму. Попробуйте еще раз.
+                </div>
+            </div>
+        `;
+    });
+}
+
+function setupCreateFormHandler(form) {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const url = this.action;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        // Анимация кнопки
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Сохранение...';
+        submitBtn.classList.add('loading');
+        
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', 'Справочник успешно создан!');
+                
+                // Закрываем модальное окно с анимацией
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalContainer'));
+                modal.hide();
+                
+                // Перезагружаем страницу с задержкой
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showNotification('error', 'Ошибка: ' + (data.error || JSON.stringify(data.errors)));
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            showNotification('error', 'Ошибка соединения с сервером');
+        })
+        .finally(() => {
+            // Восстанавливаем кнопку
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            submitBtn.classList.remove('loading');
+        });
+    });
+}
+
+function deleteDictionary(id) {
+    if (confirm('Вы уверены, что хотите удалить этот справочник?')) {
+        // Добавляем эффект загрузки на строку
+        const row = document.querySelector(`tr[data-dictionary-id="${id}"]`);
+        if (row) {
+            row.classList.add('loading');
+        }
+        
+        fetch(`/dictionaries/${id}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', 'Справочник успешно удален!');
+                
+                // Анимация удаления строки
+                if (row) {
+                    row.style.transform = 'translateX(100%)';
+                    row.style.opacity = '0';
+                    row.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        row.remove();
+                    }, 500);
+                } else {
+                    location.reload();
+                }
+            } else {
+                showNotification('error', 'Ошибка при удалении: ' + (data.error || 'Неизвестная ошибка'));
+                if (row) {
+                    row.classList.remove('loading');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            showNotification('error', 'Ошибка соединения с сервером');
+            if (row) {
+                row.classList.remove('loading');
+            }
+        });
+    }
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Показываем уведомление
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Скрываем уведомление
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 400);
+    }, 5000);
+}
+
+// Очистка модального окна при закрытии
+document.getElementById('modalContainer').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('modalContent').innerHTML = '';
+});
+
+// Добавляем интерактивность для строк таблицы
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('tbody tr[data-dictionary-id]');
+    
+    rows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Не срабатывает при клике на кнопки
+            if (!e.target.closest('.action-buttons') && !e.target.closest('.dictionary-link')) {
+                const dictionaryId = this.dataset.dictionaryId;
+                // Добавляем эффект ripple
+                createRipple(e, this);
+                
+                // Переход к таблице справочника
+                setTimeout(() => {
+                    window.location.href = `/dictionary/table/${dictionaryId}/`;
+                }, 300);
+            }
+        });
+    });
+});
+
+function createRipple(event, element) {
+    const ripple = document.createElement('span');
+    const rect = element.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+    
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.classList.add('ripple');
+    
+    element.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
+
+// Добавляем стили для ripple эффекта
+const style = document.createElement('style');
+style.textContent = `
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(127, 176, 105, 0.3);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+    
+    tbody tr {
+        position: relative;
+        overflow: hidden;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

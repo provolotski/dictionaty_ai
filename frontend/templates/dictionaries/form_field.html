@@ -1,0 +1,280 @@
+<!-- form_field.html -->
+{% load form_filters %}
+
+<div class="mb-4 form-field-container">
+    <label for="{{ field.id_for_label }}" class="form-label">
+        {{ field.label }}
+        {% if field.field.required %}
+            <span class="text-danger" title="Обязательное поле">*</span>
+        {% endif %}
+    </label>
+    
+    {% with field_type=field|input_type %}
+        {% if field_type == 'textarea' %}
+            <div class="input-wrapper">
+                {{ field|add_class:"form-control" }}
+                <div class="input-icon">
+                    <i class="bi bi-text-paragraph"></i>
+                </div>
+            </div>
+        {% elif field_type == 'date' %}
+            <div class="input-wrapper">
+                {{ field|add_class:"form-control" }}
+                <div class="input-icon">
+                    <i class="bi bi-calendar3"></i>
+                </div>
+            </div>
+        {% elif field_type == 'select' %}
+            <div class="input-wrapper">
+                {{ field|add_class:"form-select" }}
+                <div class="input-icon">
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+            </div>
+        {% elif field_type == 'checkbox' %}
+            <div class="form-check custom-checkbox">
+                {{ field|add_class:"form-check-input" }}
+                <label class="form-check-label" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                </label>
+                <div class="checkmark"></div>
+            </div>
+        {% else %}
+            <div class="input-wrapper">
+                {{ field|add_class:"form-control" }}
+                <div class="input-icon">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    {% if field.help_text %}
+        <div class="form-text">
+            <i class="bi bi-info-circle me-1"></i>
+            {{ field.help_text }}
+        </div>
+    {% endif %}
+    
+    {% if field.errors %}
+        <div class="text-danger field-error">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            {% for error in field.errors %}
+                <small class="d-block">{{ error }}</small>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+/* Дополнительные стили для полей формы */
+.form-field-container {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.form-field-container:hover {
+    transform: translateY(-1px);
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--secondary-green);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.form-control:focus + .input-icon,
+.form-select:focus + .input-icon {
+    color: var(--primary-green);
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Кастомные чекбоксы */
+.custom-checkbox {
+    position: relative;
+    padding-left: 2.5rem;
+    cursor: pointer;
+    user-select: none;
+    border: 2px solid var(--border-green);
+    border-radius: 8px;
+    padding: 1rem 1rem 1rem 3rem;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.custom-checkbox:hover {
+    border-color: var(--light-green);
+    background-color: rgba(127, 176, 105, 0.05);
+}
+
+.custom-checkbox .form-check-input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 20px;
+    background-color: white;
+    border: 2px solid var(--border-green);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.custom-checkbox:hover .checkmark {
+    border-color: var(--light-green);
+}
+
+.custom-checkbox .form-check-input:checked ~ .checkmark {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.custom-checkbox .form-check-input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.custom-checkbox .checkmark:after {
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Анимации для полей */
+.form-field-container {
+    animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Стили для разных типов полей */
+.form-control[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.5) sepia(1) saturate(5) hue-rotate(90deg);
+    cursor: pointer;
+}
+
+.form-control[type="date"]::-webkit-calendar-picker-indicator:hover {
+    filter: invert(0.3) sepia(1) saturate(5) hue-rotate(90deg);
+}
+
+/* Стили для текстовых областей */
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Стили для селектов */
+.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%234a7c59' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+}
+
+.form-select:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%232d5a27' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+}
+
+/* Эффект фокуса для всех полей */
+.form-control:focus,
+.form-select:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(127, 176, 105, 0.2);
+}
+
+/* Стили для обязательных полей */
+.form-label .text-danger {
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(220, 53, 69, 0.3);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .form-field-container {
+        margin-bottom: 1.5rem;
+    }
+    
+    .custom-checkbox {
+        padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+    }
+    
+    .checkmark {
+        left: 0.75rem;
+    }
+}
+
+/* Анимация загрузки для полей */
+.form-field-container.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.form-field-container.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-green);
+    border-top: 2px solid var(--primary-green);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Стили для валидации в реальном времени */
+.form-control.valid {
+    border-color: var(--success-green);
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.form-control.invalid {
+    border-color: var(--danger-red);
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.form-control.valid + .input-icon {
+    color: var(--success-green);
+}
+
+.form-control.invalid + .input-icon {
+    color: var(--danger-red);
+}
+</style>

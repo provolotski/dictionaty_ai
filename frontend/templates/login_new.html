@@ -1,0 +1,569 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход в систему | BelStat{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="welcome-section">
+        <div class="welcome-content">
+            <h1 class="welcome-title">Вход в систему</h1>
+            <p class="welcome-subtitle">Введите ваши учетные данные для доступа к системе</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Авторизация</h2>
+                    <p class="card-subtitle">Введите логин, пароль и выберите домен</p>
+                </div>
+                
+                <div class="card-body">
+                    <form id="loginForm" method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Поле имени пользователя -->
+                        <div class="form-group">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">
+                                <i class="fas fa-user"></i>
+                                Имя пользователя
+                            </label>
+                            <div class="input-container">
+                                {{ form.username }}
+                                <div class="input-focus-border"></div>
+                            </div>
+                            {% if form.username.errors %}
+                            <div class="field-error">
+                                {% for error in form.username.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Поле пароля -->
+                        <div class="form-group">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">
+                                <i class="fas fa-lock"></i>
+                                Пароль
+                            </label>
+                            <div class="input-container">
+                                {{ form.password }}
+                                <button type="button" class="password-toggle" id="passwordToggle">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <div class="input-focus-border"></div>
+                            </div>
+                            {% if form.password.errors %}
+                            <div class="field-error">
+                                {% for error in form.password.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Поле домена -->
+                        <div class="form-group">
+                            <label for="{{ form.domain.id_for_label }}" class="form-label">
+                                <i class="fas fa-globe"></i>
+                                Домен
+                            </label>
+                            <div class="input-container">
+                                {{ form.domain }}
+                                <div class="input-focus-border"></div>
+                            </div>
+                            {% if form.domain.errors %}
+                            <div class="field-error">
+                                {% for error in form.domain.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Дополнительные опции -->
+                        <div class="form-options">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="rememberMe" name="remember_me">
+                                <span class="checkmark"></span>
+                                Запомнить меня
+                            </label>
+                            <a href="#" class="forgot-password">Забыли пароль?</a>
+                        </div>
+
+                        <!-- Кнопка входа -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100" id="loginButton">
+                            <span class="button-text">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Войти в систему
+                            </span>
+                            <div class="button-loader" style="display: none;">
+                                <div class="spinner"></div>
+                            </div>
+                        </button>
+
+                        <!-- Сообщения об ошибках -->
+                        {% if error %}
+                        <div class="alert alert-danger mt-3" id="errorMessage">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error }}</span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Сообщения об успехе -->
+                        {% if success %}
+                        <div class="alert alert-success mt-3" id="successMessage">
+                            <i class="fas fa-check-circle"></i>
+                            <span>{{ success }}</span>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Дополнительная информация -->
+            <div class="card mt-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Нужна помощь?</h5>
+                    <p class="card-text">Обратитесь к администратору системы</p>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>support@belstat.by</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>+375 17 123-45-67</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Добро пожаловать в BelStat</h3>
+                    <p class="card-subtitle">Современная система управления иерархическими справочниками</p>
+                </div>
+                
+                <div class="card-body">
+                    <div class="features">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h5>Иерархические справочники</h5>
+                                <p>Управление сложными структурами данных с поддержкой родительско-дочерних связей</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h5>Исторические данные</h5>
+                                <p>Отслеживание изменений во времени с возможностью просмотра данных на любую дату</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h5>Многоязычность</h5>
+                                <p>Поддержка русского, белорусского и английского языков для всех элементов системы</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h5>Безопасность</h5>
+                                <p>Ролевая модель доступа с детальным аудитом всех действий пользователей</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .welcome-section {
+        background: var(--gradient-primary);
+        color: var(--white);
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+        margin-bottom: 3rem;
+    }
+    
+    .welcome-content {
+        text-align: center;
+    }
+    
+    .welcome-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .welcome-subtitle {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label i {
+        color: var(--primary-green);
+        width: 1rem;
+    }
+    
+    .input-container {
+        position: relative;
+    }
+    
+    .input-container input,
+    .input-container select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--gray-200);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: var(--white);
+    }
+    
+    .input-container input:focus,
+    .input-container select:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--gray-400);
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+        transition: all 0.2s ease;
+    }
+    
+    .password-toggle:hover {
+        color: var(--primary-green);
+        background: var(--gray-100);
+    }
+    
+    .field-error {
+        color: var(--error);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+    
+    .checkmark {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid var(--gray-300);
+        border-radius: 0.25rem;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+    
+    .checkbox-container input:checked + .checkmark {
+        background: var(--primary-green);
+        border-color: var(--primary-green);
+    }
+    
+    .checkbox-container input:checked + .checkmark::after {
+        content: '✓';
+        color: var(--white);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    
+    .forgot-password {
+        color: var(--primary-green);
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: color 0.2s ease;
+    }
+    
+    .forgot-password:hover {
+        color: var(--primary-green-dark);
+        text-decoration: underline;
+    }
+    
+    .btn-primary {
+        background: var(--gradient-primary);
+        border: none;
+        padding: 0.875rem 1.5rem;
+        font-weight: 600;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .button-text {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .button-loader {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid transparent;
+        border-top: 2px solid var(--white);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .contact-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--gray-600);
+        font-size: 0.875rem;
+    }
+    
+    .contact-item i {
+        color: var(--primary-green);
+        width: 1rem;
+    }
+    
+    .features {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .feature-item {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .feature-icon {
+        width: 3rem;
+        height: 3rem;
+        background: var(--gradient-primary);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    
+    .feature-content h5 {
+        margin: 0 0 0.5rem 0;
+        color: var(--gray-900);
+        font-weight: 600;
+    }
+    
+    .feature-content p {
+        margin: 0;
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+    
+    .alert {
+        border: none;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .alert-danger {
+        background: var(--error-light);
+        color: var(--error);
+    }
+    
+    .alert-success {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .alert i {
+        font-size: 1.25rem;
+    }
+    
+    @media (max-width: 768px) {
+        .welcome-title {
+            font-size: 2rem;
+        }
+        
+        .form-options {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .feature-item {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            align-self: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const loginButton = document.getElementById('loginButton');
+    const buttonText = loginButton.querySelector('.button-text');
+    const buttonLoader = loginButton.querySelector('.button-loader');
+    const passwordToggle = document.getElementById('passwordToggle');
+    const passwordInput = document.querySelector('input[type="password"]');
+    
+    // Переключение видимости пароля
+    passwordToggle.addEventListener('click', function() {
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+        
+        const icon = this.querySelector('i');
+        icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    });
+    
+    // Обработка отправки формы
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Показываем загрузчик
+        buttonText.style.display = 'none';
+        buttonLoader.style.display = 'block';
+        loginButton.disabled = true;
+        
+        // Отправляем форму
+        const formData = new FormData(loginForm);
+        
+        fetch(loginForm.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Успешная авторизация
+                Utils.showNotification(data.message || 'Авторизация успешна', 'success');
+                
+                // Редирект
+                setTimeout(() => {
+                    window.location.href = data.redirect_url || '/';
+                }, 1000);
+            } else {
+                // Ошибка авторизации
+                Utils.showNotification(data.error || 'Ошибка авторизации', 'error');
+                
+                // Показываем ошибку на странице
+                const errorDiv = document.getElementById('errorMessage');
+                if (errorDiv) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.querySelector('span').textContent = data.error || 'Ошибка авторизации';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            Utils.showNotification('Ошибка сети. Проверьте подключение к интернету.', 'error');
+        })
+        .finally(() => {
+            // Скрываем загрузчик
+            buttonText.style.display = 'flex';
+            buttonLoader.style.display = 'none';
+            loginButton.disabled = false;
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Профиль пользователя</h2>
+  <div class="card" style="max-width: 640px;">
+    <div class="card-body">
+      <div class="row mb-2">
+        <div class="col-4 text-muted">Имя</div>
+        <div class="col-8">{{ display_name }}</div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-4 text-muted">Домен</div>
+        <div class="col-8">{{ domain }}</div>
+      </div>
+
+      {% if in_users %}
+      <div class="row mb-2">
+        <div class="col-12">
+          <span class="badge bg-success">Пользователь ЕИСГС</span>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if in_security %}
+      <div class="row mb-2">
+        <div class="col-12">
+          <span class="badge bg-primary">Администратор Безопасности</span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

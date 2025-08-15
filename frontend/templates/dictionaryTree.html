@@ -1,0 +1,496 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+/* Зеленоватая цветовая схема для страницы дерева справочника */
+:root {
+    --primary-green: #2d5a27;
+    --secondary-green: #4a7c59;
+    --light-green: #7fb069;
+    --very-light-green: #a7c957;
+    --accent-green: #6b8e23;
+    --bg-light-green: #f8faf8;
+    --border-green: #d4edda;
+    --text-green: #155724;
+    --hover-green: #5a8c5a;
+}
+
+/* Общие стили страницы */
+.container-fluid {
+    background: linear-gradient(135deg, var(--bg-light-green) 0%, #ffffff 100%);
+    min-height: 100vh;
+}
+
+/* Заголовок */
+h2 {
+    color: var(--primary-green);
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(45, 90, 39, 0.1);
+}
+
+/* Кнопки */
+.btn-secondary {
+    background-color: var(--secondary-green);
+    border-color: var(--secondary-green);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+    color: white;
+}
+
+.btn-outline-info {
+    color: var(--accent-green);
+    border-color: var(--accent-green);
+}
+
+.btn-outline-info:hover {
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
+    color: white;
+}
+
+.btn-outline-secondary {
+    color: var(--secondary-green);
+    border-color: var(--secondary-green);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--secondary-green);
+    border-color: var(--secondary-green);
+    color: white;
+}
+
+/* Карточка */
+.card {
+    border-color: var(--border-green);
+    box-shadow: 0 4px 6px rgba(45, 90, 39, 0.1);
+    border-radius: 8px;
+}
+
+.card-body {
+    background-color: white;
+}
+
+/* Формы и инпуты */
+.form-control:focus {
+    border-color: var(--light-green);
+    box-shadow: 0 0 0 0.2rem rgba(127, 176, 105, 0.25);
+}
+
+.input-group-text {
+    background-color: var(--light-green);
+    border-color: var(--light-green);
+    color: white;
+}
+
+/* Модальное окно */
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    color: white;
+}
+
+.modal-title {
+    color: white;
+}
+
+.btn-close {
+    filter: invert(1);
+}
+
+/* Дополнительные эффекты */
+.text-muted {
+    color: var(--secondary-green) !important;
+}
+
+/* Hover эффекты для кнопок */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(45, 90, 39, 0.2);
+}
+
+/* Стили для поиска */
+#searchInput::placeholder {
+    color: var(--secondary-green);
+    opacity: 0.7;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Заголовок -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>{{ dictionary_name }}</h2>
+                    <p class="text-muted">Всего позиций: {{ total_items }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'dictionary_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Назад к списку
+                    </a>
+                    <a href="{% url 'dictionary_table' dictionary_id %}" class="btn btn-outline-info">
+                        <i class="bi bi-table"></i> Таблица
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры и поиск -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Поиск по дереву...">
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <button class="btn btn-outline-secondary" onclick="expandAll()">
+                <i class="bi bi-arrows-expand"></i> Развернуть все
+            </button>
+            <button class="btn btn-outline-secondary" onclick="collapseAll()">
+                <i class="bi bi-arrows-collapse"></i> Свернуть все
+            </button>
+        </div>
+    </div>
+
+    <!-- Дерево -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <div id="treeContainer">
+                        {% if tree_data %}
+                            <ul class="tree-root">
+                                {% for item in tree_data %}
+                                    {% include "tree_node.html" with node=item %}
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <div class="text-center text-muted">
+                                <i class="bi bi-inbox"></i> Нет данных для отображения
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для деталей -->
+<div class="modal fade" id="itemDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Детали позиции</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="itemDetailsContent">
+                <!-- Содержимое будет загружено динамически -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.tree-root {
+    list-style: none;
+    padding-left: 0;
+}
+
+.tree-node {
+    margin: 5px 0;
+}
+
+.tree-content {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background-color: rgba(127, 176, 105, 0.05);
+    border: 1px solid var(--border-green);
+    transition: all 0.3s ease;
+}
+
+.tree-content:hover {
+    background-color: rgba(127, 176, 105, 0.1);
+    border-color: var(--light-green);
+    transform: translateX(2px);
+    box-shadow: 0 2px 4px rgba(45, 90, 39, 0.1);
+}
+
+.tree-content.expanded {
+    background-color: rgba(127, 176, 105, 0.15);
+    border-color: var(--light-green);
+}
+
+.tree-toggle {
+    background: none;
+    border: none;
+    color: var(--primary-green);
+    cursor: pointer;
+    padding: 4px 8px;
+    margin-right: 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.tree-toggle:hover {
+    background-color: var(--light-green);
+    color: white;
+    transform: scale(1.1);
+}
+
+.tree-toggle i {
+    font-size: 0.9em;
+}
+
+.tree-children {
+    list-style: none;
+    padding-left: 30px;
+    margin-top: 5px;
+    border-left: 2px solid var(--light-green);
+}
+
+.tree-children.collapsed {
+    display: none;
+}
+
+.tree-item-info {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.tree-item-code {
+    font-weight: bold;
+    color: var(--primary-green);
+    min-width: 80px;
+    text-shadow: 1px 1px 1px rgba(45, 90, 39, 0.1);
+}
+
+.tree-item-name {
+    flex-grow: 1;
+    color: var(--text-green);
+}
+
+.tree-item-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.tree-item-actions .btn {
+    padding: 2px 6px;
+    font-size: 0.8em;
+    color: var(--accent-green);
+    border-color: var(--accent-green);
+}
+
+.tree-item-actions .btn:hover {
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
+    color: white;
+}
+
+.highlight {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    border-color: #ffc107 !important;
+}
+
+.search-result {
+    background-color: rgba(127, 176, 105, 0.2) !important;
+    border-color: var(--light-green) !important;
+    box-shadow: 0 0 8px rgba(127, 176, 105, 0.3);
+}
+
+/* Анимации для дерева */
+@keyframes treeFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.tree-node {
+    animation: treeFadeIn 0.3s ease-in-out;
+}
+
+/* Уровни дерева с разными оттенками */
+.tree-node[data-level="0"] .tree-content {
+    background-color: rgba(127, 176, 105, 0.08);
+    border-left: 4px solid var(--primary-green);
+}
+
+.tree-node[data-level="1"] .tree-content {
+    background-color: rgba(127, 176, 105, 0.06);
+    border-left: 4px solid var(--secondary-green);
+}
+
+.tree-node[data-level="2"] .tree-content {
+    background-color: rgba(127, 176, 105, 0.04);
+    border-left: 4px solid var(--light-green);
+}
+
+.tree-node[data-level="3"] .tree-content {
+    background-color: rgba(127, 176, 105, 0.02);
+    border-left: 4px solid var(--very-light-green);
+}
+</style>
+
+<script>
+// Поиск по дереву
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const treeNodes = document.querySelectorAll('.tree-content');
+    
+    treeNodes.forEach(node => {
+        const text = node.textContent.toLowerCase();
+        const isMatch = text.includes(searchTerm);
+        
+        node.classList.remove('highlight', 'search-result');
+        
+        if (searchTerm && isMatch) {
+            node.classList.add('search-result');
+            // Показываем родительские узлы
+            expandParents(node);
+        } else if (searchTerm && !isMatch) {
+            node.classList.add('highlight');
+        }
+    });
+});
+
+// Развернуть все узлы
+function expandAll() {
+    const collapsedNodes = document.querySelectorAll('.tree-children.collapsed');
+    const toggles = document.querySelectorAll('.tree-toggle i.bi-chevron-right');
+    
+    collapsedNodes.forEach(node => {
+        node.classList.remove('collapsed');
+    });
+    
+    toggles.forEach(toggle => {
+        toggle.classList.remove('bi-chevron-right');
+        toggle.classList.add('bi-chevron-down');
+    });
+}
+
+// Свернуть все узлы
+function collapseAll() {
+    const expandedNodes = document.querySelectorAll('.tree-children:not(.collapsed)');
+    const toggles = document.querySelectorAll('.tree-toggle i.bi-chevron-down');
+    
+    expandedNodes.forEach(node => {
+        if (node.querySelector('.tree-children')) { // Только узлы с детьми
+            node.classList.add('collapsed');
+        }
+    });
+    
+    toggles.forEach(toggle => {
+        toggle.classList.remove('bi-chevron-down');
+        toggle.classList.add('bi-chevron-right');
+    });
+}
+
+// Переключение узлов дерева
+function toggleNode(button) {
+    const node = button.closest('.tree-node');
+    const children = node.querySelector('.tree-children');
+    const icon = button.querySelector('i');
+    
+    if (children) {
+        children.classList.toggle('collapsed');
+        
+        if (children.classList.contains('collapsed')) {
+            icon.classList.remove('bi-chevron-down');
+            icon.classList.add('bi-chevron-right');
+        } else {
+            icon.classList.remove('bi-chevron-right');
+            icon.classList.add('bi-chevron-down');
+        }
+    }
+}
+
+// Показать детали позиции
+function showItemDetails(itemId) {
+    const modal = new bootstrap.Modal(document.getElementById('itemDetailsModal'));
+    const content = document.getElementById('itemDetailsContent');
+    
+    // Найти данные позиции
+    const node = document.querySelector(`[data-item-id="${itemId}"]`);
+    if (node) {
+        const itemInfo = node.querySelector('.tree-item-info');
+        const code = node.querySelector('.tree-item-code').textContent;
+        const name = node.querySelector('.tree-item-name').textContent;
+        
+        content.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Основная информация</h6>
+                    <p><strong>Код:</strong> ${code}</p>
+                    <p><strong>Наименование:</strong> ${name}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Иерархия</h6>
+                    <p><strong>Уровень:</strong> ${node.closest('.tree-node').dataset.level || 0}</p>
+                    <p><strong>Дочерних элементов:</strong> ${node.querySelector('.tree-children') ? node.querySelector('.tree-children').children.length : 0}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    modal.show();
+}
+
+// Развернуть родительские узлы для поиска
+function expandParents(node) {
+    let parent = node.closest('.tree-children');
+    while (parent) {
+        parent.classList.remove('collapsed');
+        const toggle = parent.previousElementSibling?.querySelector('.tree-toggle i');
+        if (toggle) {
+            toggle.classList.remove('bi-chevron-right');
+            toggle.classList.add('bi-chevron-down');
+        }
+        parent = parent.closest('.tree-children');
+    }
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем обработчики для всех кнопок переключения
+    const toggles = document.querySelectorAll('.tree-toggle');
+    toggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            toggleNode(this);
+        });
+    });
+    
+    // Добавляем обработчики для всех кнопок деталей
+    const detailButtons = document.querySelectorAll('.btn-details');
+    detailButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.closest('.tree-node').dataset.itemId;
+            showItemDetails(itemId);
+        });
+    });
+});
+</script>
+{% endblock %} 

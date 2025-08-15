@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Аудит входов{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Аудит входов</h2>
+
+  <form method="get" class="mb-3 audit-filters">
+    <div class="filters-row">
+      <input type="text" name="search" placeholder="Поиск (user)" value="{{ search_query }}" class="form-control form-control-sm" />
+      <select name="status" class="form-select form-select-sm">
+        <option value="">Все статусы</option>
+        {% for value,label in statuses %}
+          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <input type="date" name="date_from" value="{{ date_from }}" class="form-control form-control-sm" />
+      <input type="date" name="date_to" value="{{ date_to }}" class="form-control form-control-sm" />
+      <select name="page_size" class="form-select form-select-sm" title="Размер страницы">
+        <option value="25" {% if backend_page_size == 25 %}selected{% endif %}>25</option>
+        <option value="50" {% if backend_page_size == 50 %}selected{% endif %}>50</option>
+        <option value="100" {% if backend_page_size == 100 %}selected{% endif %}>100</option>
+        <option value="200" {% if backend_page_size == 200 %}selected{% endif %}>200</option>
+      </select>
+      <button type="submit" class="btn btn-primary btn-sm">Применить</button>
+    </div>
+  </form>
+
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Логи (Внешний API)</span>
+      <div class="pager">
+        <a class="btn btn-outline-secondary btn-sm {% if backend_page <= 1 %}disabled{% endif %}" href="?{% if search_query %}search={{search_query}}&{% endif %}{% if status_filter %}status={{status_filter}}&{% endif %}{% if date_from %}date_from={{date_from}}&{% endif %}{% if date_to %}date_to={{date_to}}&{% endif %}page={{ backend_page|add:'-1' }}&page_size={{ backend_page_size }}">Назад</a>
+        <span class="mx-2 small text-muted">Стр. {{ backend_page }}</span>
+        <a class="btn btn-outline-secondary btn-sm {% if not backend_has_next %}disabled{% endif %}" href="?{% if search_query %}search={{search_query}}&{% endif %}{% if status_filter %}status={{status_filter}}&{% endif %}{% if date_from %}date_from={{date_from}}&{% endif %}{% if date_to %}date_to={{date_to}}&{% endif %}page={{ backend_page|add:'1' }}&page_size={{ backend_page_size }}">Вперёд</a>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover audit-table">
+        <thead>
+          <tr>
+            <th class="col-date">Дата/время</th>
+            <th class="col-user">Пользователь</th>
+            <th class="col-domain">Домен</th>
+            <th class="col-action">Действие</th>
+            <th class="col-status">Статус</th>
+            <th class="col-comment">Комментарий</th>
+          </tr>
+        </thead>
+        <tbody id="backendAuditBody">
+          {% if backend_audit_logs and backend_audit_logs|length > 0 %}
+            {% for r in backend_audit_logs %}
+            <tr>
+              <td class="col-date" data-ts="{{ r.datetime }}">{{ r.datetime }}</td>
+              <td class="col-user">{{ r.username }}</td>
+              <td class="col-domain">{{ r.domain }}</td>
+              <td class="col-action">{{ r.action }}</td>
+              <td class="col-status">
+                {% if r.status|lower == 'успешно' or r.status|lower == 'success' %}
+                  <span class="badge bg-success">{{ r.status }}</span>
+                {% elif r.status|lower == 'failed' or r.status|lower == 'неудачно' %}
+                  <span class="badge bg-danger">{{ r.status }}</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ r.status }}</span>
+                {% endif %}
+              </td>
+              <td class="col-comment">{{ r.comment }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="6" class="text-center text-muted">Нет данных</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<style>
+  .audit-filters .filters-row { display:flex; gap:12px; flex-wrap:wrap; }
+  .audit-table { table-layout: fixed; width: 100%; }
+  .audit-table th, .audit-table td { vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .audit-table .col-date { width: 180px; }
+  .audit-table .col-user { width: 240px; }
+  .audit-table .col-domain { width: 160px; }
+  .audit-table .col-action { width: 240px; }
+  .audit-table .col-status { width: 160px; }
+  .audit-table .col-comment { width: auto; white-space: normal; overflow: hidden; overflow-wrap: anywhere; word-break: break-word; }
+  .card { box-shadow: var(--shadow-lg); border: 1px solid var(--gray-200); }
+  .card-header { background: var(--gray-50); font-weight: 600; }
+</style>
+
+<script>
+  (function() {
+    // Дополнительная клиентская логика при необходимости
+  })();
+</script>
+{% endblock %}

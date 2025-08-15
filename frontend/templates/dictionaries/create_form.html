@@ -1,0 +1,38 @@
+           <div class="modal-dialog modal-lg" style="min-height: 80vh;">
+        <div class="modal-content" style="height: 80vh;">
+           
+            <form method="post" id="dictionaryForm">
+                {% csrf_token %}
+              <div class="modal-header">
+                    <h5 class="modal-title">
+                        {% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} справочника
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                {{ form.non_field_errors }}
+
+
+                <div class="modal-body" style="max-height: calc(80vh - 120px); overflow-y: auto;">
+                    {% for field in form %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </form>
+
+        
+</div>
+</div>

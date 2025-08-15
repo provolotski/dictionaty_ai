@@ -1,0 +1,727 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+/* Зеленоватая цветовая схема для страницы справочника */
+:root {
+    --primary-green: #2d5a27;
+    --secondary-green: #4a7c59;
+    --light-green: #7fb069;
+    --very-light-green: #a7c957;
+    --accent-green: #6b8e23;
+    --bg-light-green: #f8faf8;
+    --border-green: #d4edda;
+    --text-green: #155724;
+    --hover-green: #5a8c5a;
+}
+
+/* Общие стили страницы */
+.container-fluid {
+    background: linear-gradient(135deg, var(--bg-light-green) 0%, #ffffff 100%);
+    min-height: 100vh;
+}
+
+/* Заголовок */
+h2 {
+    color: var(--primary-green);
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(45, 90, 39, 0.1);
+}
+
+/* Кнопки */
+.btn-secondary {
+    background-color: var(--secondary-green);
+    border-color: var(--secondary-green);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+    color: white;
+}
+
+.btn-outline-success {
+    color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+    color: white;
+}
+
+.btn-outline-secondary {
+    color: var(--secondary-green);
+    border-color: var(--secondary-green);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--secondary-green);
+    border-color: var(--secondary-green);
+    color: white;
+}
+
+.btn-outline-info {
+    color: var(--accent-green);
+    border-color: var(--accent-green);
+}
+
+.btn-outline-info:hover {
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
+    color: white;
+}
+
+/* Таблица */
+.table {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(45, 90, 39, 0.1);
+    overflow: hidden;
+}
+
+.table-dark {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%) !important;
+    border-color: var(--primary-green);
+}
+
+.table-dark th {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%) !important;
+    color: white !important;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    border-color: var(--light-green) !important;
+    padding: 12px 8px;
+}
+
+.table-dark th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.table-dark th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(127, 176, 105, 0.05);
+}
+
+.table-hover > tbody > tr:hover {
+    background-color: rgba(127, 176, 105, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+/* Пагинация */
+.pagination .page-link {
+    color: var(--primary-green);
+    border-color: var(--border-green);
+}
+
+.pagination .page-link:hover {
+    background-color: var(--light-green);
+    border-color: var(--light-green);
+    color: white;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    border-color: var(--border-green);
+}
+
+/* Формы и инпуты */
+.form-control:focus {
+    border-color: var(--light-green);
+    box-shadow: 0 0 0 0.2rem rgba(127, 176, 105, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--light-green);
+    box-shadow: 0 0 0 0.2rem rgba(127, 176, 105, 0.25);
+}
+
+.input-group-text {
+    background-color: var(--light-green);
+    border-color: var(--light-green);
+    color: white;
+}
+
+/* Индикатор загрузки */
+.spinner-border.text-primary {
+    color: var(--primary-green) !important;
+}
+
+/* Алерты */
+.alert-info {
+    background-color: rgba(127, 176, 105, 0.1);
+    border-color: var(--border-green);
+    color: var(--text-green);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+/* Модальное окно */
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    color: white;
+}
+
+.modal-title {
+    color: white;
+}
+
+.btn-close {
+    filter: invert(1);
+}
+
+/* Карточки и контейнеры */
+.card {
+    border-color: var(--border-green);
+    box-shadow: 0 2px 4px rgba(45, 90, 39, 0.1);
+}
+
+/* Анимации */
+@keyframes fadeInGreen {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+        background-color: rgba(127, 176, 105, 0.1);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        background-color: transparent;
+    }
+}
+
+.table tbody tr {
+    animation: fadeInGreen 0.5s ease-in-out;
+}
+
+/* Дополнительные эффекты */
+.text-muted {
+    color: var(--secondary-green) !important;
+}
+
+/* Hover эффекты для кнопок */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(45, 90, 39, 0.2);
+}
+
+/* Стили для поиска */
+#searchInput::placeholder {
+    color: var(--secondary-green);
+    opacity: 0.7;
+}
+
+/* Стили для селектора размера страницы */
+#pageSizeSelect {
+    color: var(--primary-green);
+}
+
+#pageSizeSelect option {
+    color: var(--primary-green);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container-fluid {
+        background: var(--bg-light-green);
+    }
+    
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(45, 90, 39, 0.1);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Заголовок -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>{{ dictionary_name }}</h2>
+                    <p class="text-muted">Всего позиций: {{ total_items }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'dictionary_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Назад к списку
+                    </a>
+                    <a href="{% url 'dictionary_tree' dictionary_id %}" class="btn btn-outline-success">
+                        <i class="bi bi-diagram-3"></i> Дерево
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры и поиск -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="searchInput" placeholder="Поиск по таблице...">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-list-ul"></i></span>
+                <select class="form-select" id="pageSizeSelect" onchange="changePageSize()">
+                    <option value="10" {% if current_page_size == 10 %}selected{% endif %}>10 записей</option>
+                    <option value="25" {% if current_page_size == 25 %}selected{% endif %}>25 записей</option>
+                    <option value="50" {% if current_page_size == 50 or not current_page_size %}selected{% endif %}>50 записей</option>
+                    <option value="100" {% if current_page_size == 100 %}selected{% endif %}>100 записей</option>
+                    <option value="200" {% if current_page_size == 200 %}selected{% endif %}>200 записей</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-outline-secondary" onclick="exportToCSV()">
+                <i class="bi bi-download"></i> Экспорт CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Индикатор загрузки -->
+    <div id="loadingIndicator" class="text-center" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+        <p class="mt-2">Загрузка данных...</p>
+    </div>
+
+    <!-- Таблица -->
+    <div class="row" id="tableContainer">
+        <div class="col">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="dictionaryTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Код</th>
+                            <th>Наименование</th>
+                            <th>Аббревиатура</th>
+                            <th>Множитель</th>
+                            <th>Шкала</th>
+                            <th>Код родительской позиции</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr data-item-id="{{ item.id }}">
+                            <td><strong>{{ item.Код|default:"-" }}</strong></td>
+                            <td>{{ item.Наименование|default:"-" }}</td>
+                            <td>{{ item.Аббревиатура|default:"-" }}</td>
+                            <td>{{ item.Множитель|default:"-" }}</td>
+                            <td>{{ item.Шкала|default:"-" }}</td>
+                            <td>{{ item.Код_родительской_позиции|default:"-" }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" onclick="showItemDetails({{ item.id }})">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                <i class="bi bi-inbox"></i> Нет данных для отображения
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Пагинация -->
+    {% if page_obj.has_other_pages %}
+    <div class="row mt-3">
+        <div class="col">
+            <nav aria-label="Навигация по страницам">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&page_size={{ current_page_size|default:'50' }}">Предыдущая</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">Предыдущая</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <a class="page-link" href="?page={{ num }}&page_size={{ current_page_size|default:'50' }}">{{ num }}</a>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&page_size={{ current_page_size|default:'50' }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&page_size={{ current_page_size|default:'50' }}">Следующая</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">Следующая</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <div class="text-center text-muted">
+                <small>
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }} 
+                    ({{ total_items }} записей, {{ current_page_size|default:'50' }} на страницу)
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Модальное окно для деталей -->
+<div class="modal fade" id="itemDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Детали позиции</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="itemDetailsContent">
+                <!-- Содержимое будет загружено динамически -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Функция изменения размера страницы
+function changePageSize() {
+    const pageSize = document.getElementById('pageSizeSelect').value;
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('page_size', pageSize);
+    currentUrl.searchParams.set('page', '1'); // Возвращаемся на первую страницу
+    window.location.href = currentUrl.toString();
+}
+
+// Поиск по таблице с debounce
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const searchTerm = this.value.toLowerCase();
+        const table = document.getElementById('dictionaryTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        let visibleCount = 0;
+        
+        for (let row of rows) {
+            const cells = row.getElementsByTagName('td');
+            let found = false;
+            
+            for (let cell of cells) {
+                if (cell.textContent.toLowerCase().includes(searchTerm)) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            row.style.display = found ? '' : 'none';
+            if (found) visibleCount++;
+        }
+        
+        // Показываем количество найденных результатов
+        updateSearchResults(visibleCount, searchTerm);
+    }, 300); // Задержка 300мс
+});
+
+// Обновление результатов поиска
+function updateSearchResults(count, term) {
+    const resultsDiv = document.getElementById('searchResults');
+    if (!resultsDiv) {
+        const div = document.createElement('div');
+        div.id = 'searchResults';
+        div.className = 'alert alert-info mt-2';
+        document.getElementById('searchInput').parentNode.appendChild(div);
+    }
+    
+    if (term) {
+        resultsDiv.textContent = `Найдено: ${count} записей`;
+        resultsDiv.style.display = 'block';
+    } else {
+        resultsDiv.style.display = 'none';
+    }
+}
+
+// Показать детали позиции
+function showItemDetails(itemId) {
+    const modal = new bootstrap.Modal(document.getElementById('itemDetailsModal'));
+    const content = document.getElementById('itemDetailsContent');
+    
+    // Найти данные позиции
+    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+    if (row) {
+        const cells = row.getElementsByTagName('td');
+        content.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Основная информация</h6>
+                    <p><strong>Код:</strong> ${cells[0].textContent}</p>
+                    <p><strong>Наименование:</strong> ${cells[1].textContent}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Дополнительная информация</h6>
+                    <p><strong>Аббревиатура:</strong> ${cells[2].textContent}</p>
+                    <p><strong>Множитель:</strong> ${cells[3].textContent}</p>
+                    <p><strong>Шкала:</strong> ${cells[4].textContent}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    modal.show();
+}
+
+// Экспорт в CSV
+function exportToCSV() {
+    const table = document.getElementById('dictionaryTable');
+    const rows = table.getElementsByTagName('tr');
+    let csv = [];
+    
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const cols = row.querySelectorAll('td, th');
+        let rowData = [];
+        
+        for (let j = 0; j < cols.length - 1; j++) { // Исключаем колонку "Действия"
+            let text = cols[j].textContent.replace(/"/g, '""');
+            rowData.push('"' + text + '"');
+        }
+        
+        csv.push(rowData.join(','));
+    }
+    
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', '{{ dictionary_name }}_data.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
+// Оптимизация производительности
+document.addEventListener('DOMContentLoaded', function() {
+    // Ленивая загрузка изображений
+    const images = document.querySelectorAll('img[data-src]');
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.classList.remove('lazy');
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+    
+    images.forEach(img => imageObserver.observe(img));
+    
+    // Оптимизация таблицы
+    const table = document.getElementById('dictionaryTable');
+    if (table) {
+        // Виртуализация для больших таблиц
+        const tbody = table.querySelector('tbody');
+        if (tbody && tbody.children.length > 100) {
+            // Применяем виртуализацию только для больших таблиц
+            applyTableVirtualization(tbody);
+        }
+    }
+});
+
+// Виртуализация таблицы
+function applyTableVirtualization(tbody) {
+    const rows = Array.from(tbody.children);
+    const visibleRows = 20; // Количество видимых строк
+    let startIndex = 0;
+    
+    function updateVisibleRows() {
+        const scrollTop = window.pageYOffset;
+        const containerHeight = window.innerHeight;
+        const rowHeight = 50; // Примерная высота строки
+        
+        startIndex = Math.floor(scrollTop / rowHeight);
+        const endIndex = Math.min(startIndex + visibleRows, rows.length);
+        
+        // Скрываем все строки
+        rows.forEach(row => row.style.display = 'none');
+        
+        // Показываем только видимые строки
+        for (let i = startIndex; i < endIndex; i++) {
+            if (rows[i]) {
+                rows[i].style.display = '';
+            }
+        }
+    }
+    
+    // Добавляем обработчик прокрутки
+    window.addEventListener('scroll', updateVisibleRows);
+    updateVisibleRows();
+}
+
+// Показ/скрытие индикатора загрузки
+function showLoading() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+    document.getElementById('tableContainer').style.display = 'none';
+}
+
+function hideLoading() {
+    document.getElementById('loadingIndicator').style.display = 'none';
+    document.getElementById('tableContainer').style.display = 'block';
+}
+
+// Асинхронная загрузка данных
+async function loadTableData(page = 1) {
+    const dictionaryId = {{ dictionary_id }};
+    const url = `/dictionary/api/v2/models/dictionary/${dictionaryId}/paginated/?page=${page}&page_size=50`;
+    
+    try {
+        showLoading();
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (response.ok) {
+            updateTableContent(data);
+            updatePagination(data);
+        } else {
+            console.error('Ошибка загрузки данных:', data.error);
+            showError('Ошибка загрузки данных');
+        }
+    } catch (error) {
+        console.error('Ошибка сети:', error);
+        showError('Ошибка сети');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Обновление содержимого таблицы
+function updateTableContent(data) {
+    const tbody = document.querySelector('#dictionaryTable tbody');
+    tbody.innerHTML = '';
+    
+    if (data.items && data.items.length > 0) {
+        data.items.forEach(item => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-item-id', item.id);
+            row.innerHTML = `
+                <td><strong>${item.Код || '-'}</strong></td>
+                <td>${item.Наименование || '-'}</td>
+                <td>${item.Аббревиатура || '-'}</td>
+                <td>${item.Множитель || '-'}</td>
+                <td>${item.Шкала || '-'}</td>
+                <td>${item.Код_родительской_позиции || '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-info" onclick="showItemDetails(${item.id})">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    } else {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-muted">
+                    <i class="bi bi-inbox"></i> Нет данных для отображения
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Обновление пагинации
+function updatePagination(data) {
+    const paginationContainer = document.querySelector('.pagination');
+    if (!paginationContainer) return;
+    
+    const currentPage = data.current_page;
+    const totalPages = data.total_pages;
+    
+    let paginationHTML = '';
+    
+    // Кнопка "Предыдущая"
+    if (data.has_previous) {
+        paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadTableData(${currentPage - 1})">Предыдущая</a></li>`;
+    } else {
+        paginationHTML += `<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Предыдущая</a></li>`;
+    }
+    
+    // Номера страниц
+    for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        if (i === currentPage) {
+            paginationHTML += `<li class="page-item active"><a class="page-link" href="#">${i}</a></li>`;
+        } else {
+            paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadTableData(${i})">${i}</a></li>`;
+        }
+    }
+    
+    // Кнопка "Следующая"
+    if (data.has_next) {
+        paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadTableData(${currentPage + 1})">Следующая</a></li>`;
+    } else {
+        paginationHTML += `<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Следующая</a></li>`;
+    }
+    
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+// Показ ошибки
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger mt-3';
+    errorDiv.innerHTML = `
+        <i class="bi bi-exclamation-triangle"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(errorDiv, container.firstChild);
+}
+
+
+</script>
+{% endblock %} 

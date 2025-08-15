@@ -1,0 +1,12 @@
+.modal-body .form-control {
+    margin-bottom: 10px;
+}
+
+.modal-body .form-check {
+    margin-bottom: 15px;
+}
+
+.code-input {
+    font-family: monospace;
+    text-transform: uppercase;
+}

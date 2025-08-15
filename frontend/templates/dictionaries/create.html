@@ -1,0 +1,591 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load form_filters %}
+
+{% block extra_css %}
+<style>
+/* Зеленоватая цветовая схема для страницы создания справочника */
+:root {
+    --primary-green: #2d5a27;
+    --secondary-green: #4a7c59;
+    --light-green: #7fb069;
+    --very-light-green: #a7c957;
+    --accent-green: #6b8e23;
+    --bg-light-green: #f8faf8;
+    --border-green: #d4edda;
+    --text-green: #155724;
+    --hover-green: #5a8c5a;
+    --success-green: #28a745;
+    --warning-green: #ffc107;
+    --danger-red: #dc3545;
+}
+
+/* Общие стили страницы */
+body {
+    background: linear-gradient(135deg, var(--bg-light-green) 0%, #ffffff 100%);
+    min-height: 100vh;
+}
+
+.container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(45, 90, 39, 0.1);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+/* Заголовок страницы */
+.page-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+    opacity: 0.3;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 2.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.page-header p {
+    margin: 1rem 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+}
+
+/* Основной контент */
+.main-content {
+    padding: 3rem;
+    background: white;
+}
+
+/* Информационная карточка */
+.info-card {
+    background: linear-gradient(135deg, rgba(127, 176, 105, 0.1) 0%, rgba(167, 201, 87, 0.05) 100%);
+    border: 2px solid var(--border-green);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+}
+
+.info-card .info-icon {
+    font-size: 2rem;
+    color: var(--primary-green);
+    margin-bottom: 1rem;
+}
+
+.info-card h3 {
+    color: var(--primary-green);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.info-card p {
+    color: var(--text-green);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Форма */
+.form-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(45, 90, 39, 0.1);
+    border: 1px solid var(--border-green);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-green);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    color: var(--primary-green);
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title::before {
+    content: '📋';
+    font-size: 1.5rem;
+}
+
+/* Кнопки */
+.btn-container {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--border-green);
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    min-width: 150px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(45, 90, 39, 0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    border-color: var(--primary-green);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--secondary-green) 0%, var(--primary-green) 100%);
+    border-color: var(--secondary-green);
+    color: white;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    border-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
+    border-color: #5a6268;
+    color: white;
+}
+
+.btn-outline-success {
+    color: var(--primary-green);
+    border-color: var(--primary-green);
+    background: transparent;
+}
+
+.btn-outline-success:hover {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+    color: white;
+}
+
+/* Прогресс-бар */
+.progress-container {
+    margin-bottom: 2rem;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: var(--border-green);
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(135deg, var(--light-green) 0%, var(--primary-green) 100%);
+    transition: width 0.5s ease;
+}
+
+/* Анимации */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.main-content {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .main-content {
+        padding: 2rem 1.5rem;
+    }
+    
+    .form-container {
+        padding: 1.5rem;
+    }
+    
+    .btn-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+/* Стили для уведомлений */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 400px;
+}
+
+.alert {
+    border-radius: 8px;
+    border: none;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);
+    color: var(--success-green);
+    border-left: 4px solid var(--success-green);
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
+    color: var(--danger-red);
+    border-left: 4px solid var(--danger-red);
+}
+
+/* Стили для загрузки */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border-green);
+    border-top: 4px solid var(--primary-green);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Контейнер для уведомлений -->
+<div id="notificationContainer" class="notification-container"></div>
+
+<!-- Индикатор загрузки -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+</div>
+
+<div class="container">
+    <!-- Заголовок страницы -->
+    <div class="page-header">
+        <h1>
+            {% if form.instance.pk %}
+                Редактирование справочника
+            {% else %}
+                Создание нового справочника
+            {% endif %}
+        </h1>
+        <p>
+            {% if form.instance.pk %}
+                Внесите необходимые изменения в справочник
+            {% else %}
+                Заполните форму для создания нового справочника в системе
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="main-content">
+        <!-- Информационная карточка -->
+        <div class="info-card">
+            <div class="info-icon">
+                <i class="bi bi-info-circle"></i>
+            </div>
+            <h3>Информация о создании справочника</h3>
+            <p>
+                Справочник - это структурированный набор данных, используемый для классификации и систематизации информации. 
+                Заполните все обязательные поля (отмеченные звездочкой *) для успешного создания справочника.
+            </p>
+        </div>
+
+        <!-- Прогресс-бар -->
+        <div class="progress-container">
+            <div class="progress">
+                <div class="progress-bar" id="formProgress" role="progressbar" style="width: 0%"></div>
+            </div>
+            <small class="text-muted mt-2 d-block text-center">Прогресс заполнения формы</small>
+        </div>
+
+        <!-- Форма -->
+        <div class="form-container">
+            <form method="post" id="dictionaryForm">
+                {% csrf_token %}
+                
+                <!-- Общие ошибки формы -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Ошибки валидации:</strong>
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Основная информация -->
+                <div class="form-section">
+                    <h3 class="section-title">Основная информация</h3>
+                    {% for field in form %}
+                        {% if forloop.counter <= 3 %}
+                            {% render_field field %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Дополнительная информация -->
+                <div class="form-section">
+                    <h3 class="section-title">Дополнительная информация</h3>
+                    {% for field in form %}
+                        {% if forloop.counter > 3 %}
+                            {% render_field field %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Кнопки действий -->
+                <div class="btn-container">
+                    <a href="{% url 'dictionary_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Назад к списку
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {% if form.instance.pk %}
+                            Сохранить изменения
+                        {% else %}
+                            Создать справочник
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Функция для показа уведомлений
+function showNotification(type, message) {
+    const container = document.getElementById('notificationContainer');
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle';
+    
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="bi ${icon} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', alertHtml);
+    
+    // Автоматически скрываем через 5 секунд
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+// Функция для показа/скрытия индикатора загрузки
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Функция для обновления прогресс-бара
+function updateProgress() {
+    const form = document.getElementById('dictionaryForm');
+    const fields = form.querySelectorAll('input, select, textarea');
+    const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
+    const filledRequiredFields = Array.from(requiredFields).filter(field => field.value.trim() !== '');
+    
+    const progress = (filledRequiredFields.length / requiredFields.length) * 100;
+    document.getElementById('formProgress').style.width = progress + '%';
+}
+
+// Обработчик отправки формы
+document.getElementById('dictionaryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const url = this.action || window.location.href;
+    
+    // Показываем индикатор загрузки
+    showLoading();
+    
+    // Обновляем кнопку
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span>Сохранение...';
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('success', data.message || 'Операция выполнена успешно');
+            setTimeout(() => {
+                window.location.href = '{% url "dictionary_list" %}';
+            }, 1500);
+        } else {
+            if (data.errors) {
+                displayFormErrors(data.errors);
+            } else {
+                showNotification('error', data.error || 'Произошла ошибка');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        showNotification('error', 'Ошибка соединения с сервером');
+    })
+    .finally(() => {
+        hideLoading();
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
+
+// Функция для отображения ошибок формы
+function displayFormErrors(errors) {
+    // Очищаем предыдущие ошибки
+    document.querySelectorAll('.field-error').forEach(el => {
+        el.remove();
+    });
+    
+    // Отображаем новые ошибки
+    for (const [fieldName, fieldErrors] of Object.entries(errors)) {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'text-danger field-error';
+            errorDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                ${fieldErrors.map(error => `<small>${error}</small>`).join('')}
+            `;
+            field.parentNode.appendChild(errorDiv);
+            
+            // Добавляем анимацию к полю с ошибкой
+            field.style.borderColor = 'var(--danger-red)';
+            field.style.animation = 'shake 0.5s ease-in-out';
+            
+            setTimeout(() => {
+                field.style.animation = '';
+            }, 500);
+        }
+    }
+}
+
+// Обновляем прогресс при изменении полей
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('dictionaryForm');
+    const fields = form.querySelectorAll('input, select, textarea');
+    
+    fields.forEach(field => {
+        field.addEventListener('input', updateProgress);
+        field.addEventListener('change', updateProgress);
+    });
+    
+    // Инициализируем прогресс
+    updateProgress();
+});
+
+// Анимация тряски для полей с ошибками
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

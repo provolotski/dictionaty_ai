@@ -1,0 +1,95 @@
+<!-- templates/dictionary_tree.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+    
+<div class="container mt-4">
+    <h2>Древовидный справочник #{{ dictionary_id }}</h2>
+    
+    <div class="tree-container mt-3">
+        <ul class="tree list-group list-group-flush">
+            {% for item in tree %}               
+                {% include 'tree_node.html' with node=item %}
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<style>
+    .tree ul {
+        list-style: none;
+        padding-left: 20px;
+    }
+    .tree li {
+        position: relative;
+        padding-left: 15px;
+    }
+    .tree li:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 15px;
+        height: 1px;
+        width: 10px;
+        background: #ccc;
+    }
+    .tree li:after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: #ccc;
+    }
+    .tree li:last-child:after {
+        height: 15px;
+    }
+    .tree .node-content {
+        padding: 5px 10px;
+        margin: 2px 0;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .tree .node-content:hover {
+        background-color: #f8f9fa;
+    }
+    .tree .has-children > .node-content {
+        font-weight: bold;
+    }
+    .tree .children {
+        display: block; /* по умолчанию раскрыто */
+    }
+    .tree .collapsed > .children {
+        display: none;
+    }
+    .tree .toggle-icon {
+        margin-right: 5px;
+        width: 15px;
+        display: inline-block;
+        text-align: center;
+    }
+</style>
+
+<script>
+$(document).ready(function() {
+    // Обработчик для сворачивания/разворачивания
+    $('.tree').on('click', '.toggle-handle', function(e) {
+        e.stopPropagation();
+        const node = $(this).closest('li');
+        node.toggleClass('collapsed');
+        
+        // Меняем иконку
+        const icon = $(this).find('.toggle-icon');
+        icon.text(node.hasClass('collapsed') ? '+' : '-');
+    });
+    
+    // Инициализация - сворачиваем все узлы кроме корневых
+    $('.tree li:has(> ul.children)').addClass('has-children');
+    $('.tree li.has-children > .node-content').prepend(
+        '<span class="toggle-handle"><span class="toggle-icon">-</span></span>'
+    );
+    $('.tree li.has-children ul li').addClass('collapsed');
+});
+</script>
+{% endblock %}

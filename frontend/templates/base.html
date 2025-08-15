@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BelStat - Система управления словарями{% endblock %}</title>
+    
+    <!-- Основные стили -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Дополнительные стили для конкретных страниц -->
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Мета-теги -->
+    <meta name="description" content="{% block meta_description %}Система управления иерархическими историческими словарями и классификаторами BelStat{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}словари, классификаторы, статистика, BelStat{% endblock %}">
+    <meta name="author" content="BelStat">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}BelStat - Система управления словарями{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Система управления иерархическими историческими словарями и классификаторами BelStat{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{% block og_url %}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}/static/images/og-image.jpg{% endblock %}">
+    
+    <!-- CSRF Token -->
+    {% csrf_token %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Навигация -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-container">
+                <!-- Логотип и название -->
+                <a href="/" class="navbar-brand">
+                    <i class="fas fa-chart-line"></i>
+                    BelStat
+                </a>
+                
+                <!-- Основное меню -->
+                <ul class="navbar-nav">
+                    <li><a href="/" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        Главная
+                    </a></li>
+                    <li><a href="/dictionaries" class="nav-link {% if 'dictionaries' in request.path %}active{% endif %}">
+                        <i class="fas fa-book"></i>
+                        Словари
+                    </a></li>
+                    <li><a href="/search" class="nav-link {% if 'search' in request.path %}active{% endif %}">
+                        <i class="fas fa-search"></i>
+                        Поиск
+                    </a></li>
+                    <li><a href="/import" class="nav-link {% if 'import' in request.path %}active{% endif %}">
+                        <i class="fas fa-upload"></i>
+                        Импорт
+                    </a></li>
+                    <li><a href="/export" class="nav-link {% if 'export' in request.path %}active{% endif %}">
+                        <i class="fas fa-download"></i>
+                        Экспорт
+                    </a></li>
+                                         <li><a href="/analytics" class="nav-link {% if 'analytics' in request.path %}active{% endif %}">
+                         <i class="fas fa-chart-bar"></i>
+                         Аналитика
+                     </a></li>
+                     {% if request.session.user_info and request.session.has_audit_access %}
+                         {% with username=request.session.user_info.username domain=request.session.user_info.domain|default:"belstat" %}
+                             {% if username and domain %}
+                                 <li><a href="/accounts/audit/" onclick="window.location.href='/accounts/audit/';" class="nav-link {% if 'audit' in request.path %}active{% endif %}">
+                                     <i class="fas fa-shield-alt"></i>
+                                     Аудит
+                                 </a></li>
+                                 <li><a href="/accounts/users/" class="nav-link {% if 'users' in request.path %}active{% endif %}">
+                                     <i class="fas fa-users"></i>
+                                     Пользователи
+                                 </a></li>
+                             {% endif %}
+                         {% endwith %}
+                     {% endif %}
+                </ul>
+                
+                                 <!-- Пользовательское меню -->
+                 <div class="user-menu">
+                     {% if request.session.user_info %}
+                         <div class="user-avatar" title="{{ request.session.user_info.username }}" onclick="toggleUserMenu()">
+                             {% with username=request.session.user_info.username %}
+                                 {% if ' ' in username %}
+                                     {% with words=username.split %}
+                                         {{ words.0 }}{% for word in words|slice:"1:" %}.{{ word|first|upper }}{% endfor %}
+                                     {% endwith %}
+                                 {% else %}
+                                     {{ username }}
+                                 {% endif %}
+                             {% endwith %}
+                         </div>
+                         
+                         <!-- Выпадающее меню пользователя -->
+                         <div class="user-dropdown" id="userDropdown" style="display: none;">
+                             <div class="user-info">
+                                 <div class="user-name">{{ request.session.user_info.username }}</div>
+                                 <div class="user-role">Пользователь системы</div>
+                             </div>
+                             
+                             <div class="dropdown-divider"></div>
+                             
+                             <a href="/accounts/profile/" class="dropdown-item">
+                                 <i class="fas fa-user"></i>
+                                 Профиль
+                             </a>
+                             
+                             <a href="/settings" class="dropdown-item">
+                                 <i class="fas fa-cog"></i>
+                                 Настройки
+                             </a>
+                             
+                             <div class="dropdown-divider"></div>
+                             
+                             <button class="dropdown-item logout-btn" onclick="logout()">
+                                 <i class="fas fa-sign-out-alt"></i>
+                                 Выйти
+                             </button>
+                         </div>
+                     {% else %}
+                         <a href="/login" class="btn btn-primary btn-sm">
+                             <i class="fas fa-sign-in-alt"></i>
+                             Войти
+                         </a>
+                     {% endif %}
+                 </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Основной контент -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>BelStat</h4>
+                    <p>Система управления иерархическими историческими словарями и классификаторами</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Продукты</h4>
+                    <ul class="footer-links">
+                        <li><a href="/dictionaries">Словари</a></li>
+                        <li><a href="/search">Поиск</a></li>
+                        <li><a href="/import">Импорт</a></li>
+                        <li><a href="/export">Экспорт</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Поддержка</h4>
+                    <ul class="footer-links">
+                        <li><a href="/help">Справка</a></li>
+                        <li><a href="/api">API документация</a></li>
+                        <li><a href="/contact">Контакты</a></li>
+                        <li><a href="/feedback">Обратная связь</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Компания</h4>
+                    <ul class="footer-links">
+                        <li><a href="/about">О нас</a></li>
+                        <li><a href="/careers">Карьера</a></li>
+                        <li><a href="/privacy">Конфиденциальность</a></li>
+                        <li><a href="/terms">Условия использования</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    &copy; 2025 BelStat. Все права защищены.
+                </div>
+                
+                <div class="footer-version">
+                    Версия 1.0.0
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Уведомления -->
+    <div id="notifications" class="notifications"></div>
+    
+    <!-- Модальные окна -->
+    <div id="modalContainer" class="modal-container"></div>
+    
+    <!-- Загрузчик -->
+    <div id="loader" class="loader-overlay" style="display: none;">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Загрузка...</div>
+        </div>
+    </div>
+    
+         <!-- Данные о пользователе -->
+     <div id="userData" data-user-info='{% if request.session.user_info %}{"isAuthenticated": true, "username": "{{ request.session.user_info.username }}", "displayName": "{% if ' ' in request.session.user_info.username %}{% with words=request.session.user_info.username.split %}{{ words.0 }}{% for word in words|slice:"1:" %}.{{ word|first|upper }}{% endfor %}{% endwith %}{% else %}{{ request.session.user_info.username }}{% endif %}"}{% else %}{"isAuthenticated": false, "username": "", "displayName": ""}{% endif %}' style="display: none;"></div>
+     
+     <!-- Основные скрипты -->
+     <script>
+                 // Глобальные переменные
+         window.APP_CONFIG = {
+             csrfToken: document.querySelector('[name=csrfmiddlewaretoken]').value,
+             apiBaseUrl: '/api/',
+             staticUrl: '/static/',
+             debug: false,
+             user: {
+                 isAuthenticated: false,
+                 username: '',
+                 permissions: []
+             }
+         };
+        
+        // Утилиты
+        const Utils = {
+            // Показать уведомление
+            showNotification(message, type = 'info', duration = 5000) {
+                const notifications = document.getElementById('notifications');
+                const notification = document.createElement('div');
+                
+                notification.className = `notification notification-${type}`;
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <i class="fas fa-${this.getNotificationIcon(type)}"></i>
+                        <span>${message}</span>
+                        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                notifications.appendChild(notification);
+                
+                // Анимация появления
+                setTimeout(() => {
+                    notification.classList.add('show');
+                }, 10);
+                
+                // Автоматическое скрытие
+                if (duration > 0) {
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                        setTimeout(() => {
+                            if (notification.parentElement) {
+                                notification.remove();
+                            }
+                        }, 300);
+                    }, duration);
+                }
+                
+                return notification;
+            },
+            
+            // Получить иконку для типа уведомления
+            getNotificationIcon(type) {
+                const icons = {
+                    success: 'check-circle',
+                    error: 'exclamation-circle',
+                    warning: 'exclamation-triangle',
+                    info: 'info-circle'
+                };
+                return icons[type] || 'info-circle';
+            },
+            
+            // Показать загрузчик
+            showLoader(text = 'Загрузка...') {
+                const loader = document.getElementById('loader');
+                const loaderText = loader.querySelector('.loader-text');
+                
+                loaderText.textContent = text;
+                loader.style.display = 'flex';
+                
+                // Анимация появления
+                setTimeout(() => {
+                    loader.classList.add('show');
+                }, 10);
+            },
+            
+            // Скрыть загрузчик
+            hideLoader() {
+                const loader = document.getElementById('loader');
+                loader.classList.remove('show');
+                
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 300);
+            },
+            
+            // Форматирование даты
+            formatDate(date, format = 'DD.MM.YYYY') {
+                if (!date) return 'N/A';
+                
+                const d = new Date(date);
+                if (isNaN(d.getTime())) return 'N/A';
+                
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                
+                return format
+                    .replace('DD', day)
+                    .replace('MM', month)
+                    .replace('YYYY', year);
+            },
+            
+            // Форматирование числа
+            formatNumber(num, decimals = 0) {
+                if (num === null || num === undefined) return 'N/A';
+                
+                return new Intl.NumberFormat('ru-RU', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                }).format(num);
+            },
+            
+            // Дебаунс функция
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            },
+            
+            // Проверка поддержки функций браузера
+            isSupported(feature) {
+                const features = {
+                    localStorage: () => {
+                        try {
+                            localStorage.setItem('test', 'test');
+                            localStorage.removeItem('test');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    },
+                    sessionStorage: () => {
+                        try {
+                            sessionStorage.setItem('test', 'test');
+                            sessionStorage.removeItem('test');
+                            return true;
+                        } catch (e) {
+                            return false;
+                        }
+                    },
+                    webWorkers: () => typeof Worker !== 'undefined',
+                    serviceWorkers: () => 'serviceWorker' in navigator,
+                    pushNotifications: () => 'PushManager' in window,
+                    geolocation: () => 'geolocation' in navigator
+                };
+                
+                return features[feature] ? features[feature]() : false;
+            }
+        };
+        
+        // API утилиты
+        const API = {
+            // Базовый запрос
+            async request(url, options = {}) {
+                const defaultOptions = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': window.APP_CONFIG.csrfToken
+                    }
+                };
+                
+                const finalOptions = this.mergeOptions(defaultOptions, options);
+                
+                try {
+                    const response = await fetch(url, finalOptions);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return await response.json();
+                    }
+                    
+                    return await response.text();
+                    
+                } catch (error) {
+                    console.error('API request error:', error);
+                    throw error;
+                }
+            },
+            
+            // GET запрос
+            async get(url, params = {}) {
+                const queryString = new URLSearchParams(params).toString();
+                const fullUrl = queryString ? `${url}?${queryString}` : url;
+                
+                return this.request(fullUrl, { method: 'GET' });
+            },
+            
+            // POST запрос
+            async post(url, data = {}) {
+                return this.request(url, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+            },
+            
+            // PUT запрос
+            async put(url, data = {}) {
+                return this.request(url, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+            },
+            
+            // DELETE запрос
+            async delete(url) {
+                return this.request(url, { method: 'DELETE' });
+            },
+            
+            // Объединение опций
+            mergeOptions(defaults, options) {
+                const merged = { ...defaults };
+                
+                for (const key in options) {
+                    if (options.hasOwnProperty(key)) {
+                        if (key === 'headers') {
+                            merged.headers = { ...merged.headers, ...options.headers };
+                        } else {
+                            merged[key] = options[key];
+                        }
+                    }
+                }
+                
+                return merged;
+            }
+        };
+        
+        // Функции пользовательского меню
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            const isVisible = dropdown.style.display !== 'none';
+            
+            if (isVisible) {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'block';
+                
+                // Закрыть при клике вне меню
+                setTimeout(() => {
+                    document.addEventListener('click', closeUserMenu);
+                }, 10);
+            }
+        }
+        
+        function closeUserMenu(event) {
+            const dropdown = document.getElementById('userDropdown');
+            const userMenu = document.querySelector('.user-menu');
+            
+            if (!userMenu.contains(event.target)) {
+                dropdown.style.display = 'none';
+                document.removeEventListener('click', closeUserMenu);
+            }
+        }
+        
+                 // Функция выхода
+         function logout() {
+             if (confirm('Вы уверены, что хотите выйти из системы?')) {
+                 Utils.showLoader('Выход из системы...');
+                 
+                 fetch('/accounts/logout/', {
+                     method: 'POST',
+                     headers: {
+                         'X-CSRFToken': window.APP_CONFIG.csrfToken,
+                         'X-Requested-With': 'XMLHttpRequest'
+                     }
+                 }).then(() => {
+                     // Очищаем локальные данные
+                     window.APP_CONFIG.user.isAuthenticated = false;
+                     window.APP_CONFIG.user.username = '';
+                     window.APP_CONFIG.user.displayName = '';
+                     
+                     // Редирект на страницу логина
+                     window.location.href = '/login/';
+                 }).catch(() => {
+                     Utils.hideLoader();
+                     Utils.showNotification('Ошибка при выходе из системы', 'error');
+                     // Принудительный редирект
+                     setTimeout(() => {
+                         window.location.href = '/login/';
+                     }, 1000);
+                 });
+             }
+         }
+        
+        // Обработчики событий
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация базовых компонентов
+            initializeBaseComponents();
+            
+            // Вызов пользовательской инициализации
+            if (typeof initializePage === 'function') {
+                initializePage();
+            }
+        });
+        
+        // Инициализация базовых компонентов
+        function initializeBaseComponents() {
+            // Обработка ошибок
+            window.addEventListener('error', function(event) {
+                console.error('JavaScript error:', event.error);
+                
+                if (window.APP_CONFIG.debug) {
+                    Utils.showNotification(
+                        `Ошибка JavaScript: ${event.error.message}`, 
+                        'error'
+                    );
+                }
+            });
+            
+            // Обработка необработанных промисов
+            window.addEventListener('unhandledrejection', function(event) {
+                console.error('Unhandled promise rejection:', event.reason);
+                
+                if (window.APP_CONFIG.debug) {
+                    Utils.showNotification(
+                        `Ошибка промиса: ${event.reason}`, 
+                        'error'
+                    );
+                }
+            });
+            
+            // Автоматическое скрытие уведомлений при клике
+            document.addEventListener('click', function(event) {
+                if (event.target.closest('.notification')) {
+                    const notification = event.target.closest('.notification');
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            });
+                 }
+     </script>
+     
+     <!-- Установка информации о пользователе -->
+     <script>
+         // Устанавливаем информацию о пользователе из Django
+         const userInfoElement = document.querySelector('[data-user-info]');
+         if (userInfoElement) {
+             const userInfo = JSON.parse(userInfoElement.dataset.userInfo);
+             window.APP_CONFIG.user.isAuthenticated = userInfo.isAuthenticated;
+             window.APP_CONFIG.user.username = userInfo.username;
+             window.APP_CONFIG.user.displayName = userInfo.displayName || userInfo.username;
+         }
+     </script>
+     
+     <!-- Дополнительные скрипты для конкретных страниц -->
+     {% block extra_js %}{% endblock %}
+    
+    <!-- Стили для базовых компонентов -->
+<style>
+        /* Стили для уведомлений */
+        .notifications {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 400px;
+        }
+        
+        .notification {
+            background: var(--white);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 1rem;
+            transform: translateX(100%);
+            opacity: 0;
+    transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-green);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .notification-success {
+            border-left-color: var(--success);
+        }
+        
+        .notification-error {
+            border-left-color: var(--error);
+        }
+        
+        .notification-warning {
+            border-left-color: var(--warning);
+        }
+        
+        .notification-info {
+            border-left-color: var(--info);
+        }
+        
+        .notification-content {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .notification-content i {
+            font-size: 1.25rem;
+            color: var(--primary-green);
+        }
+        
+        .notification-success .notification-content i {
+            color: var(--success);
+        }
+        
+        .notification-error .notification-content i {
+            color: var(--error);
+        }
+        
+        .notification-warning .notification-content i {
+            color: var(--warning);
+        }
+        
+        .notification-info .notification-content i {
+            color: var(--info);
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 0.25rem;
+            margin-left: auto;
+            border-radius: 0.25rem;
+            transition: all 0.2s ease;
+        }
+        
+        .notification-close:hover {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+        
+        /* Стили для загрузчика */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loader-overlay.show {
+            opacity: 1;
+        }
+        
+        .loader-content {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        .loader-text {
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+        
+        /* Стили для пользовательского меню */
+        .user-menu {
+    position: relative;
+}
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--white);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            min-width: 200px;
+            z-index: 1000;
+            margin-top: 0.5rem;
+        }
+        
+        .user-info {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+        
+        .user-role {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background: var(--gray-200);
+            margin: 0.5rem 0;
+        }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+    width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+        
+        .dropdown-item:hover {
+            background: var(--gray-50);
+            color: var(--primary-green);
+        }
+        
+        .dropdown-item i {
+            width: 1rem;
+            text-align: center;
+        }
+        
+        /* Стили для подвала */
+        .footer {
+            background: var(--gray-900);
+            color: var(--gray-300);
+            padding: 3rem 0 1rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h4 {
+            color: var(--white);
+            margin-bottom: 1rem;
+            font-size: 1.125rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-links a {
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-green);
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            background: var(--gray-800);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-400);
+            transition: all 0.2s ease;
+        }
+        
+        .social-link:hover {
+            background: var(--primary-green);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+        
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray-800);
+            font-size: 0.875rem;
+        }
+        
+        .footer-version {
+            color: var(--gray-500);
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .footer-bottom {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .notifications {
+                left: 20px;
+                right: 20px;
+                max-width: none;
+            }
+        }
+    </style>
+</body>
+</html>

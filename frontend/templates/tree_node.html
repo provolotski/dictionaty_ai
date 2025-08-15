@@ -1,0 +1,30 @@
+<li class="tree-node" data-item-id="{{ node.id }}" data-level="{{ node.level }}">
+    <div class="tree-content">
+        {% if node.children %}
+            <button class="tree-toggle" type="button">
+                <i class="bi bi-chevron-down"></i>
+            </button>
+        {% else %}
+            <span style="width: 20px; display: inline-block;"></span>
+        {% endif %}
+        
+        <div class="tree-item-info">
+            <span class="tree-item-code">{{ node.Код|default:"-" }}</span>
+            <span class="tree-item-name">{{ node.Наименование|default:"-" }}</span>
+        </div>
+        
+        <div class="tree-item-actions">
+            <button class="btn btn-sm btn-outline-info btn-details" title="Детали">
+                <i class="bi bi-eye"></i>
+            </button>
+        </div>
+    </div>
+    
+    {% if node.children %}
+        <ul class="tree-children">
+            {% for child in node.children %}
+                {% include "tree_node.html" with node=child %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+</li>

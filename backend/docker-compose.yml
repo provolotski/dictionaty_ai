@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # API приложение
+  app:
+    build: .
+    container_name: dictionary-api
+    ports:
+      - "9092:9092"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dictionary-network
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9092/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # База данных PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: dictionary-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nsi_database}
+      POSTGRES_USER: ${POSTGRES_USER:-nsi_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nsi_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/public:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    networks:
+      - dictionary-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nsi_user} -d ${POSTGRES_DB:-nsi_database}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin (опционально, для управления базой данных)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: dictionary-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - dictionary-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  dictionary-network:
+    driver: bridge 

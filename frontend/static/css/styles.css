@@ -1,0 +1,58 @@
+/* Кастомные стили для таблицы */
+.table-container {
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: #343a40;
+    color: white;
+    font-weight: 500;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,0.075);
+}
+
+.modal {
+    display: block !important; /* Для тестирования */
+    opacity: 0; /* Начальное состояние */
+    pointer-events: none;
+}
+
+.modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+.modal {
+    z-index: 1050 !important;
+}
+
+.modal-body .form-control {
+    margin-bottom: 10px;
+}
+
+.modal-body .form-check {
+    margin-bottom: 15px;
+}
+
+.code-input {
+    font-family: monospace;
+    text-transform: uppercase;
+}
+
+
+#modalContainer .modal-dialog {
+    min-height: 80vh; /* 80% от высоты viewport */
+}
+
+/* Увеличение высоты body модального окна */
+#modalContainer .modal-body {
+    max-height: 70vh;
+    overflow-y: auto; /* Добавить прокрутку если контент не помещается */
+}

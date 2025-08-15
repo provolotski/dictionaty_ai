@@ -1,0 +1,96 @@
+<!-- dictionaries/edit_form.html -->
+<div class="modal-header">
+    <h5 class="modal-title">Редактировать справочник</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<form id="editDictionaryForm" method="post" action="{% url 'dictionary_edit' dictionary_id %}">
+    {% csrf_token %}
+    <div class="modal-body">
+        <input type="hidden" name="id" value="{{ dictionary_id }}">
+        
+        <div class="mb-3">
+            <label for="name" class="form-label">Название</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="text-danger">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <label for="code" class="form-label">Код</label>
+            {{ form.code }}
+            {% if form.code.errors %}
+                <div class="text-danger">{{ form.code.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <label for="description" class="form-label">Описание</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div class="text-danger">{{ form.description.errors }}</div>
+            {% endif %}
+        </div>
+        
+        {% if form.start_date %}
+        <div class="mb-3">
+            <label for="start_date" class="form-label">Дата начала</label>
+            {{ form.start_date }}
+            {% if form.start_date.errors %}
+                <div class="text-danger">{{ form.start_date.errors }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if form.finish_date %}
+        <div class="mb-3">
+            <label for="finish_date" class="form-label">Дата окончания</label>
+            {{ form.finish_date }}
+            {% if form.finish_date.errors %}
+                <div class="text-danger">{{ form.finish_date.errors }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+    </div>
+</form>
+
+<script>
+document.getElementById('editDictionaryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const url = this.action;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalContainer'));
+            modal.hide();
+            
+            // Перезагружаем страницу или обновляем таблицу
+            location.reload();
+        } else {
+            // Показываем ошибки
+            alert('Ошибка: ' + (data.error || JSON.stringify(data.errors)));
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка соединения с сервером');
+    });
+});
+</script>

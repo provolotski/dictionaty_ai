@@ -1,0 +1,80 @@
+<!-- dictionaries/form_modal_advanced.html -->
+{% load form_filters %}
+
+<div class="modal-header">
+    <h5 class="modal-title">
+        {% if dictionary_id %}
+            Редактировать справочник
+        {% else %}
+            Создать справочник
+        {% endif %}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<form id="dictionaryForm" method="post" 
+      action="{% if dictionary_id %}{% url 'dictionary_edit' dictionary_id %}{% else %}{% url 'dictionary_create' %}{% endif %}">
+    {% csrf_token %}
+    
+    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        {% if dictionary_id %}
+            <input type="hidden" name="id" value="{{ dictionary_id }}">
+        {% endif %}
+        
+        <!-- Основная информация -->
+        <div class="border rounded p-3 mb-3">
+            <h6 class="text-primary mb-3">Основная информация</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    {% for field in form %}
+                        {% if field.name == 'name' %}
+                            {% render_field field %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    {% for field in form %}
+                        {% if field.name == 'code' %}
+                            {% render_field field %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% for field in form %}
+                {% if field.name == 'description' %}
+                    {% render_field field %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        <!-- Многоязычность -->
+        <div class="border rounded p-3 mb-3">
+            <h6 class="text-primary mb-3">Многоязычность</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    {% for field in form %}
+                        {% if field.name == 'name_eng' %}
+                            {% render_field field %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for field in form %}
+                        {% if field.name == 'name_bel' %}
+                            {% render_field field %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    {% for field in form %}
+                        {% if field.name == 'description_eng' %}
+                            {% render_field field %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for field in form %}
+                        {% if field.name == 'description_bel' %}
+                            {% render_field field %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        

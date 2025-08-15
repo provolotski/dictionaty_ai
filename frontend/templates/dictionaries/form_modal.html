@@ -1,0 +1,493 @@
+<!-- dictionaries/form_modal.html -->
+{% load form_filters %}
+
+<style>
+/* Зеленоватая цветовая схема для формы создания справочника */
+:root {
+    --primary-green: #2d5a27;
+    --secondary-green: #4a7c59;
+    --light-green: #7fb069;
+    --very-light-green: #a7c957;
+    --accent-green: #6b8e23;
+    --bg-light-green: #f8faf8;
+    --border-green: #d4edda;
+    --text-green: #155724;
+    --hover-green: #5a8c5a;
+    --success-green: #28a745;
+    --warning-green: #ffc107;
+    --danger-red: #dc3545;
+}
+
+/* Стили для модального окна */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(45, 90, 39, 0.3);
+    overflow: hidden;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.5rem;
+    position: relative;
+}
+
+.modal-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--light-green), var(--very-light-green), var(--light-green));
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+.modal-title {
+    color: white;
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-title::before {
+    content: '📊';
+    font-size: 1.5rem;
+}
+
+.btn-close {
+    filter: invert(1) brightness(1.5);
+    transition: all 0.3s ease;
+}
+
+.btn-close:hover {
+    transform: scale(1.1);
+    filter: invert(1) brightness(2);
+}
+
+.modal-body {
+    background: linear-gradient(135deg, var(--bg-light-green) 0%, #ffffff 100%);
+    padding: 2rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Стили для полей формы */
+.form-label {
+    color: var(--primary-green);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-control, .form-select {
+    border: 2px solid var(--border-green);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--light-green);
+    box-shadow: 0 0 0 0.2rem rgba(127, 176, 105, 0.25);
+    transform: translateY(-1px);
+}
+
+.form-control:hover, .form-select:hover {
+    border-color: var(--light-green);
+}
+
+/* Стили для чекбоксов */
+.form-check-input {
+    border-color: var(--border-green);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(127, 176, 105, 0.25);
+}
+
+.form-check-label {
+    color: var(--text-green);
+    font-weight: 500;
+}
+
+/* Стили для кнопок */
+.modal-footer {
+    background: linear-gradient(135deg, #f8f9fa 0%, var(--bg-light-green) 100%);
+    border-top: 2px solid var(--border-green);
+    padding: 1.5rem;
+    gap: 1rem;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(45, 90, 39, 0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    border-color: var(--primary-green);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--secondary-green) 0%, var(--primary-green) 100%);
+    border-color: var(--secondary-green);
+    color: white;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    border-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
+    border-color: #5a6268;
+    color: white;
+}
+
+/* Стили для ошибок */
+.text-danger {
+    color: var(--danger-red) !important;
+    font-weight: 500;
+}
+
+.field-error {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-left: 3px solid var(--danger-red);
+    padding: 0.5rem;
+    border-radius: 0 4px 4px 0;
+    margin-top: 0.25rem;
+}
+
+/* Стили для алертов */
+.alert {
+    border-radius: 8px;
+    border: none;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);
+    color: var(--success-green);
+    border-left: 4px solid var(--success-green);
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
+    color: var(--danger-red);
+    border-left: 4px solid var(--danger-red);
+}
+
+/* Стили для справки */
+.form-text {
+    color: var(--secondary-green);
+    font-size: 0.875rem;
+    font-style: italic;
+    margin-top: 0.25rem;
+}
+
+/* Анимации */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-body > div {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Кастомный скроллбар */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: var(--bg-light-green);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--light-green) 0%, var(--secondary-green) 100%);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--secondary-green) 0%, var(--primary-green) 100%);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Индикатор загрузки */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 0.5rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Эффект пульсации для обязательных полей */
+.form-label .text-danger {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+</style>
+
+<div class="modal-header">
+    <h5 class="modal-title">
+        {% if dictionary_id %}
+            Редактировать справочник
+        {% else %}
+            Создать новый справочник
+        {% endif %}
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<form id="dictionaryForm" method="post" 
+      action="{% if dictionary_id %}{% url 'dictionary_edit' dictionary_id %}{% else %}{% url 'dictionary_create' %}{% endif %}">
+    {% csrf_token %}
+
+    <div class="modal-body">
+        {% if dictionary_id %}
+            <input type="hidden" name="id" value="{{ dictionary_id }}">
+        {% endif %}
+
+        <!-- Информационный блок -->
+        <div class="alert alert-info mb-4">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Информация:</strong> Заполните все обязательные поля для создания справочника. 
+            Поля, отмеченные звездочкой (*), являются обязательными.
+        </div>
+
+        <!-- Динамическое построение полей формы -->
+        {% for field in form %}
+            {% render_field field %}
+        {% endfor %}
+
+        <!-- Общие ошибки формы -->
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Ошибки валидации:</strong>
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i>Отмена
+        </button>
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+            <i class="bi bi-check-circle me-1"></i>
+            {% if dictionary_id %}
+                Сохранить изменения
+            {% else %}
+                Создать справочник
+            {% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+document.getElementById('dictionaryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const url = this.action;
+    
+    // Показываем индикатор загрузки
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span>Сохранение...';
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Показываем уведомление об успехе
+            showNotification('success', data.message || 'Операция выполнена успешно');
+            
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalContainer'));
+            modal.hide();
+            
+            // Перезагружаем страницу
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            // Показываем ошибки
+            if (data.errors) {
+                displayFormErrors(data.errors);
+            } else {
+                showNotification('error', data.error || 'Произошла ошибка');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        showNotification('error', 'Ошибка соединения с сервером');
+    })
+    .finally(() => {
+        // Восстанавливаем кнопку
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
+
+function displayFormErrors(errors) {
+    // Очищаем предыдущие ошибки
+    document.querySelectorAll('.field-error').forEach(el => {
+        el.remove();
+    });
+    
+    // Отображаем новые ошибки
+    for (const [fieldName, fieldErrors] of Object.entries(errors)) {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'text-danger field-error';
+            errorDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                ${fieldErrors.map(error => `<small>${error}</small>`).join('')}
+            `;
+            field.parentNode.appendChild(errorDiv);
+            
+            // Добавляем анимацию к полю с ошибкой
+            field.style.borderColor = 'var(--danger-red)';
+            field.style.animation = 'shake 0.5s ease-in-out';
+            
+            setTimeout(() => {
+                field.style.animation = '';
+            }, 500);
+        }
+    }
+}
+
+function showNotification(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle';
+    
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="bi ${icon} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    const container = document.getElementById('notifications') || document.body;
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // Автоматически скрываем через 5 секунд
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+// Анимация тряски для полей с ошибками
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+`;
+document.head.appendChild(style);
+
+// Добавляем валидацию в реальном времени
+document.querySelectorAll('.form-control, .form-select').forEach(field => {
+    field.addEventListener('blur', function() {
+        if (this.hasAttribute('required') && !this.value.trim()) {
+            this.style.borderColor = 'var(--danger-red)';
+        } else {
+            this.style.borderColor = 'var(--light-green)';
+        }
+    });
+    
+    field.addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.style.borderColor = 'var(--light-green)';
+        }
+    });
+});
+</script>
