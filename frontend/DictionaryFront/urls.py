@@ -25,6 +25,8 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('dictionary/', include('Dictionary.urls')),
     path('', include('home.urls')),
+    # API прокси для backend
+    path('api/', include('api.urls')),
     # Прямые маршруты для удобства
     path('login/', accounts_views.login_view, name='login_direct'),
 ]

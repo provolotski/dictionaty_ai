@@ -6,10 +6,10 @@ from fastapi.security import APIKeyHeader
 
 
 logging.basicConfig(
-    level=settings.log_level,
-    format=settings.log_format,
-    datefmt=settings.log_date,
-    handlers=[logging.FileHandler(settings.log_file), logging.StreamHandler()],
+    level=settings.LOG_LEVEL,
+    format=settings.LOG_FORMAT,
+    datefmt=settings.LOG_DATE_FORMAT,
+    handlers=[logging.FileHandler(settings.LOG_FILE), logging.StreamHandler()],
 )
 
 logger = logging.getLogger(__name__)

@@ -407,11 +407,15 @@ def login_view(request):
                                     logger.warning(f"Failed to refresh user groups: {e}")
                             
                             has_audit_access_flag = 'EISGS_AppSecurity' in group_names
+                            in_users_flag = 'EISGS_Users' in group_names
                             request.session['has_audit_access'] = has_audit_access_flag
+                            request.session['in_users'] = in_users_flag
                             logger.info(f"has_audit_access(session) = {has_audit_access_flag}")
+                            logger.info(f"in_users(session) = {in_users_flag}")
                         except Exception as e:
                             logger.warning(f"Не удалось определить доступ к аудиту: {e}")
                             request.session['has_audit_access'] = False
+                            request.session['in_users'] = False
                         
                         # Если выбрано "запомнить меня", устанавливаем длительную сессию
                         if remember_me:
@@ -673,6 +677,11 @@ def profile_view(request):
     if not user_info:
         return redirect('login_direct')
 
+    # Проверяем, входит ли пользователь в группу EISGS_Users
+    if not request.session.get('in_users', False):
+        messages.error(request, 'У Вас недостаточно прав для доступа к профилю')
+        return redirect('home')
+
     display_name = user_info.get('username', '')
     login = user_info.get('login') or display_name
     guid = (user_info.get('guid') or None)
@@ -729,6 +738,7 @@ def users_view(request):
     
     # Проверяем, есть ли у пользователя доступ к аудиту (группа EISGS_AppSecurity)
     has_audit_access = request.session.get('has_audit_access', False)
+    
     if not has_audit_access:
         return redirect('home')
     
@@ -813,7 +823,112 @@ def users_view(request):
         'search_query': search_query,
         'domain_filter': domain_filter,
         'page_sizes': [25, 50, 100],
-        'user_info': user_info
+        'user_info': user_info,
+        'has_audit_access': has_audit_access  # Добавляем информацию о правах доступа к аудиту
     }
     
     return render(request, 'users.html', context)
+
+
+def get_user_data_view(request, user_id):
+    """Получение данных пользователя для карточки"""
+    # Проверяем, входит ли пользователь в группу EISGS_Users
+    if not request.session.get('in_users', False):
+        return JsonResponse({'success': False, 'error': 'Недостаточно прав'}, status=403)
+    
+    try:
+        from accounts.utils import fetch_users_from_backend
+        # Получаем пользователя по ID
+        params = {'page': 1, 'page_size': 100}  # Ограничиваем размер страницы до 100
+        users_data = fetch_users_from_backend(params)
+        
+        if users_data and users_data.get('users'):
+            user = None
+            for u in users_data['users']:
+                if u.get('id') == user_id:
+                    user = u
+                    break
+            
+            if user:
+                # Форматируем даты
+                from datetime import datetime
+                
+                # Обрабатываем created_at
+                created_at_raw = user.get('created_at')
+                if created_at_raw:
+                    try:
+                        if isinstance(created_at_raw, str):
+                            created_dt = datetime.fromisoformat(created_at_raw.replace('Z', '+00:00'))
+                            user['created_at_formatted'] = created_dt.strftime('%d.%m.%Y %H:%M')
+                        else:
+                            user['created_at_formatted'] = created_at_raw.strftime('%d.%m.%Y %H:%M')
+                    except Exception:
+                        user['created_at_formatted'] = 'Ошибка даты'
+                else:
+                    user['created_at_formatted'] = 'Не указана'
+                
+                # Обрабатываем last_login_at
+                last_login_raw = user.get('last_login_at')
+                if last_login_raw:
+                    try:
+                        if isinstance(last_login_raw, str):
+                            login_dt = datetime.fromisoformat(last_login_raw.replace('Z', '+00:00'))
+                            user['last_login_at_formatted'] = login_dt.strftime('%d.%m.%Y %H:%M')
+                        else:
+                            user['last_login_at_formatted'] = last_login_raw.strftime('%d.%m.%Y %H:%M')
+                    except Exception:
+                        user['last_login_at_formatted'] = 'Ошибка даты'
+                else:
+                    user['last_login_at_formatted'] = 'Никогда'
+                
+                return JsonResponse({'success': True, 'user': user})
+        
+        return JsonResponse({'success': False, 'error': 'Пользователь не найден'}, status=404)
+        
+    except Exception as e:
+        logger.error(f"Ошибка получения данных пользователя {user_id}: {e}")
+        return JsonResponse({'success': False, 'error': 'Внутренняя ошибка сервера'}, status=500)
+
+
+def update_user_view(request, user_id):
+    """Обновление пользователя через POST запрос"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Метод не поддерживается'}, status=405)
+    
+    # Проверяем, входит ли пользователь в группу EISGS_Users
+    if not request.session.get('in_users', False):
+        return JsonResponse({'success': False, 'error': 'Недостаточно прав'}, status=403)
+    
+    try:
+        import json
+        data = json.loads(request.body)
+        
+        # Проверяем права доступа
+        has_audit_access = request.session.get('has_audit_access', False)
+        if not has_audit_access:
+            return JsonResponse({'success': False, 'error': 'Недостаточно прав'}, status=403)
+        
+        # Обновляем пользователя через backend API
+        from accounts.utils import update_user_in_backend
+        
+        update_data = {}
+        if 'name' in data:
+            update_data['name'] = data['name']
+        if 'is_admin' in data:
+            update_data['is_admin'] = data['is_admin']
+        
+        if not update_data:
+            return JsonResponse({'success': False, 'error': 'Нет данных для обновления'}, status=400)
+        
+        result = update_user_in_backend(user_id, update_data)
+        
+        if result:
+            return JsonResponse({'success': True, 'user': result})
+        else:
+            return JsonResponse({'success': False, 'error': 'Ошибка обновления на backend'}, status=500)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Неверный формат JSON'}, status=400)
+    except Exception as e:
+        logger.error(f"Ошибка обновления пользователя {user_id}: {e}")
+        return JsonResponse({'success': False, 'error': 'Внутренняя ошибка сервера'}, status=500)

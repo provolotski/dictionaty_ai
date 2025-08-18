@@ -48,33 +48,73 @@ class DictionaryService:
             DuplicateCodeError: Дублирование кода
         """
         try:
+            logger.debug(f"=== СОЗДАНИЕ СПРАВОЧНИКА В СЕРВИСЕ ===")
+            logger.debug(f"Входные данные: {dictionary}")
+            logger.debug(f"Тип данных: {type(dictionary)}")
+            logger.debug(f"Поля справочника:")
+            logger.debug(f"  - name: {dictionary.name}")
+            logger.debug(f"  - code: {dictionary.code}")
+            logger.debug(f"  - description: {dictionary.description}")
+            logger.debug(f"  - start_date: {dictionary.start_date} (тип: {type(dictionary.start_date)})")
+            logger.debug(f"  - finish_date: {dictionary.finish_date} (тип: {type(dictionary.finish_date)})")
+            logger.debug(f"  - id_type: {dictionary.id_type}")
+            logger.debug(f"  - name_eng: {dictionary.name_eng}")
+            logger.debug(f"  - name_bel: {dictionary.name_bel}")
+            logger.debug(f"  - description_eng: {dictionary.description_eng}")
+            logger.debug(f"  - description_bel: {dictionary.description_bel}")
+            logger.debug(f"  - gko: {dictionary.gko}")
+            logger.debug(f"  - organization: {dictionary.organization}")
+            logger.debug(f"  - classifier: {dictionary.classifier}")
+            
             # Валидация дат
+            logger.debug(f"Проверка валидности дат...")
+            logger.debug(f"start_date: {dictionary.start_date}, finish_date: {dictionary.finish_date}")
             if dictionary.start_date >= dictionary.finish_date:
+                logger.error(f"Ошибка валидации дат: start_date ({dictionary.start_date}) >= finish_date ({dictionary.finish_date})")
                 raise DictionaryValidationError(
                     "Дата начала должна быть меньше даты окончания"
                 )
+            logger.debug("Валидация дат прошла успешно")
             
             # Проверка на дублирование кода
+            logger.debug(f"Проверка на дублирование кода: {dictionary.code}")
             existing = await self.find_dictionary_by_code(dictionary.code)
             if existing:
+                logger.error(f"Найден дублирующий код: {dictionary.code}")
                 raise DuplicateCodeError(dictionary.code)
+            logger.debug("Проверка на дублирование кода прошла успешно")
             
             # Установка статуса
-            if dictionary.start_date <= date.today() <= dictionary.finish_date:
-                dictionary.id_status = 1
+            logger.debug(f"Установка статуса справочника...")
+            today = date.today()
+            logger.debug(f"Сегодняшняя дата: {today}")
+            
+            # Создаем словарь с дополнительными полями для передачи в модель
+            dictionary_data = dictionary.model_dump()
+            
+            if dictionary.start_date <= today <= dictionary.finish_date:
+                dictionary_data['id_status'] = 1
+                logger.debug(f"Установлен статус: 1 (активный)")
             else:
-                dictionary.id_status = 0
+                dictionary_data['id_status'] = 0
+                logger.debug(f"Установлен статус: 0 (неактивный)")
             
             # Создание справочника
-            dictionary_id = await self.model.create(dictionary)
-            logger.info(f"Создан справочник с ID: {dictionary_id}")
+            logger.debug(f"Вызов model.create с данными: {dictionary_data}")
+            dictionary_id = await self.model.create(dictionary_data)
+            logger.info(f"Справочник успешно создан с ID: {dictionary_id}")
+            logger.debug(f"Возвращаем ID: {dictionary_id}")
             
             return dictionary_id
             
         except (DictionaryValidationError, DuplicateCodeError):
+            logger.error(f"Известная ошибка валидации: {type(exc).__name__}: {exc}")
             raise
         except Exception as e:
-            logger.error(f"Ошибка создания справочника: {e}")
+            logger.error(f"=== НЕОЖИДАННАЯ ОШИБКА СОЗДАНИЯ СПРАВОЧНИКА ===")
+            logger.error(f"Тип ошибки: {type(e)}")
+            logger.error(f"Сообщение об ошибке: {str(e)}")
+            logger.error(f"Полный traceback:", exc_info=True)
             raise DictionaryValidationError(f"Ошибка создания справочника: {str(e)}")
     
     @cached("dictionary_by_id", ttl=1800)  # 30 минут

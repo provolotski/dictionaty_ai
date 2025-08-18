@@ -23,9 +23,25 @@ from accounts.utils import api_get, api_post, api_post_create_dict,api_post_dict
 logger = logging.getLogger('myapp')
 
 
+def require_users_group(view_func):
+    """Декоратор для проверки принадлежности к группе EISGS_Users"""
+    def wrapper(request, *args, **kwargs):
+        if not request.session.get('in_users', False):
+            messages.error(request, 'У Вас недостаточно прав для доступа к этой странице')
+            return redirect('home')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
 @require_http_methods(["GET"])
+@require_users_group
 def dictionary_list_view(request):
     """Список справочников"""
+    # Проверяем, входит ли пользователь в группу EISGS_Users
+    if not request.session.get('in_users', False):
+        messages.error(request, 'У Вас недостаточно прав для доступа к справочникам')
+        return redirect('home')
+    
     try:
         logger.debug('dictionary_list_view')
         response = api_get(request, '/models/list', service='dict')
@@ -39,6 +55,7 @@ def dictionary_list_view(request):
     return render(request, 'dictionaryList.html', {'dictionaries': dictionaries})
 
 
+@require_users_group
 def dictionary_create(request):
     """Создание справочника"""
     if request.method == 'POST':
@@ -104,6 +121,7 @@ def dictionary_create(request):
     return render(request, 'dictionaries/form_modal.html', {'form': form})
 
 
+@require_users_group
 def dictionary_edit(request, pk):
     """Редактирование существующего справочника"""
     logger.debug(f'dictionary_edit pk={pk}')
@@ -181,6 +199,7 @@ def dictionary_edit(request, pk):
     })
 
 
+@require_users_group
 def dictionary_delete(request, pk):
     """Удаление справочника"""
     if request.method == 'POST':
@@ -212,6 +231,7 @@ def dictionary_delete(request, pk):
     return redirect('dictionary_list')
 
 
+@require_users_group
 def dictionary_detail_view(request, dictionary_id):
     """Детальный просмотр справочника"""
     try:
@@ -255,6 +275,7 @@ def build_tree(items, parent_id=None):
 
 
 @require_POST
+@require_users_group
 def sync_dictionaries(request):
     """Синхронизация справочников"""
     if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -269,12 +290,13 @@ def sync_dictionaries(request):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
-# Удалена дублирующая функция save_dictionary_view
+@require_users_group
 def save_dictionary_view(request):
     """Сохранение справочника (устаревшая функция)"""
     return redirect('dictionary_list')
 
 
+@require_users_group
 def api_dictionary_list(request):
     """API endpoint для получения списка справочников из внешнего API"""
     try:
@@ -289,6 +311,7 @@ def api_dictionary_list(request):
         return JsonResponse({'error': 'Internal server error'}, status=500)
 
 
+@require_users_group
 def api_dictionary_detail(request, dictionary_id):
     """API endpoint для получения детальной информации о справочнике из внешнего API"""
     try:
@@ -302,6 +325,7 @@ def api_dictionary_detail(request, dictionary_id):
         logger.error(f'External API Error in dictionary_detail: {e}')
         return JsonResponse({'error': 'Internal server error'}, status=500)
 
+@require_users_group
 def api_dictionary_paginated(request, dictionary_id):
     """API endpoint для получения данных справочника с пагинацией"""
     try:
@@ -371,6 +395,7 @@ def api_dictionary_paginated(request, dictionary_id):
         return JsonResponse({'error': 'Ошибка обработки запроса'}, status=500)
 
 
+@require_users_group
 def dictionary_table_view(request, dictionary_id):
     """Отображение справочника в виде таблицы с пагинацией и кэшированием"""
     try:
@@ -449,6 +474,7 @@ def dictionary_table_view(request, dictionary_id):
         return redirect('dictionary_list')
 
 
+@require_users_group
 def dictionary_tree_view(request, dictionary_id):
     """Отображение справочника в виде дерева"""
     try:

@@ -18,7 +18,7 @@ class MemoryCache:
         # TTL кэш для данных с временем жизни
         self.ttl_cache = TTLCache(
             maxsize=1000,  # Максимум 1000 элементов
-            ttl=settings.redis_cache_ttl  # Время жизни в секундах
+            ttl=int(settings.REDIS_CACHE_TTL)  # Время жизни в секундах
         )
         
         # LRU кэш для часто используемых данных

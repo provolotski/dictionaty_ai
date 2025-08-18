@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'Dictionary.apps.DictionaryConfig',
     'home.apps.HomeConfig',
     'accounts.apps.AccountsConfig',
+    'api.apps.ApiConfig',
     'crispy_forms',
     'crispy_bootstrap4'
 ]
@@ -109,11 +110,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Minsk'
 
 USE_I18N = True
 
@@ -181,19 +182,27 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{asctime} {levelname} {name} {module} {funcName} {lineno} {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'detailed': {
+            'format': '{levelname} {asctime} {module} {funcName} {lineno} {message}',
             'style': '{',
             'datefmt': '%Y-%m-%d %H:%M:%S'
         },
         'simple': {
-            'format': '{asctime} {levelname} {name} {message}',
+            'format': '{levelname} {message}',
             'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S'
         },
         'auth_format': {
             'format': '{asctime} {levelname} {name} {message}',
             'style': '{',
             'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
         },
     },
     'handlers': {
@@ -219,50 +228,63 @@ LOGGING = {
             'formatter': 'auth_format',
         },
         'console': {
-            'class': 'logging.StreamHandler',
             'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
             'formatter': 'simple',
+        },
+        'rotating_file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/belstat.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'detailed',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/errors.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'detailed',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
+            'handlers': ['console', 'file'],
             'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['request_file', 'console'],
-            'level': 'WARNING',
             'propagate': False,
-        },
-        'myapp': {
-            'handlers': ['file', 'console'],
-            'level': 'DEBUG',
-            'formatter': 'verbose',
         },
         'accounts': {
-            'handlers': ['auth_file', 'file', 'console'],
+            'handlers': ['file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
-            'formatter': 'auth_format',
         },
-        'accounts.auth_manager': {
-            'handlers': ['auth_file', 'file', 'console'],
+        'accounts.utils': {
+            'handlers': ['file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
-            'formatter': 'auth_format',
+        },
+        'accounts.views': {
+            'handlers': ['file', 'error_file'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
         'accounts.middleware': {
-            'handlers': ['auth_file', 'file', 'console'],
+            'handlers': ['file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
-            'formatter': 'auth_format',
+        },
+        'accounts.permissions': {
+            'handlers': ['file', 'error_file'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
     },
     'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
-        'formatter': 'simple',
+        'handlers': ['file', 'error_file'],
+        'level': 'WARNING',
     },
 }
 

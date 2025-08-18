@@ -336,3 +336,31 @@ def fetch_users_from_backend(params: Dict[str, Any]) -> Optional[dict]:
         logger.warning(f"Не удалось получить пользователей: {e}")
         return None
 
+
+def update_user_in_backend(user_id: int, user_data: Dict[str, Any]) -> Optional[dict]:
+    """
+    Обновляет информацию о пользователе через backend эндпоинт PUT /api/v1/users/{user_id}
+    user_id: ID пользователя для обновления
+    user_data: словарь с данными для обновления (name, is_admin)
+    """
+    try:
+        base_v1 = _backend_base_v1()
+        url = f"{base_v1}/users/{user_id}"
+        logger.info(f"USERS PUT → {url} data={user_data}")
+        
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        resp = requests.put(url, json=user_data, headers=headers, timeout=15)
+        
+        logger.info(f"USERS PUT ← status={resp.status_code}")
+        if resp.status_code != 200:
+            logger.warning(f"Ошибка обновления пользователя: {resp.text}")
+            return None
+            
+        data = resp.json()
+        if isinstance(data, dict) and 'id' in data:
+            return data
+        return None
+    except Exception as e:
+        logger.warning(f"Не удалось обновить пользователя: {e}")
+        return None
+

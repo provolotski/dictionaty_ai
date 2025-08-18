@@ -1,2 +1,8 @@
 context.md
 frontend/Dictionary/__pycache__/
+logs/backend.log
+logs/frontend.log
+logs/backend.log
+frontend/logs/belstat.log
+frontend/logs/auth.log
+frontend/accounts/__pycache__/

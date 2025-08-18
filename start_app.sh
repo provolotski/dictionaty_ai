@@ -89,6 +89,12 @@ else
     pip install -r requirements.txt --force-reinstall --no-deps || true
 fi
 
+# Создание .env файла если его нет
+if [ ! -f ".env" ]; then
+    print_status "Создание .env файла..."
+    cp env.example .env
+fi
+
 # Запуск бэкенда
 print_status "Запуск бэкенда (FastAPI)..."
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload > ../logs/backend.log 2>&1 &

@@ -8,4 +8,6 @@ urlpatterns =[
     path('audit/', views.audit_view, name='audit'),
     path('profile/', views.profile_view, name='profile'),
     path('users/', views.users_view, name='users'),
+    path('users/<int:user_id>/data/', views.get_user_data_view, name='user_data'),
+    path('users/<int:user_id>/update/', views.update_user_view, name='user_update'),
 ]

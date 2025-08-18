@@ -21,6 +21,15 @@ class AuthMiddleware:
             '/static/',
             '/media/',
         ]
+        
+        # URL-адреса, которые требуют группы EISGS_Users
+        self.users_required_urls = [
+            '/dictionaries',
+            '/search',
+            '/import',
+            '/export',
+            '/analytics',
+        ]
 
     def __call__(self, request):
         # Проверяем, требует ли URL авторизации
@@ -41,6 +50,21 @@ class AuthMiddleware:
             )
             return redirect('login')
 
+        # Проверяем, требуется ли группа EISGS_Users для данного URL
+        if self._requires_users_group(request.path) and not request.session.get('in_users', False):
+            ip_address = self._get_client_ip(request)
+            user_info = request.session.get('user_info', {})
+            username = user_info.get('username', 'unknown')
+            log_auth_event(
+                'middleware_access_denied',
+                username,
+                'unknown',
+                ip_address,
+                False,
+                f"User {username} denied access to {request.path} - not in EISGS_Users group"
+            )
+            return redirect('home')
+
         response = self.get_response(request)
         return response
 
@@ -50,6 +74,13 @@ class AuthMiddleware:
             if path.startswith(exempt_url):
                 return False
         return True
+
+    def _requires_users_group(self, path):
+        """Проверяет, требует ли URL группу EISGS_Users"""
+        for users_url in self.users_required_urls:
+            if path.startswith(users_url):
+                return True
+        return False
 
     def _is_authenticated(self, request):
         """Проверяет, авторизован ли пользователь"""

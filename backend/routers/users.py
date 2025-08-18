@@ -158,3 +158,53 @@ async def get_user_by_guid(
     except Exception as e:
         logger.error(f"Ошибка получения пользователя по GUID {guid}: {e}")
         raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")
+
+
+@users_router.put("/{user_id}", response_model=UserOut)
+async def update_user(
+    user_id: int,
+    user_data: dict,
+    db: Database = Depends(get_database)
+) -> Any:
+    """
+    Обновление информации о пользователе
+    """
+    try:
+        # Проверяем, что пользователь существует
+        check_query = "SELECT id FROM users WHERE id = :user_id"
+        existing_user = await db.fetch_one(query=check_query, values={"user_id": user_id})
+        
+        if not existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Пользователь не найден"
+            )
+        
+        # Обновляем только разрешенные поля
+        allowed_fields = ['name', 'is_admin']
+        update_fields = []
+        values = {"user_id": user_id}
+        
+        for field in allowed_fields:
+            if field in user_data:
+                update_fields.append(f"{field} = :{field}")
+                values[field] = user_data[field]
+        
+        if not update_fields:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Нет полей для обновления"
+            )
+        
+        update_query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = :user_id RETURNING id, guid, name, domain, created_at, last_login_at, is_admin"
+        
+        updated_user = await db.fetch_one(query=update_query, values=values)
+        
+        logger.info(f"USER_UPDATE → user_id={user_id}, fields={list(user_data.keys())}")
+        return UserOut(**updated_user)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка обновления пользователя {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")

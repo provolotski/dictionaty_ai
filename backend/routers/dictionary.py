@@ -41,14 +41,39 @@ async def create_new_dictionary(
         JSONResponse: Результат создания
     """
     try:
+        logger.debug(f"=== СОЗДАНИЕ СПРАВОЧНИКА ===")
+        logger.debug(f"Получены данные: {dictionary}")
+        logger.debug(f"Тип данных: {type(dictionary)}")
+        logger.debug(f"Поля справочника:")
+        logger.debug(f"  - name: {dictionary.name}")
+        logger.debug(f"  - code: {dictionary.code}")
+        logger.debug(f"  - description: {dictionary.description}")
+        logger.debug(f"  - start_date: {dictionary.start_date}")
+        logger.debug(f"  - finish_date: {dictionary.finish_date}")
+        logger.debug(f"  - id_type: {dictionary.id_type}")
+        logger.debug(f"  - name_eng: {dictionary.name_eng}")
+        logger.debug(f"  - name_bel: {dictionary.name_bel}")
+        logger.debug(f"  - description_eng: {dictionary.description_eng}")
+        logger.debug(f"  - description_bel: {dictionary.description_bel}")
+        logger.debug(f"  - gko: {dictionary.gko}")
+        logger.debug(f"  - organization: {dictionary.organization}")
+        logger.debug(f"  - classifier: {dictionary.classifier}")
+        
+        logger.info(f"Вызов service.create_dictionary с данными: {dictionary}")
         dictionary_id = await service.create_dictionary(dictionary)
-        logger.info(f"Создан справочник с ID: {dictionary_id}")
+        
+        logger.info(f"Справочник успешно создан с ID: {dictionary_id}")
+        logger.debug(f"Возвращаем ответ: {{'message': 'Справочник создан', 'id': {dictionary_id}}}")
+        
         return JSONResponse(
             content={"message": "Справочник создан", "id": dictionary_id},
             status_code=201
         )
     except Exception as e:
-        logger.error(f"Ошибка создания справочника: {e}")
+        logger.error(f"=== ОШИБКА СОЗДАНИЯ СПРАВОЧНИКА ===")
+        logger.error(f"Тип ошибки: {type(e)}")
+        logger.error(f"Сообщение об ошибке: {str(e)}")
+        logger.error(f"Детали ошибки:", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))
 
 

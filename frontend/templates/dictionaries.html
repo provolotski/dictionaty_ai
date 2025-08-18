@@ -12,16 +12,1028 @@
     </div>
     
     <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
             <h2 class="card-title">Доступные словари</h2>
             <p class="card-subtitle">Выберите словарь для просмотра и редактирования</p>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="badge bg-primary me-3">Всего: {{ total_count }}</span>
+                <button class="btn btn-outline-primary me-2" onclick="refreshDictionaries()" title="Обновить список">
+                    <i class="fas fa-sync-alt"></i> Обновить
+                </button>
+                <div class="btn-group me-2" role="group">
+                    <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" title="Экспорт списка">
+                        <i class="fas fa-download"></i> Экспорт
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="exportDictionaries('csv')">
+                            <i class="fas fa-file-csv"></i> CSV файл
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportDictionaries('json')">
+                            <i class="fas fa-file-code"></i> JSON файл
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportDictionaries('xlsx')">
+                            <i class="fas fa-file-excel"></i> Excel файл
+                        </a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-success" onclick="createNewDictionary()">
+                    <i class="fas fa-plus"></i> Создать словарь
+                </button>
+            </div>
+        </div>
+        
+        <!-- Поиск и фильтры -->
+        <div class="card-body border-bottom">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="searchInput" 
+                               placeholder="Поиск по названию или коду..." 
+                               onkeyup="filterDictionaries()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="clearFilters()" title="Очистить фильтры">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter" onchange="filterDictionaries()">
+                        <option value="">Все статусы</option>
+                        <option value="active">Активные</option>
+                        <option value="inactive">Неактивные</option>
+                        <option value="draft">Черновики</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="typeFilter" onchange="filterDictionaries()">
+                        <option value="">Все типы</option>
+                        <option value="classifier">Классификатор</option>
+                        <option value="dictionary">Словарь</option>
+                        <option value="reference">Справочник</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        Используйте поиск и фильтры для быстрого нахождения нужных словарей. 
+                        Нажмите на заголовки столбцов для сортировки.
+                    </small>
+                </div>
+            </div>
         </div>
         
         <div class="card-body">
-            <p>Здесь будет список доступных словарей.</p>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% if dictionaries %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="sortable" data-sort="code">
+                                    Код <i class="fas fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="name">
+                                    Название <i class="fas fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="description">
+                                    Описание <i class="fas fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="status">
+                                    Статус <i class="fas fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="type">
+                                    Тип <i class="fas fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="date">
+                                    Дата создания <i class="fas fa-sort"></i>
+                                </th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dictionary in dictionaries %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary">{{ dictionary.code|default:"-" }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ dictionary.name|default:"Без названия" }}</strong>
+                                    {% if dictionary.description %}
+                                        <br><small class="text-muted">{{ dictionary.description|truncatechars:100 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if dictionary.description %}
+                                        <span class="text-muted">{{ dictionary.description|truncatechars:80 }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Описание отсутствует</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if dictionary.status %}
+                                        {% if dictionary.status == 'active' or dictionary.status == 'активный' %}
+                                            <span class="badge bg-success">{{ dictionary.status }}</span>
+                                        {% elif dictionary.status == 'inactive' or dictionary.status == 'неактивный' %}
+                                            <span class="badge bg-warning">{{ dictionary.status }}</span>
+                                        {% elif dictionary.status == 'draft' or dictionary.status == 'черновик' %}
+                                            <span class="badge bg-secondary">{{ dictionary.status }}</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ dictionary.status }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-secondary">Не указан</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if dictionary.type %}
+                                        {% if dictionary.type == 'classifier' or dictionary.type == 'классификатор' %}
+                                            <span class="badge bg-primary">{{ dictionary.type }}</span>
+                                        {% elif dictionary.type == 'dictionary' or dictionary.type == 'словарь' %}
+                                            <span class="badge bg-success">{{ dictionary.type }}</span>
+                                        {% elif dictionary.type == 'reference' or dictionary.type == 'справочник' %}
+                                            <span class="badge bg-info">{{ dictionary.type }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ dictionary.type }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if dictionary.created_at %}
+                                        <small class="text-muted">{{ dictionary.created_at|date:"d.m.Y" }}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary view-dict-btn" 
+                                                data-dict-id="{{ dictionary.id }}" 
+                                                title="Просмотр">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning edit-dict-btn" 
+                                                data-dict-id="{{ dictionary.id }}" 
+                                                title="Редактировать">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger delete-dict-btn" 
+                                                data-dict-id="{{ dictionary.id }}" 
+                                                data-dict-name="{{ dictionary.name|default:'Словарь' }}" 
+                                                title="Удалить">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Словари не найдены</h4>
+                    <p class="text-muted">В системе пока нет созданных словарей</p>
+                    <button class="btn btn-primary" onclick="createNewDictionary()">
+                        <i class="fas fa-plus"></i> Создать первый словарь
+                    </button>
+                </div>
+            {% endif %}
+            
+            <!-- Индикатор загрузки -->
+            <div id="loadingIndicator" class="text-center py-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+                <p class="mt-2 text-muted">Обновление списка словарей...</p>
+            </div>
+            
+            <!-- Сообщения об ошибках -->
+            <div id="errorMessage" class="alert alert-danger" style="display: none;" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="errorText"></span>
+            </div>
+            
+            <!-- Информационные сообщения -->
+            <div id="infoMessage" class="alert alert-info" style="display: none;" role="alert">
+                <i class="fas fa-info-circle"></i>
+                <span id="infoText"></span>
+            </div>
+            
+            <!-- Успешные сообщения -->
+            <div id="successMessage" class="alert alert-success" style="display: none;" role="alert">
+                <i class="fas fa-check-circle"></i>
+                <span id="successText"></span>
+            </div>
+            
+            <!-- Предупреждения -->
+            <div id="warningMessage" class="alert alert-warning" style="display: none;" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="warningText"></span>
+            </div>
+            
+            <!-- Статистика -->
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ total_count }}</h5>
+                            <p class="card-text">Всего словарей</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title" id="activeCount">-</h5>
+                            <p class="card-text">Активных</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title" id="draftCount">-</h5>
+                            <p class="card-text">Черновиков</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title" id="classifierCount">-</h5>
+                            <p class="card-text">Классификаторов</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Дополнительная информация -->
+            <div class="mt-4">
+                <h5>Информация о системе</h5>
+                <p class="text-muted">
+                    На этой странице отображаются все доступные словари и классификаторы в системе. 
+                    Вы можете просматривать, редактировать и удалять словари, а также создавать новые.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Возможности:</h6>
+                        <ul class="text-muted">
+                            <li>Просмотр списка всех словарей</li>
+                            <li>Поиск и фильтрация</li>
+                            <li>Сортировка по любому столбцу</li>
+                            <li>Экспорт данных</li>
+                            <li>Создание новых словарей</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Статусы словарей:</h6>
+                        <ul class="text-muted">
+                            <li><span class="badge bg-success">Активный</span> - словарь доступен для использования</li>
+                            <li><span class="badge bg-warning">Неактивный</span> - словарь временно недоступен</li>
+                            <li><span class="badge bg-secondary">Черновик</span> - словарь в разработке</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Быстрые действия -->
+            <div class="mt-4">
+                <h5>Быстрые действия</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-plus-circle fa-2x text-success mb-2"></i>
+                                <h6>Создать словарь</h6>
+                                <p class="text-muted small">Добавить новый словарь в систему</p>
+                                <button class="btn btn-outline-success btn-sm" onclick="createNewDictionary()">
+                                    Создать
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-download fa-2x text-primary mb-2"></i>
+                                <h6>Экспорт данных</h6>
+                                <p class="text-muted small">Выгрузить список словарей</p>
+                                <button class="btn btn-outline-primary btn-sm" onclick="exportDictionaries('csv')">
+                                    Экспорт CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-sync-alt fa-2x text-info mb-2"></i>
+                                <h6>Обновить список</h6>
+                                <p class="text-muted small">Получить актуальные данные</p>
+                                <button class="btn btn-outline-info btn-sm" onclick="refreshDictionaries()">
+                                    Обновить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Дополнительные возможности -->
+            <div class="mt-4">
+                <h5>Дополнительные возможности</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Статистика</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">Просмотр статистики по словарям</p>
+                                <button class="btn btn-primary btn-sm" onclick="showStatistics()">
+                                    Показать статистику
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-cog"></i> Настройки</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">Настройка отображения и экспорта</p>
+                                <button class="btn btn-success btn-sm" onclick="showSettings()">
+                                    Настройки
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Справка -->
+            <div class="mt-4">
+                <h5>Справка</h5>
+                <div class="accordion" id="helpAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="helpOne">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                Как работать со словарями?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <p>Для работы со словарями используйте следующие возможности:</p>
+                                <ul>
+                                    <li><strong>Просмотр:</strong> Нажмите на кнопку с иконкой глаза для просмотра содержимого словаря</li>
+                                    <li><strong>Редактирование:</strong> Нажмите на кнопку с иконкой карандаша для изменения словаря</li>
+                                    <li><strong>Удаление:</strong> Нажмите на кнопку с иконкой корзины для удаления словаря</li>
+                                    <li><strong>Создание:</strong> Нажмите на кнопку "Создать словарь" для добавления нового</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="helpTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                Как использовать поиск и фильтры?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <p>Поиск и фильтрация помогают быстро найти нужные словари:</p>
+                                <ul>
+                                    <li><strong>Поиск:</strong> Введите текст в поле поиска для фильтрации по названию или коду</li>
+                                    <li><strong>Статус:</strong> Выберите статус словаря для фильтрации</li>
+                                    <li><strong>Тип:</strong> Выберите тип словаря для фильтрации</li>
+                                    <li><strong>Сортировка:</strong> Нажмите на заголовок столбца для сортировки</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="helpThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                Как экспортировать данные?
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <p>Для экспорта данных используйте кнопку "Экспорт":</p>
+                                <ul>
+                                    <li><strong>CSV:</strong> Экспорт в формате CSV для Excel</li>
+                                    <li><strong>JSON:</strong> Экспорт в формате JSON для программной обработки</li>
+                                    <li><strong>Excel:</strong> Экспорт в формате XLSX (в разработке)</li>
+                                </ul>
+                                <p class="text-muted small">Примечание: экспортируются только видимые (отфильтрованные) словари</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Контакты поддержки -->
+            <div class="mt-4">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-question-circle"></i> Нужна помощь?</h6>
+                    <p class="mb-2">Если у вас возникли вопросы по работе со словарями, обратитесь к администратору системы или в службу поддержки.</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Администратор:</strong> admin@belstat.by<br>
+                            <strong>Телефон:</strong> +375 (17) 123-45-67
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Поддержка:</strong> support@belstat.by<br>
+                            <strong>Документация:</strong> <a href="#" class="text-decoration-none">Справочник пользователя</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Информация о версии -->
+            <div class="mt-4 text-center">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Версия системы: 1.0.0 | Последнее обновление: {{ "now"|date:"d.m.Y H:i" }} | 
+                    <a href="#" class="text-decoration-none">История изменений</a>
+                </small>
+            </div>
+            
+            <!-- Футер страницы -->
+            <footer class="mt-5 py-4 border-top">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Система управления словарями BelStat</h6>
+                        <p class="text-muted small">
+                            Современная система для управления иерархическими историческими словарями и классификаторами.
+                            Обеспечивает надежное хранение, поиск и управление данными.
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h6>Полезные ссылки</h6>
+                        <ul class="list-unstyled">
+                            <li><a href="#" class="text-decoration-none">Документация API</a></li>
+                            <li><a href="#" class="text-decoration-none">Примеры использования</a></li>
+                            <li><a href="#" class="text-decoration-none">Часто задаваемые вопросы</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </footer>
+            
+            <!-- Пагинация -->
+            {% if total_count > 25 %}
+            <nav aria-label="Навигация по словарям" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <span class="page-link">Предыдущая</span>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">1</span>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">2</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">3</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Следующая</a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Модальное окно для подтверждения удаления -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы действительно хотите удалить словарь <strong id="deleteDictionaryName"></strong>?</p>
+                <p class="text-danger"><small>Это действие нельзя отменить!</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для информации о словаре -->
+<div class="modal fade" id="dictionaryInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Информация о словаре</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dictionaryInfoContent">
+                    <!-- Здесь будет загружаться информация о словаре -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary" id="editDictionaryBtn">Редактировать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let dictionaryToDelete = null;
+
+function createNewDictionary() {
+    // Перенаправляем на страницу создания словаря
+    window.location.href = '/dictionaries/create/';
+}
+
+function exportDictionaries(format = 'csv') {
+    const table = document.querySelector('table');
+    if (!table) return;
+    
+    let data, mimeType, filename;
+    
+    if (format === 'csv') {
+        // Экспорт в CSV
+        data = 'Код,Название,Описание,Статус,Тип,Дата создания\n';
+        
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            if (row.style.display !== 'none') { // Только видимые строки
+                const code = row.querySelector('td:nth-child(1) .badge').textContent;
+                const name = row.querySelector('td:nth-child(2) strong').textContent;
+                const description = row.querySelector('td:nth-child(3) span').textContent;
+                const status = row.querySelector('td:nth-child(4) .badge').textContent;
+                const type = row.querySelector('td:nth-child(5) .badge').textContent;
+                const date = row.querySelector('td:nth-child(6) small').textContent;
+                
+                data += `"${code}","${name}","${description}","${status}","${type}","${date}"\n`;
+            }
+        });
+        
+        mimeType = 'text/csv;charset=utf-8;';
+        filename = 'словари_системы.csv';
+        
+    } else if (format === 'json') {
+        // Экспорт в JSON
+        const dictionaries = [];
+        const rows = table.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const code = row.querySelector('td:nth-child(1) .badge').textContent;
+                const name = row.querySelector('td:nth-child(2) strong').textContent;
+                const description = row.querySelector('td:nth-child(3) span').textContent;
+                const status = row.querySelector('td:nth-child(4) .badge').textContent;
+                const type = row.querySelector('td:nth-child(5) .badge').textContent;
+                const date = row.querySelector('td:nth-child(6) small').textContent;
+                
+                dictionaries.push({
+                    code: code,
+                    name: name,
+                    description: description,
+                    status: status,
+                    type: type,
+                    date: date
+                });
+            }
+        });
+        
+        data = JSON.stringify(dictionaries, null, 2);
+        mimeType = 'application/json;charset=utf-8;';
+        filename = 'словари_системы.json';
+        
+    } else if (format === 'xlsx') {
+        // Для Excel пока используем CSV (можно добавить библиотеку для создания XLSX)
+        alert('Экспорт в Excel пока не поддерживается. Используйте CSV формат.');
+        return;
+    }
+    
+    // Создаем и скачиваем файл
+    const blob = new Blob([data], { type: mimeType });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function refreshDictionaries() {
+    // Показываем индикатор загрузки
+    const refreshBtn = document.querySelector('button[onclick="refreshDictionaries()"]');
+    const originalContent = refreshBtn.innerHTML;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Обновление...';
+    refreshBtn.disabled = true;
+    
+    // Обновляем страницу для получения свежих данных
+    // В будущем можно заменить на AJAX запрос
+    setTimeout(() => {
+        location.reload();
+    }, 500);
+}
+
+function viewDictionary(dictionaryId) {
+    // Перенаправляем на страницу просмотра словаря
+    window.location.href = `/dictionaries/${dictionaryId}/`;
+}
+
+function editDictionary(dictionaryId) {
+    // Перенаправляем на страницу редактирования словаря
+    window.location.href = `/dictionaries/${dictionaryId}/edit/`;
+}
+
+function deleteDictionary(dictionaryId, dictionaryName) {
+    dictionaryToDelete = dictionaryId;
+    document.getElementById('deleteDictionaryName').textContent = dictionaryName;
+    
+    // Показываем модальное окно подтверждения
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+}
+
+// Функция фильтрации словарей
+function filterDictionaries() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    
+    const tbody = document.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const name = row.querySelector('td:nth-child(2) strong').textContent.toLowerCase();
+        const code = row.querySelector('td:nth-child(1) .badge').textContent.toLowerCase();
+        const status = row.querySelector('td:nth-child(4) .badge').textContent.toLowerCase();
+        const type = row.querySelector('td:nth-child(5) .badge').textContent.toLowerCase();
+        
+        let showRow = true;
+        
+        // Поиск по названию или коду
+        if (searchTerm && !name.includes(searchTerm) && !code.includes(searchTerm)) {
+            showRow = false;
+        }
+        
+        // Фильтр по статусу
+        if (statusFilter && status !== statusFilter) {
+            showRow = false;
+        }
+        
+        // Фильтр по типу
+        if (typeFilter && type !== typeFilter) {
+            showRow = false;
+        }
+        
+        if (showRow) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Обновляем счетчик видимых словарей
+    const totalBadge = document.querySelector('.badge.bg-primary');
+    if (totalBadge) {
+        totalBadge.textContent = `Показано: ${visibleCount}`;
+    }
+}
+
+// Обработчик подтверждения удаления
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (dictionaryToDelete) {
+        // Здесь можно добавить AJAX запрос для удаления
+        // Пока просто перенаправляем на страницу удаления
+        window.location.href = `/dictionaries/${dictionaryToDelete}/delete/`;
+    }
+});
+
+// Обновляем страницу каждые 30 секунд для синхронизации данных
+setInterval(function() {
+    // Можно добавить AJAX запрос для обновления списка без перезагрузки страницы
+}, 30000);
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем обработчики для клавиш
+    document.getElementById('searchInput').addEventListener('keyup', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            filterDictionaries();
+        }
+    });
+    
+    // Добавляем обработчики для кнопок словарей
+    document.querySelectorAll('.view-dict-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const dictId = this.getAttribute('data-dict-id');
+            viewDictionary(dictId);
+        });
+    });
+    
+    document.querySelectorAll('.edit-dict-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const dictId = this.getAttribute('data-dict-id');
+            editDictionary(dictId);
+        });
+    });
+    
+    document.querySelectorAll('.delete-dict-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const dictId = this.getAttribute('data-dict-id');
+            const dictName = this.getAttribute('data-dict-name');
+            deleteDictionary(dictId, dictName);
+        });
+    });
+    
+    // Добавляем обработчики для сортировки
+    document.querySelectorAll('.sortable').forEach(th => {
+        th.addEventListener('click', function() {
+            const sortBy = this.getAttribute('data-sort');
+            sortTable(sortBy, this);
+        });
+    });
+    
+    // Показываем все словари при загрузке
+    filterDictionaries();
+    
+    // Подсчитываем статистику
+    calculateStatistics();
+});
+
+// Функция сортировки таблицы
+function sortTable(sortBy, headerElement) {
+    const table = document.querySelector('table');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    // Определяем направление сортировки
+    const isAsc = !headerElement.classList.contains('sort-asc');
+    
+    // Убираем все классы сортировки
+    document.querySelectorAll('.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+    });
+    
+    // Добавляем класс для текущего заголовка
+    headerElement.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
+    
+    // Сортируем строки
+    rows.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch(sortBy) {
+            case 'code':
+                aValue = a.querySelector('td:nth-child(1) .badge').textContent;
+                bValue = b.querySelector('td:nth-child(1) .badge').textContent;
+                break;
+            case 'name':
+                aValue = a.querySelector('td:nth-child(2) strong').textContent;
+                bValue = b.querySelector('td:nth-child(2) strong').textContent;
+                break;
+            case 'description':
+                aValue = a.querySelector('td:nth-child(3) span').textContent;
+                bValue = b.querySelector('td:nth-child(3) span').textContent;
+                break;
+            case 'status':
+                aValue = a.querySelector('td:nth-child(4) .badge').textContent;
+                bValue = b.querySelector('td:nth-child(4) .badge').textContent;
+                break;
+            case 'type':
+                aValue = a.querySelector('td:nth-child(5) .badge').textContent;
+                bValue = b.querySelector('td:nth-child(5) .badge').textContent;
+                break;
+            case 'date':
+                aValue = a.querySelector('td:nth-child(6) small').textContent;
+                bValue = b.querySelector('td:nth-child(6) small').textContent;
+                break;
+            default:
+                return 0;
+        }
+        
+        if (aValue < bValue) return isAsc ? -1 : 1;
+        if (aValue > bValue) return isAsc ? 1 : -1;
+        return 0;
+    });
+    
+    // Перестраиваем таблицу
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// Функция подсчета статистики
+function calculateStatistics() {
+    const table = document.querySelector('table');
+    if (!table) return;
+    
+    const rows = table.querySelectorAll('tbody tr');
+    let activeCount = 0;
+    let draftCount = 0;
+    let classifierCount = 0;
+    
+    rows.forEach(row => {
+        const status = row.querySelector('td:nth-child(4) .badge').textContent.toLowerCase();
+        const type = row.querySelector('td:nth-child(5) .badge').textContent.toLowerCase();
+        
+        if (status === 'активный' || status === 'active') {
+            activeCount++;
+        } else if (status === 'черновик' || status === 'draft') {
+            draftCount++;
+        }
+        
+        if (type === 'классификатор' || type === 'classifier') {
+            classifierCount++;
+        }
+    });
+    
+    // Обновляем статистику
+    document.getElementById('activeCount').textContent = activeCount;
+    document.getElementById('draftCount').textContent = draftCount;
+    document.getElementById('classifierCount').textContent = classifierCount;
+}
+
+// Функция показа сообщений
+function showMessage(type, text, duration = 5000) {
+    const messageId = type + 'Message';
+    const messageElement = document.getElementById(messageId);
+    const textElement = document.getElementById(type + 'Text');
+    
+    if (messageElement && textElement) {
+        textElement.textContent = text;
+        messageElement.style.display = 'block';
+        
+        // Автоматически скрываем сообщение
+        setTimeout(() => {
+            messageElement.style.display = 'none';
+        }, duration);
+    }
+}
+
+// Функция скрытия всех сообщений
+function hideAllMessages() {
+    const messageTypes = ['error', 'info', 'success', 'warning'];
+    messageTypes.forEach(type => {
+        const messageElement = document.getElementById(type + 'Message');
+        if (messageElement) {
+            messageElement.style.display = 'none';
+        }
+    });
+}
+
+// Функция валидации данных
+function validateDictionaryData(dictionary) {
+    const errors = [];
+    
+    if (!dictionary.name || dictionary.name.trim() === '') {
+        errors.push('Название словаря обязательно');
+    }
+    
+    if (!dictionary.code || dictionary.code.trim() === '') {
+        errors.push('Код словаря обязателен');
+    }
+    
+    return errors;
+}
+
+// Функция форматирования даты
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU');
+    } catch (e) {
+        return dateString;
+    }
+}
+
+// Функция очистки фильтров
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('typeFilter').value = '';
+    filterDictionaries();
+}
+
+// Функция показа статистики
+function showStatistics() {
+    const stats = {
+        total: document.querySelector('.badge.bg-primary').textContent,
+        active: document.getElementById('activeCount').textContent,
+        draft: document.getElementById('draftCount').textContent,
+        classifier: document.getElementById('classifierCount').textContent
+    };
+    
+    const message = `Статистика словарей:\n` +
+                   `Всего: ${stats.total}\n` +
+                   `Активных: ${stats.active}\n` +
+                   `Черновиков: ${stats.draft}\n` +
+                   `Классификаторов: ${stats.classifier}`;
+    
+    alert(message);
+}
+
+// Функция показа настроек
+function showSettings() {
+    const settings = {
+        'Автообновление': 'Включено (каждые 30 сек)',
+        'Сортировка по умолчанию': 'По названию',
+        'Экспорт по умолчанию': 'CSV',
+        'Показывать описания': 'Да',
+        'Цветовая схема': 'Стандартная'
+    };
+    
+    let message = 'Текущие настройки:\n\n';
+    for (const [key, value] of Object.entries(settings)) {
+        message += `${key}: ${value}\n`;
+    }
+    message += '\nДля изменения настроек обратитесь к администратору системы.';
+    
+    alert(message);
+}
+
+// Функция для проверки доступности API
+function checkApiAvailability() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorMessage = document.getElementById('errorMessage');
+    const infoMessage = document.getElementById('infoMessage');
+    const successMessage = document.getElementById('successMessage');
+    const warningMessage = document.getElementById('warningMessage');
+
+    loadingIndicator.style.display = 'block';
+    errorMessage.style.display = 'none';
+    infoMessage.style.display = 'none';
+    successMessage.style.display = 'none';
+    warningMessage.style.display = 'none';
+
+    fetch('/api/v1/check-api-availability/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            loadingIndicator.style.display = 'none';
+            if (data.status === 'available') {
+                successMessage.style.display = 'block';
+                infoMessage.style.display = 'none';
+                warningMessage.style.display = 'none';
+                showMessage('success', 'API доступен. Последнее обновление: ' + data.last_updated);
+            } else {
+                errorMessage.style.display = 'block';
+                infoMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+                warningMessage.style.display = 'none';
+                showMessage('error', 'API недоступен. Статус: ' + data.status + ' (последнее обновление: ' + data.last_updated + ')');
+            }
+        })
+        .catch(error => {
+            loadingIndicator.style.display = 'none';
+            errorMessage.style.display = 'block';
+            infoMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            warningMessage.style.display = 'none';
+            showMessage('error', 'Произошла ошибка при проверке доступности API: ' + error.message);
+        });
+}
+
+// Функция для переключения отображения отладочной информации
+function toggleDebugInfo() {
+    const debugInfoDiv = document.getElementById('debugInfo');
+    if (debugInfoDiv) {
+        debugInfoDiv.style.display = debugInfoDiv.style.display === 'block' ? 'none' : 'block';
+    }
+}
+</script>
 
 <style>
     .welcome-section {
@@ -50,6 +1062,64 @@
         font-size: 1.125rem;
         opacity: 0.9;
         margin-bottom: 2rem;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border-radius: 0.75rem;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .btn-group .btn {
+        margin-right: 0.25rem;
+    }
+    
+    .btn-group .btn:last-child {
+        margin-right: 0;
+    }
+    
+    .badge {
+        font-size: 0.75em;
+    }
+    
+    .table-responsive {
+        border-radius: 0.5rem;
+    }
+    
+    .sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .sortable:hover {
+        background-color: #e9ecef;
+    }
+    
+    .sortable i {
+        margin-left: 0.5rem;
+        opacity: 0.5;
+    }
+    
+    .sortable.sort-asc i::before {
+        content: "\f0de"; /* fa-sort-up */
+        opacity: 1;
+    }
+    
+    .sortable.sort-desc i::before {
+        content: "\f0dd"; /* fa-sort-down */
+        opacity: 1;
     }
 </style>
 {% endblock %}

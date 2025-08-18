@@ -44,6 +44,25 @@ async def handle_exception(request: Request, exc: Exception) -> JSONResponse:
     Returns:
         JSONResponse: Ответ с ошибкой
     """
+    # Детальное логирование исключения
+    logger.error(f"=== ОБРАБОТКА ИСКЛЮЧЕНИЯ ===")
+    logger.error(f"Метод запроса: {request.method}")
+    logger.error(f"URL запроса: {request.url}")
+    logger.error(f"Тип исключения: {type(exc).__name__}")
+    logger.error(f"Сообщение исключения: {str(exc)}")
+    logger.error(f"Заголовки запроса: {dict(request.headers)}")
+    
+    # Логируем тело запроса если есть
+    try:
+        body = await request.body()
+        if body:
+            logger.error(f"Тело запроса: {body.decode('utf-8')}")
+    except Exception as e:
+        logger.error(f"Не удалось прочитать тело запроса: {e}")
+    
+    # Логируем полный traceback
+    logger.error(f"Полный traceback:", exc_info=True)
+    
     # Логируем исключение
     logger.error(
         f"Ошибка при обработке запроса {request.method} {request.url}: {exc}",
@@ -69,6 +88,15 @@ async def handle_exception(request: Request, exc: Exception) -> JSONResponse:
     
     # Обрабатываем ошибки валидации FastAPI
     if isinstance(exc, RequestValidationError):
+        logger.error(f"=== ОШИБКА ВАЛИДАЦИИ ДАННЫХ ===")
+        logger.error(f"Ошибки валидации:")
+        for error in exc.errors():
+            logger.error(f"  - Поле: {'.'.join(str(loc) for loc in error['loc'])}")
+            logger.error(f"    Тип: {error['type']}")
+            logger.error(f"    Сообщение: {error['msg']}")
+            if 'input' in error:
+                logger.error(f"    Входные данные: {error['input']}")
+        
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content={

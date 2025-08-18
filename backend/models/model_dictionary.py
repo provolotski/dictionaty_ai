@@ -15,10 +15,10 @@ from models.model_attribute import AttributeManager
 from schemas import DictionaryPosition
 
 logging.basicConfig(
-    level=settings.log_level,
-    format=settings.log_format,
-    datefmt=settings.log_date,
-    handlers=[logging.FileHandler(settings.log_file), logging.StreamHandler()],
+    level=settings.LOG_LEVEL,
+    format=settings.LOG_FORMAT,
+    datefmt=settings.LOG_DATE_FORMAT,
+    handlers=[logging.FileHandler(settings.LOG_FILE), logging.StreamHandler()],
 )
 
 logger = logging.getLogger(__name__)
@@ -163,12 +163,24 @@ class DictionaryService:
         return [schemas.DictionaryOut(**dict(row)) for row in rows]
 
     @staticmethod
-    async def create(dictionary: schemas.DictionaryIn) -> int:
+    async def create(dictionary) -> int:
         """
         Создание справочника
-        :param dictionary:
+        :param dictionary: DictionaryIn объект или словарь с данными
         :return:
         """
+        logger.debug(f"=== СОЗДАНИЕ СПРАВОЧНИКА В МОДЕЛИ ===")
+        logger.debug(f"Входные данные: {dictionary}")
+        logger.debug(f"Тип данных: {type(dictionary)}")
+        
+        # Преобразуем в словарь если это Pydantic модель
+        if hasattr(dictionary, 'model_dump'):
+            dictionary_data = dictionary.model_dump()
+            logger.debug(f"Модель данных: {dictionary_data}")
+        else:
+            dictionary_data = dictionary
+            logger.debug(f"Данные уже в виде словаря: {dictionary_data}")
+
         sql = """
             insert into dictionary (name, code, description,start_date,
             finish_date, change_date, name_eng,
@@ -179,22 +191,48 @@ class DictionaryService:
             :description_eng, :description_bel, :gko,
             :organization, :classifier,:id_status,:id_type, current_timestamp, current_timestamp) returning id
         """
-        dict_id = await database.execute(sql, values=dictionary.model_dump())
 
-        # Создаем обязательные параметры
+        logger.debug(f"SQL запрос: {sql}")
+        logger.debug(f"Значения для SQL: {dictionary_data}")
 
-        for attr_config in DictionaryService.REQUIRED_ATTRIBUTES:
-            attr = schemas.AttributeDict(
-                id_dictionary=dict_id,
-                start_date=dictionary.start_date,
-                finish_date=dictionary.finish_date,
-                capacity=DictionaryService.DEFAULT_CAPACITY,
-                **attr_config,
-            )
-            await DictionaryService._create_attribute(attr)
+        try:
+            dict_id = await database.execute(sql, values=dictionary_data)
+            logger.debug(f"Справочник создан в БД с ID: {dict_id}")
 
-        logger.info("Created dictionary ID: %d", dict_id)
-        return dict_id
+            # Создаем обязательные параметры
+            logger.debug(f"Создание обязательных атрибутов для справочника {dict_id}...")
+            logger.debug(f"Обязательные атрибуты: {DictionaryService.REQUIRED_ATTRIBUTES}")
+
+            for attr_config in DictionaryService.REQUIRED_ATTRIBUTES:
+                logger.debug(f"Создание атрибута: {attr_config}")
+                
+                # Создаем правильную структуру данных для атрибута
+                attr_data = {
+                    'id_dictionary': dict_id,
+                    'start_date': dictionary_data['start_date'],
+                    'finish_date': dictionary_data['finish_date'],
+                    'capacity': DictionaryService.DEFAULT_CAPACITY,
+                    'name': attr_config['name'],
+                    'alt_name': attr_config['alt_name'],
+                    'required': attr_config['required'],
+                    'id_attribute_type': attr_config['id_attribute_type']
+                }
+                
+                logger.debug(f"Данные атрибута для создания: {attr_data}")
+                attr_id = await DictionaryService._create_attribute(attr_data)
+                logger.debug(f"Атрибут создан с ID: {attr_id}")
+
+            logger.info("Справочник успешно создан в БД с ID: %d", dict_id)
+            return dict_id
+
+        except Exception as e:
+            logger.error(f"=== ОШИБКА СОЗДАНИЯ СПРАВОЧНИКА В БД ===")
+            logger.error(f"Тип ошибки: {type(e)}")
+            logger.error(f"Сообщение об ошибке: {str(e)}")
+            logger.error(f"SQL запрос: {sql}")
+            logger.error(f"Значения: {dictionary_data}")
+            logger.error(f"Полный traceback:", exc_info=True)
+            raise
 
     @staticmethod
     async def update(dict_id: int, dictionary: schemas.DictionaryIn) -> bool:
@@ -235,12 +273,16 @@ class DictionaryService:
         return True
 
     @staticmethod
-    async def _create_attribute(attribute: schemas.AttributeDict) -> int:
+    async def _create_attribute(attribute_data: dict) -> int:
         """
         Создание атрибута
-        :param attribute:
+        :param attribute_data: Словарь с данными атрибута
         :return:
         """
+        logger.debug(f"=== СОЗДАНИЕ АТРИБУТА ===")
+        logger.debug(f"Входные данные атрибута: {attribute_data}")
+        logger.debug(f"Тип данных: {type(attribute_data)}")
+
         sql = """
             INSERT INTO dictionary_attribute (
                 id_dictionary, name, required, start_date,
@@ -250,11 +292,22 @@ class DictionaryService:
                 :finish_date, :alt_name, :id_attribute_type, :capacity
             ) RETURNING id
         """
+
+        logger.debug(f"SQL запрос для атрибута: {sql}")
+        logger.debug(f"Значения для SQL атрибута: {attribute_data}")
+
         try:
-            return await database.execute(sql, values=attribute.model_dump())
+            attr_id = await database.execute(sql, values=attribute_data)
+            logger.debug(f"Атрибут успешно создан в БД с ID: {attr_id}")
+            return attr_id
         except Exception as e:
-            logger.error(e)
-            logger.error(attribute.model_dump())
+            logger.error(f"=== ОШИБКА СОЗДАНИЯ АТРИБУТА В БД ===")
+            logger.error(f"Тип ошибки: {type(e)}")
+            logger.error(f"Сообщение об ошибке: {str(e)}")
+            logger.error(f"SQL запрос: {sql}")
+            logger.error(f"Значения: {attribute_data}")
+            logger.error(f"Полный traceback:", exc_info=True)
+            raise
 
     @staticmethod
     async def insert_dictionary_values(id_dictionary: int, dataframe) -> True | False:
@@ -344,7 +397,7 @@ class DictionaryService:
 
     @staticmethod
     async def can_delete_dictionary(dictionary_id: int) -> bool:
-        sql = """select count(*) from dictionary_positions dp 
+        sql = """select count(*) from dictionary_positions dp
         where dp.id_dictionary = :id_dictionary"""
 
         rows = await database.fetch_one(sql, {"id_dictionary": dictionary_id})

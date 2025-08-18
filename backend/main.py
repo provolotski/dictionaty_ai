@@ -11,19 +11,32 @@ from fastapi.openapi.docs import (
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
+from fastapi.responses import JSONResponse
+import uvicorn
+import logging
+import os
 
 from routers.dictionary import dict_router
 from routers.dictionary_v1 import dict_router as dict_router1
 from routers.audit import audit_router
 from routers.users import users_router
 from database import database, check_database_connection
-from config import settings
+from config import settings, setup_logging
 from middleware.error_handler import exception_handler_middleware
 from utils.logger import setup_logger
 from cache.cache_manager import cache_manager
 
-# Настройка логирования
-logger = setup_logger(__name__)
+# Настраиваем логирование с временной зоной Minsk
+logger = setup_logging()
+
+# Настраиваем логирование для FastAPI
+logging.getLogger("fastapi").setLevel(logging.DEBUG)
+logging.getLogger("uvicorn").setLevel(logging.DEBUG)
+logging.getLogger("uvicorn.access").setLevel(logging.DEBUG)
+logging.getLogger("uvicorn.error").setLevel(logging.DEBUG)
+
+# Создаем директорию для логов если её нет
+os.makedirs('logs', exist_ok=True)
 
 
 @asynccontextmanager
@@ -78,33 +91,40 @@ api_router_v1.include_router(audit_router)
 # Создание приложения
 app = FastAPI(
     lifespan=lifespan,
-    title=settings.api_title,
-    summary="Справочники ЕИСГС",
-    version=settings.api_version,
-    docs_url="/docs",
-    redoc_url="/redoc",
-    swagger_ui_parameters={"syntaxHighlight.theme": "obsidian"},
-    swagger_js_url="/static/swagger/swagger-ui-bundle.js",
-    swagger_css_url="/static/swagger/swagger-ui.css",
+    title=settings.PROJECT_NAME,
+    version="1.0.0",
+    description="API для системы управления справочниками"
 )
 
 # Настройка CORS
-cors_origins = [origin.strip() for origin in settings.cors_origins.split(",")]
-cors_methods = [method.strip() for method in settings.cors_allow_methods.split(",")]
-cors_headers = [header.strip() for header in settings.cors_allow_headers.split(",")]
+cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]
+cors_methods = [method.strip() for method in settings.CORS_ALLOW_METHODS.split(",")]
+cors_headers = [header.strip() for header in settings.CORS_ALLOW_HEADERS.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=settings.cors_allow_credentials,
-    allow_methods=cors_methods,
-    allow_headers=cors_headers,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Добавление middleware для обработки исключений
+# Middleware для логирования запросов
 @app.middleware("http")
-async def error_handler_middleware(request: Request, call_next):
-    return await exception_handler_middleware(request, call_next)
+async def log_requests(request: Request, call_next):
+    logger.info(f"REQUEST → {request.method} {request.url}")
+    response = await call_next(request)
+    logger.info(f"RESPONSE ← {request.method} {request.url} {response.status_code}")
+    return response
+
+# Обработчик ошибок
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"GLOBAL_ERROR → {request.method} {request.url}: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Внутренняя ошибка сервера"}
+    )
 
 # Подключение статических файлов
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -115,12 +135,7 @@ async def root():
     """
     Корневой эндпоинт
     """
-    return {
-        "message": "API справочников ЕИСГС",
-        "version": settings.api_version,
-        "docs": "/docs",
-        "redoc": "/redoc"
-    }
+    return {"message": "Dictionary Management System API", "version": "1.0.0"}
 
 
 @app.get("/health", include_in_schema=False)
@@ -135,22 +150,10 @@ async def health_check():
         # Получение статистики кэша
         cache_stats = await cache_manager.get_stats()
         
-        return {
-            "status": "healthy",
-            "database": "connected" if is_connected else "disconnected",
-            "cache": cache_stats,
-            "version": settings.api_version,
-            "message": "API работает" if is_connected else "API работает (без БД)"
-        }
+        return {"status": "healthy", "timestamp": "2025-01-15T08:30:00+03:00"}
     except Exception as e:
         logger.warning(f"Ошибка проверки состояния БД: {e}")
-        return {
-            "status": "healthy",
-            "database": "disconnected",
-            "cache": {"error": "Не удалось получить статистику кэша"},
-            "version": settings.api_version,
-            "message": "API работает (без БД)"
-        }
+        return {"status": "healthy", "timestamp": "2025-01-15T08:30:00+03:00"}
 
 
 @app.get("/docs", include_in_schema=False)
@@ -252,12 +255,11 @@ app.include_router(api_router_v1)
 app.include_router(users_router, prefix="/api/v1")
 
 if __name__ == "__main__":
-    import uvicorn
-    
+    logger.info("Запуск Dictionary Management System API...")
     uvicorn.run(
         "main:app",
-        host=settings.api_host,
-        port=settings.api_port,
+        host="0.0.0.0",
+        port=8000,
         reload=True,
-        log_level=settings.log_level.lower()
+        log_level=settings.LOG_LEVEL.lower()
     )

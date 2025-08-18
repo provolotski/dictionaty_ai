@@ -2,8 +2,17 @@
 {% load custom_filters %}
 {% block title %}Пользователи системы{% endblock %}
 
+{% block styles %}
+<style>
+  /* Дополнительные стили для страницы пользователей */
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4" data-is-security-admin="{% if has_audit_access %}true{% else %}false{% endif %}">
+
+
+
   <h2>Пользователи системы</h2>
   
   <div class="row mb-3">
@@ -82,7 +91,7 @@
         <tbody>
           {% if users %}
             {% for user in users %}
-            <tr>
+            <tr data-user-id="{{ user.id }}">
               <td>
                 <strong>{{ user.name }}</strong>
               </td>
@@ -172,7 +181,67 @@
   </div>
 </div>
 
+<!-- Модальное окно карточки пользователя -->
+<div class="modal fade" id="userCardModal" tabindex="-1" aria-labelledby="userCardModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userCardModalLabel">Карточка пользователя</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="userEditForm">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Имя пользователя</label>
+              <input type="text" class="form-control" id="userName" name="name" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Домен</label>
+              <input type="text" class="form-control" id="userDomain" readonly>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Дата первого входа</label>
+              <input type="text" class="form-control" id="userCreatedAt" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Дата последнего входа</label>
+              <input type="text" class="form-control" id="userLastLoginAt" readonly>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Администратор системы</label>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="userIsAdmin" name="is_admin">
+                <label class="form-check-label" for="userIsAdmin">
+                  Пользователь является администратором системы
+                </label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">GUID</label>
+              <input type="text" class="form-control" id="userGuid" readonly>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-primary" id="saveUserBtn" style="display: none;">
+          <i class="fas fa-save"></i> Сохранить
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style>
+  /* Стили для таблицы */
   .table th {
     font-weight: 600;
     background-color: #f8f9fa;
@@ -212,10 +281,146 @@
     max-height: 600px;
     overflow-y: auto;
   }
+  
+  /* Дополнительные стили для корректного отображения с Bootstrap */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .form-control, .form-select {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+  
+  .row {
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+  }
+  
+  .col-md-2, .col-md-3, .col-md-4, .col-md-6, .col-md-8 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .mb-3 {
+    margin-bottom: 1rem !important;
+  }
+  
+  .mt-4 {
+    margin-top: 1.5rem !important;
+  }
+  
+  .text-end {
+    text-align: right !important;
+  }
+  
+  .text-muted {
+    color: #6c757d !important;
+  }
+  
+  /* Стили для переключателя администратора */
+  .form-check-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .form-check-input:not(:disabled) {
+    opacity: 1;
+    cursor: pointer;
+  }
+  
+  .form-check-input:not(:disabled):hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+  }
+  
+  .form-check-label:has(+ .form-check-input:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .form-check-label:has(+ .form-check-input:not(:disabled)) {
+    opacity: 1;
+    cursor: pointer;
+  }
+  
+  /* Принудительная активация для администраторов безопасности */
+  .container[data-is-security-admin="true"] .form-check-input {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+  }
+  
+  .container[data-is-security-admin="true"] .form-check-input:disabled {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+  }
+  
+  /* Стили для активного состояния */
+  .form-check-input.active {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+  }
+  
+  /* Дополнительные принудительные стили */
+  .form-check-input[enabled="true"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+  }
+  
+  /* Принудительно убираем disabled состояние */
+  .form-check-input:not([disabled]) {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+  
+  /* Специальные стили для модального окна */
+  #userCardModal .form-check-input {
+    pointer-events: auto !important;
+  }
+  
+  #userCardModal .form-check-input:disabled {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+  }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  let currentUser = null;
+  let isSecurityAdmin = false; // Инициализируем как false, потом обновим
+  
+  // Получаем элементы DOM - ищем контейнер с атрибутом data-is-security-admin
+  const container = document.querySelector('.container[data-is-security-admin]');
+  
+  if (!container) {
+    console.error('Container с атрибутом data-is-security-admin не найден!');
+    console.log('Все .container элементы:', document.querySelectorAll('.container'));
+    return;
+  }
+  
+  // Определяем статус администратора безопасности
+  isSecurityAdmin = container.getAttribute('data-is-security-admin') === 'true';
+  
   // Автоматическое обновление при изменении размера страницы
   document.querySelector('select[name="page_size"]').addEventListener('change', function() {
     this.form.submit();
@@ -231,6 +436,213 @@ document.addEventListener('DOMContentLoaded', function() {
       this.style.backgroundColor = '';
     });
   });
+  
+  // Открытие карточки пользователя по клику на имя
+  document.querySelectorAll('tbody tr').forEach(row => {
+    const nameCell = row.querySelector('td:first-child strong');
+    if (nameCell) {
+      nameCell.style.cursor = 'pointer';
+      nameCell.addEventListener('click', function() {
+        const userId = this.closest('tr').getAttribute('data-user-id');
+        if (userId) {
+          openUserCard(userId);
+        }
+      });
+    }
+  });
+  
+  // Функция открытия карточки пользователя
+  function openUserCard(userId) {
+    fetch(`/accounts/users/${userId}/data/`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          currentUser = data.user;
+          fillUserCard(data.user);
+          
+          // Дополнительная проверка состояния переключателя
+          const userIsAdminField = document.getElementById('userIsAdmin');
+          
+          if (isSecurityAdmin) {
+            userIsAdminField.disabled = false;
+            userIsAdminField.style.opacity = '1';
+            userIsAdminField.style.cursor = 'pointer';
+            
+            // Принудительно убираем все атрибуты disabled
+            userIsAdminField.removeAttribute('disabled');
+            userIsAdminField.setAttribute('enabled', 'true');
+            
+            // Добавляем класс active для принудительной активации
+            userIsAdminField.classList.add('active');
+            userIsAdminField.classList.remove('disabled');
+            
+            // Принудительно включаем pointer-events
+            userIsAdminField.style.pointerEvents = 'auto';
+            userIsAdminField.style.userSelect = 'auto';
+          } else {
+            userIsAdminField.disabled = true;
+            userIsAdminField.style.opacity = '0.6';
+            userIsAdminField.style.cursor = 'not-allowed';
+          }
+          
+          showSaveButton();
+          const modal = new bootstrap.Modal(document.getElementById('userCardModal'));
+          
+          // Добавляем обработчик события показа модального окна
+          document.getElementById('userCardModal').addEventListener('shown.bs.modal', function() {
+            if (isSecurityAdmin) {
+              const userIsAdminField = document.getElementById('userIsAdmin');
+              userIsAdminField.disabled = false;
+              userIsAdminField.removeAttribute('disabled');
+              userIsAdminField.classList.add('active');
+              userIsAdminField.style.pointerEvents = 'auto';
+              userIsAdminField.style.opacity = '1';
+              userIsAdminField.style.cursor = 'pointer';
+            }
+          }, { once: true }); // once: true означает, что обработчик выполнится только один раз
+          
+          modal.show();
+        } else {
+          alert('Ошибка загрузки данных пользователя: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка загрузки данных пользователя');
+      });
+  }
+  
+  // Заполнение карточки данными пользователя
+  function fillUserCard(user) {
+    document.getElementById('userName').value = user.name || '';
+    document.getElementById('userDomain').value = user.domain || '';
+    document.getElementById('userCreatedAt').value = user.created_at_formatted || 'Не указана';
+    document.getElementById('userLastLoginAt').value = user.last_login_at_formatted || 'Никогда';
+    document.getElementById('userIsAdmin').checked = user.is_admin || false;
+    document.getElementById('userGuid').value = user.guid || '';
+    
+    // Принудительно вызываем showSaveButton для правильной настройки состояния полей
+    setTimeout(() => {
+      showSaveButton();
+      
+      // Дополнительная принудительная активация
+      if (isSecurityAdmin) {
+        const userIsAdminField = document.getElementById('userIsAdmin');
+        userIsAdminField.disabled = false;
+        userIsAdminField.removeAttribute('disabled');
+        userIsAdminField.classList.add('active');
+        userIsAdminField.style.pointerEvents = 'auto';
+        userIsAdminField.style.opacity = '1';
+        userIsAdminField.style.cursor = 'pointer';
+      }
+    }, 100);
+  }
+  
+  // Показ/скрытие кнопки сохранения
+  function showSaveButton() {
+    const saveBtn = document.getElementById('saveUserBtn');
+    const userNameField = document.getElementById('userName');
+    const userIsAdminField = document.getElementById('userIsAdmin');
+    
+    if (isSecurityAdmin) {
+      saveBtn.style.display = 'block';
+      // Делаем поля редактируемыми для администратора безопасности
+      userNameField.readOnly = false;
+      userIsAdminField.disabled = false;
+      
+      // Убираем атрибут disabled и добавляем стили для активного состояния
+      userIsAdminField.removeAttribute('disabled');
+      userIsAdminField.style.opacity = '1';
+      userIsAdminField.style.cursor = 'pointer';
+      
+      // Добавляем класс active для принудительной активации
+      userIsAdminField.classList.add('active');
+      userIsAdminField.classList.remove('disabled');
+      
+      // Принудительно включаем pointer-events
+      userIsAdminField.style.pointerEvents = 'auto';
+      userIsAdminField.style.userSelect = 'auto';
+      
+      // Убираем disabled у label
+      const adminLabel = userIsAdminField.nextElementSibling;
+      if (adminLabel) {
+        adminLabel.style.opacity = '1';
+        adminLabel.style.cursor = 'pointer';
+      }
+    } else {
+      saveBtn.style.display = 'none';
+      // Делаем поля только для чтения для обычных пользователей
+      userNameField.readOnly = true;
+      userIsAdminField.disabled = true;
+      userIsAdminField.style.opacity = '0.6';
+      userIsAdminField.style.cursor = 'not-allowed';
+      
+      // Добавляем disabled у label
+      const adminLabel = userIsAdminField.nextElementSibling;
+      if (adminLabel) {
+        adminLabel.style.opacity = '0.6';
+        adminLabel.style.cursor = 'not-allowed';
+      }
+    }
+  }
+  
+  // Обработчик сохранения
+  document.getElementById('saveUserBtn').addEventListener('click', function() {
+    if (!currentUser) return;
+    
+    const formData = {
+      name: document.getElementById('userName').value,
+      is_admin: document.getElementById('userIsAdmin').checked
+    };
+    
+    // Валидация
+    if (!formData.name.trim()) {
+      alert('Имя пользователя не может быть пустым');
+      return;
+    }
+    
+    // Отправка данных на сервер
+    fetch(`/accounts/users/${currentUser.id}/update/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Пользователь успешно обновлен');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('userCardModal'));
+        modal.hide();
+        // Обновляем страницу для отображения изменений
+        location.reload();
+      } else {
+        alert('Ошибка обновления: ' + (data.error || 'Неизвестная ошибка'));
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка:', error);
+      alert('Ошибка обновления пользователя');
+    });
+  });
+  
+  // Функция получения CSRF токена
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 });
 </script>
 {% endblock %}

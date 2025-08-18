@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 # Формируем URL для подключения к базе данных
 DATABASE_URL = (
-    f"postgresql://{settings.postgres_user}:"
-    f"{settings.postgres_password}@{settings.postgres_host}:"
-    f"{settings.postgres_port}/{settings.postgres_db}"
+    f"postgresql://{settings.POSTGRES_USER}:"
+    f"{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:"
+    f"{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 )
 
 # Создаем экземпляр базы данных

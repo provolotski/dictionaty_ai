@@ -8,6 +8,9 @@
     <!-- Основные стили -->
     <link rel="stylesheet" href="/static/css/main.css">
     
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -16,6 +19,9 @@
     
     <!-- Дополнительные стили для конкретных страниц -->
     {% block extra_css %}{% endblock %}
+    
+    <!-- Дополнительные CSS стили -->
+    {% block styles %}{% endblock %}
     
     <!-- Мета-теги -->
     <meta name="description" content="{% block meta_description %}Система управления иерархическими историческими словарями и классификаторами BelStat{% endblock %}">
@@ -52,6 +58,7 @@
                         <i class="fas fa-home"></i>
                         Главная
                     </a></li>
+                    {% if request.session.in_users %}
                     <li><a href="/dictionaries" class="nav-link {% if 'dictionaries' in request.path %}active{% endif %}">
                         <i class="fas fa-book"></i>
                         Словари
@@ -68,10 +75,11 @@
                         <i class="fas fa-download"></i>
                         Экспорт
                     </a></li>
-                                         <li><a href="/analytics" class="nav-link {% if 'analytics' in request.path %}active{% endif %}">
-                         <i class="fas fa-chart-bar"></i>
-                         Аналитика
-                     </a></li>
+                    <li><a href="/analytics" class="nav-link {% if 'analytics' in request.path %}active{% endif %}">
+                        <i class="fas fa-chart-bar"></i>
+                        Аналитика
+                    </a></li>
+                    {% endif %}
                      {% if request.session.user_info and request.session.has_audit_access %}
                          {% with username=request.session.user_info.username domain=request.session.user_info.domain|default:"belstat" %}
                              {% if username and domain %}
@@ -107,7 +115,15 @@
                          <div class="user-dropdown" id="userDropdown" style="display: none;">
                              <div class="user-info">
                                  <div class="user-name">{{ request.session.user_info.username }}</div>
-                                 <div class="user-role">Пользователь системы</div>
+                                 <div class="user-role">
+                                     {% if request.session.has_audit_access %}
+                                         Администратор безопасности
+                                     {% elif request.session.in_users %}
+                                         Пользователь системы
+                                     {% else %}
+                                         Гость
+                                     {% endif %}
+                                 </div>
                              </div>
                              
                              <div class="dropdown-divider"></div>
@@ -875,6 +891,427 @@
                 max-width: none;
             }
         }
+    </style>
+    
+    <!-- Bootstrap JavaScript Bundle (включает Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" 
+            crossorigin="anonymous"></script>
+    
+    <!-- Основные скрипты приложения -->
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Блок для дополнительных скриптов страниц -->
+    {% block scripts %}{% endblock %}
+    
+    <!-- Глобальные стили для исправления конфликтов с Bootstrap -->
+    <style>
+      /* Исправление стилей навигации после подключения Bootstrap */
+      .navbar {
+        background: var(--primary-green);
+        padding: 0.75rem 0;
+        box-shadow: var(--shadow-md);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        /* Принудительно горизонтальная навигация */
+        flex-direction: row !important;
+      }
+      
+      .navbar-container {
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-start;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+        flex-direction: row !important;
+        width: 100%;
+        gap: 0;
+      }
+      
+      .navbar-brand {
+        color: var(--white);
+        text-decoration: none;
+        font-size: 1.25rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-right: 2rem;
+        /* Фиксированная ширина для логотипа */
+        min-width: 120px;
+        flex-shrink: 0;
+      }
+      
+      .navbar-brand:hover {
+        color: var(--gray-100);
+        transform: scale(1.05);
+        transition: all 0.2s ease;
+      }
+      
+      .navbar-nav {
+        display: flex !important;
+        flex-direction: row !important;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: nowrap;
+        /* Принудительно горизонтальное меню */
+        flex: 1;
+        /* Прижимаем пункты меню к левому краю */
+        margin-left: 0;
+        justify-content: flex-start;
+        /* Распределяем элементы равномерно */
+        margin-right: 2rem;
+      }
+      
+      .navbar-nav li {
+        display: block;
+        margin: 0;
+        padding: 0;
+        /* Равномерное распределение элементов */
+        flex: 0 0 auto;
+      }
+      
+      .nav-link {
+        color: var(--white);
+        text-decoration: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+        /* Принудительно горизонтальные ссылки */
+        flex-direction: row;
+        /* Уменьшенный шрифт */
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      
+      /* Уменьшенные иконки в навигации */
+      .nav-link i {
+        font-size: 0.875rem;
+      }
+      
+      .nav-link:hover {
+        color: var(--primary-green);
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      .nav-link.active {
+        color: var(--white);
+        background: rgba(255, 255, 255, 0.2);
+        font-weight: 600;
+      }
+      
+      .user-menu {
+        position: relative;
+        /* Прижимаем к правому краю */
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        background: transparent;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        /* Уменьшенный шрифт */
+        font-size: 0.875rem;
+        border: none;
+        /* Улучшенная читаемость */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+      
+      .user-avatar:hover {
+        background: transparent !important;
+        transform: scale(1.05);
+        color: var(--white);
+        /* Принудительно убираем все фоновые эффекты */
+        box-shadow: none !important;
+        border: none !important;
+      }
+      
+      /* Дополнительно убираем все возможные фоновые эффекты */
+      .user-avatar:hover::before,
+      .user-avatar:hover::after {
+        background: transparent !important;
+        content: none !important;
+      }
+      
+      /* Принудительно отключаем все Bootstrap эффекты для аватара */
+      .user-avatar:focus,
+      .user-avatar:active,
+      .user-avatar:focus-visible {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        outline: none !important;
+      }
+      
+      /* Убираем все возможные фокусные эффекты */
+      .user-avatar:focus-visible {
+        outline: none !important;
+        outline-offset: 0 !important;
+      }
+      
+      /* Принудительно отключаем мобильные стили Bootstrap */
+      .navbar-toggler {
+        display: none !important;
+      }
+      
+      .navbar-collapse {
+        display: flex !important;
+        flex-basis: auto !important;
+        flex-grow: 1 !important;
+      }
+      
+      /* Принудительно отключаем все Bootstrap стили навигации */
+      .navbar-expand-lg,
+      .navbar-expand-md,
+      .navbar-expand-sm,
+      .navbar-expand {
+        flex-direction: row !important;
+      }
+      
+      .navbar-expand-lg .navbar-nav,
+      .navbar-expand-md .navbar-nav,
+      .navbar-expand-sm .navbar-nav,
+      .navbar-expand .navbar-nav {
+        flex-direction: row !important;
+        display: flex !important;
+      }
+      
+      .navbar-expand-lg .navbar-collapse,
+      .navbar-expand-md .navbar-collapse,
+      .navbar-expand-sm .navbar-collapse,
+      .navbar-expand .navbar-collapse {
+        display: flex !important;
+        flex-basis: auto !important;
+      }
+      
+      /* Дополнительные правила для принудительного горизонтального отображения */
+      .navbar-nav .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        min-width: 10rem;
+        padding: 0.5rem 0;
+        margin: 0.125rem 0 0;
+        font-size: 0.875rem;
+        color: var(--gray-700);
+        text-align: left;
+        list-style: none;
+        background-color: var(--white);
+        background-clip: padding-box;
+        border: 1px solid var(--gray-200);
+        border-radius: 0.375rem;
+        box-shadow: var(--shadow-lg);
+      }
+      
+      .navbar-nav .dropdown-menu.show {
+        display: block;
+      }
+      
+      /* Принудительно отключаем все flexbox свойства Bootstrap */
+      .d-flex {
+        display: flex !important;
+      }
+      
+      .flex-row {
+        flex-direction: row !important;
+      }
+      
+      .flex-column {
+        flex-direction: column !important;
+      }
+      
+      /* Принудительно отключаем все возможные Bootstrap классы навигации */
+      .navbar-nav .nav-item {
+        display: block;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .navbar-nav .nav-link {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        color: var(--gray-300);
+        text-decoration: none;
+        border-radius: 0.375rem;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+      }
+      
+      /* Принудительно отключаем все Bootstrap responsive классы */
+      .navbar-expand,
+      .navbar-expand-sm,
+      .navbar-expand-md,
+      .navbar-expand-lg,
+      .navbar-expand-xl,
+      .navbar-expand-xxl {
+        flex-direction: row !important;
+      }
+      
+      .navbar-expand .navbar-nav,
+      .navbar-expand-sm .navbar-nav,
+      .navbar-expand-md .navbar-nav,
+      .navbar-expand-lg .navbar-nav,
+      .navbar-expand-xl .navbar-nav,
+      .navbar-expand-xxl .navbar-nav {
+        flex-direction: row !important;
+        display: flex !important;
+        flex-wrap: nowrap;
+      }
+      
+      /* Принудительно отключаем все Bootstrap responsive breakpoints */
+      @media (min-width: 576px) {
+        .navbar-expand-sm {
+          flex-direction: row !important;
+        }
+        .navbar-expand-sm .navbar-nav {
+          flex-direction: row !important;
+        }
+      }
+      
+      @media (min-width: 768px) {
+        .navbar-expand-md {
+          flex-direction: row !important;
+        }
+        .navbar-expand-md .navbar-nav {
+          flex-direction: row !important;
+        }
+      }
+      
+      @media (min-width: 992px) {
+        .navbar-expand-lg {
+          flex-direction: row !important;
+        }
+        .navbar-expand-lg .navbar-nav {
+          flex-direction: row !important;
+        }
+      }
+      
+      @media (min-width: 1200px) {
+        .navbar-expand-xl {
+          flex-direction: row !important;
+        }
+        .navbar-expand-xl .navbar-nav {
+          flex-direction: row !important;
+        }
+      }
+      
+      @media (min-width: 1400px) {
+        .navbar-expand-xxl {
+          flex-direction: row !important;
+        }
+        .navbar-expand-xxl .navbar-nav {
+          flex-direction: row !important;
+        }
+      }
+      
+      /* Адаптивность для очень маленьких экранов */
+      @media (max-width: 768px) {
+        .navbar-container {
+          flex-direction: column;
+          gap: 1rem;
+        }
+        
+        .navbar-nav {
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.5rem;
+          /* Принудительно горизонтальное меню даже на мобильных */
+          flex-direction: row !important;
+          display: flex !important;
+        }
+        
+        .nav-link {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.875rem;
+          /* Принудительно горизонтальные ссылки */
+          flex-direction: row !important;
+          display: flex !important;
+        }
+        
+        .navbar-brand {
+          margin-right: 0;
+          margin-bottom: 0.5rem;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .navbar-nav {
+          gap: 0.25rem;
+          /* Принудительно горизонтальное меню даже на очень маленьких экранах */
+          flex-direction: row !important;
+          display: flex !important;
+          flex-wrap: wrap;
+        }
+        
+        .nav-link {
+          padding: 0.2rem 0.4rem;
+          font-size: 0.8rem;
+          /* Принудительно горизонтальные ссылки */
+          flex-direction: row !important;
+          display: flex !important;
+        }
+        
+        .nav-link i {
+          display: none;
+        }
+      }
+      
+      /* Финальные правила для принудительного горизонтального отображения */
+      .navbar,
+      .navbar > *,
+      .navbar .navbar-nav,
+      .navbar .navbar-nav > *,
+      .navbar .navbar-nav .nav-link {
+        flex-direction: row !important;
+        display: flex !important;
+      }
+      
+      /* Переменные CSS для цветов */
+      :root {
+        --gray-900: #111827;
+        --gray-800: #1f2937;
+        --gray-700: #374151;
+        --gray-600: #4b5563;
+        --gray-500: #6b7280;
+        --gray-400: #9ca3af;
+        --gray-300: #d1d5db;
+        --gray-200: #e5e7eb;
+        --gray-100: #f3f4f6;
+        --gray-50: #f9fafb;
+        --white: #ffffff;
+        --primary-green: #10b981;
+        --primary-green-dark: #059669;
+        --success: #10b981;
+        --error: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
     </style>
 </body>
 </html>
