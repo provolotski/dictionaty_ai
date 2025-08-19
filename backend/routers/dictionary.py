@@ -5,7 +5,7 @@ Endpoint для системы справочников
 from datetime import date as datetime_date
 from typing import Optional, List, Union
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Query
 
 from database import get_database
 from services.dictionary_service import DictionaryService
@@ -464,8 +464,8 @@ async def import_csv(
 @dict_router.get(path="/dictionary/")
 @dict_router.post(path="/dictionary/")
 async def get_dictionary(
-    dictionary: int,
-    date: Optional[datetime_date] = None,
+    dictionary: int = Query(..., description="ID справочника"),
+    date: Optional[datetime_date] = Query(None, description="Дата (опционально)"),
     service: DictionaryService = Depends(get_dictionary_service)
 ):
     """
@@ -480,7 +480,22 @@ async def get_dictionary(
         List: Значения справочника
     """
     try:
-        return await service.get_dictionary_values(dictionary, date)
+        logger.info(f"=== BACKEND: ПОЛУЧЕНИЕ ЗНАЧЕНИЙ СПРАВОЧНИКА ===")
+        logger.info(f"Параметр dictionary: {dictionary}")
+        logger.info(f"Тип параметра: {type(dictionary)}")
+        logger.info(f"Параметр date: {date}")
+        logger.info(f"Тип date: {type(date)}")
+        
+        # Дополнительная диагностика
+        logger.info(f"=== BACKEND: ДОПОЛНИТЕЛЬНАЯ ДИАГНОСТИКА ===")
+        logger.info(f"dictionary is None: {dictionary is None}")
+        logger.info(f"dictionary == 0: {dictionary == 0}")
+        logger.info(f"dictionary == '': {dictionary == ''}")
+        logger.info(f"dictionary == False: {dictionary == False}")
+        
+        result = await service.get_dictionary_values(dictionary, date)
+        logger.info(f"Результат: {len(result) if isinstance(result, list) else 'не список'} позиций")
+        return result
     except Exception as e:
         logger.error(f"Ошибка получения значений справочника {dictionary}: {e}")
         return []

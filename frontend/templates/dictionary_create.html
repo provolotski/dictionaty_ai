@@ -642,10 +642,7 @@ function getAccessToken() {
     let token = '{{ access_token }}';
     
     if (!token) {
-        // Если токен не доступен в сессии, пытаемся получить его через AJAX
         console.warn('Токен не найден в сессии');
-        // Можно попробовать получить токен через fetchAccessToken()
-        // token = await fetchAccessToken();
     }
     
     return token;
@@ -653,7 +650,7 @@ function getAccessToken() {
 
 // Функция для получения токена через AJAX (если нужно)
 function fetchAccessToken() {
-    return fetch('http://127.0.0.1:9090/api/v1/auth/check_token', {
+    return fetch('/accounts/get_access_token/', {
         method: 'GET',
         credentials: 'same-origin'
     })

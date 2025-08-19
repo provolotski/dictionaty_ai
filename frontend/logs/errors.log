@@ -1,8 +1,26 @@
-ERROR 2025-08-18 11:11:32 views proxy_api_request 95 Ошибка от backend: HTTP 422
-ERROR 2025-08-18 11:11:32 views proxy_api_request 98 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['body', 'description'], 'msg': 'Field required', 'input': {'name': 'eqwrqwer', 'code': '1234', 'id_type': '1', 'start_date': '2025-08-18'}, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}, {'type': 'missing', 'loc': ['body', 'finish_date'], 'msg': 'Field required', 'input': {'name': 'eqwrqwer', 'code': '1234', 'id_type': '1', 'start_date': '2025-08-18'}, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-18 11:12:19 views proxy_api_request 95 Ошибка от backend: HTTP 422
-ERROR 2025-08-18 11:12:19 views proxy_api_request 98 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['body', 'finish_date'], 'msg': 'Field required', 'input': {'name': 'eqwrqwer', 'code': '1234', 'description': 'sdf', 'id_type': '1', 'start_date': '2025-08-18', 'classifier': 'sdf', 'gko': 'dsf', 'name_bel': 'sdaf', 'description_bel': 'sadf', 'name_eng': 'sdf', 'description_eng': 'adsf', 'organization': 'sdaf'}, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-18 11:15:42 views proxy_api_request 95 Ошибка от backend: HTTP 422
-ERROR 2025-08-18 11:15:42 views proxy_api_request 98 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['body', 'finish_date'], 'msg': 'Field required', 'input': {'name': 'eqwrqwer', 'code': '1234', 'description': 'sdf', 'id_type': '1', 'start_date': '2025-08-18', 'classifier': 'sdf', 'gko': 'dsf', 'name_bel': 'sdaf', 'description_bel': 'sadf', 'name_eng': 'sdf', 'description_eng': 'adsf', 'organization': 'sdaf'}, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-18 11:16:19 views proxy_api_request 95 Ошибка от backend: HTTP 400
-ERROR 2025-08-18 11:16:19 views proxy_api_request 98 Данные ошибки: {'detail': 'Ошибка создания справочника: "DictionaryIn" object has no field "id_status"'}
+ERROR 2025-08-19 18:29:56 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:29:56 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:29:56 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:29:56 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:31:35 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:31:35 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:31:35 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:31:35 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:31:38 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:31:38 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:31:38 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:31:38 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:48:27 middleware _refresh_token 228 Token refresh failed: 401
+ERROR 2025-08-19 18:48:38 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:48:38 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:48:38 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:48:38 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:49:12 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:49:12 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:49:12 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:49:12 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:53:14 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:53:14 views proxy_api_request 96 Ошибка от backend: HTTP 422
+ERROR 2025-08-19 18:53:14 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 18:53:14 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
+ERROR 2025-08-19 19:20:43 middleware _refresh_token 228 Token refresh failed: 500

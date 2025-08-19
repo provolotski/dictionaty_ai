@@ -5,3 +5,4 @@ celery~=5.5.3
 pydantic~=2.11.7
 django-crispy-forms~=2.1
 crispy-bootstrap4~=2023.1
+python-dotenv~=1.0.0

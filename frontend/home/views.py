@@ -44,7 +44,8 @@ def dictionaries_page(request):
     
     context = {
         'dictionaries': dictionaries,
-        'total_count': len(dictionaries) if isinstance(dictionaries, list) else 0
+        'total_count': len(dictionaries) if isinstance(dictionaries, list) else 0,
+        'access_token': request.session.get('access', '')  # Добавляем токен в контекст
     }
     
     return render(request, 'dictionaries.html', context)
@@ -53,7 +54,7 @@ def dictionaries_page(request):
 def dictionary_create_page(request):
     """Страница создания нового словаря"""
     # Получаем токен из сессии
-    access_token = request.session.get('access_token', '')
+    access_token = request.session.get('access', '')
     
     context = {
         'access_token': access_token

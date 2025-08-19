@@ -52,7 +52,9 @@ def dictionary_list_view(request):
         messages.error(request, 'Ошибка загрузки списка справочников')
 
     logger.debug(f'Загружено справочников: {len(dictionaries)}')
-    return render(request, 'dictionaryList.html', {'dictionaries': dictionaries})
+    return render(request, 'dictionaryList.html', {
+        'dictionaries': dictionaries
+    })
 
 
 @require_users_group
@@ -118,7 +120,9 @@ def dictionary_create(request):
             'dictionary_id': None
         })
 
-    return render(request, 'dictionaries/form_modal.html', {'form': form})
+    return render(request, 'dictionaries/form_modal.html', {
+        'form': form
+    })
 
 
 @require_users_group

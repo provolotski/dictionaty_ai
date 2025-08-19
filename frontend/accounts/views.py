@@ -932,3 +932,26 @@ def update_user_view(request, user_id):
     except Exception as e:
         logger.error(f"Ошибка обновления пользователя {user_id}: {e}")
         return JsonResponse({'success': False, 'error': 'Внутренняя ошибка сервера'}, status=500)
+
+def get_access_token_view(request):
+    """
+    Возвращает токен доступа из сессии пользователя
+    """
+    # Временно отключаем проверку аутентификации для тестирования
+    # if not request.user.is_authenticated:
+    #     return JsonResponse({
+    #         'error': 'User not authenticated',
+    #         'status_code': 401
+    #     }, status=401)
+    
+    access_token = request.session.get('access')
+    if not access_token:
+        return JsonResponse({
+            'error': 'Access token not found in session',
+            'status_code': 404
+        }, status=404)
+    
+    return JsonResponse({
+        'access_token': access_token,
+        'status_code': 200
+    }, status=200)

@@ -10,4 +10,5 @@ urlpatterns =[
     path('users/', views.users_view, name='users'),
     path('users/<int:user_id>/data/', views.get_user_data_view, name='user_data'),
     path('users/<int:user_id>/update/', views.update_user_view, name='user_update'),
+    path('get_access_token/', views.get_access_token_view, name='get_access_token'),
 ]

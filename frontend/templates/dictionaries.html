@@ -2,6 +2,147 @@
 
 {% block title %}Словари | BelStat{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Стили для дерева */
+    .tree-container {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        max-height: 600px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        background-color: #fff;
+    }
+    
+    .tree-node {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .tree-item {
+        position: relative;
+        margin: 2px 0;
+    }
+    
+    .tree-item-content {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .tree-item-content:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .tree-toggle {
+        width: 20px;
+        height: 20px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 8px;
+        border-radius: 3px;
+        color: #6c757d;
+    }
+    
+    .tree-toggle:hover {
+        background-color: #e9ecef;
+    }
+    
+    .tree-toggle.collapsed::before {
+        content: '▶';
+    }
+    
+    .tree-toggle.expanded::before {
+        content: '▼';
+    }
+    
+    .tree-toggle.leaf {
+        visibility: hidden;
+    }
+    
+    .tree-item-info {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .tree-item-main {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .tree-item-title {
+        font-weight: 500;
+        color: #212529;
+        margin-bottom: 2px;
+    }
+    
+    .tree-item-code {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-family: monospace;
+    }
+    
+    .tree-item-meta {
+        font-size: 0.75rem;
+        color: #6c757d;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .tree-item-actions {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .tree-item-content:hover .tree-item-actions {
+        opacity: 1;
+    }
+    
+    .tree-children {
+        margin-left: 28px;
+        border-left: 1px dashed #dee2e6;
+        padding-left: 12px;
+        display: none;
+    }
+    
+    .tree-children.expanded {
+        display: block;
+    }
+    
+    .tree-root > .tree-children {
+        margin-left: 0;
+        border-left: none;
+        padding-left: 0;
+        display: block;
+    }
+    
+    .tree-empty {
+        text-align: center;
+        padding: 2rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    /* Стили для переключателя вида */
+    .btn-check:checked + .btn {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="welcome-section">
@@ -184,6 +325,7 @@
                                     <div class="btn-group" role="group">
                                         <button class="btn btn-sm btn-outline-primary view-dict-btn" 
                                                 data-dict-id="{{ dictionary.id }}" 
+                                                data-dict-name="{{ dictionary.name|default:'Словарь' }}"
                                                 title="Просмотр">
                                             <i class="fas fa-eye"></i>
                                         </button>
@@ -565,17 +707,156 @@
     </div>
 </div>
 
+<!-- Модальное окно для просмотра содержимого справочника -->
+<div class="modal fade" id="dictionaryContentModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dictionaryContentTitle">Содержимое справочника</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="cleanupModalState()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="badge bg-primary me-2" id="dictionaryContentCode"></span>
+                        <span class="badge bg-info me-2" id="dictionaryContentStatus"></span>
+                        <span class="badge bg-secondary" id="dictionaryContentType"></span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <!-- Переключатель вида отображения -->
+                        <div class="btn-group me-3" role="group" aria-label="Вид отображения">
+                            <input type="radio" class="btn-check" name="viewMode" id="tableViewMode" value="table" checked>
+                            <label class="btn btn-outline-primary btn-sm" for="tableViewMode" onclick="switchToTableView()">
+                                <i class="fas fa-table"></i> Таблица
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="viewMode" id="treeViewMode" value="tree">
+                            <label class="btn btn-outline-primary btn-sm" for="treeViewMode" onclick="switchToTreeView()">
+                                <i class="fas fa-sitemap"></i> Дерево
+                            </label>
+                        </div>
+                        
+                        <button class="btn btn-sm btn-outline-primary me-2" onclick="exportDictionaryContent()">
+                            <i class="fas fa-download"></i> Экспорт
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshDictionaryContent()">
+                            <i class="fas fa-sync-alt"></i> Обновить
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Фильтры для содержимого -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" id="contentSearchInput" 
+                               placeholder="Поиск по коду или названию...">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" class="form-control" id="contentDateFilter" 
+                               title="Фильтр по дате">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="contentParentFilter">
+                            <option value="">Все родители</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-secondary w-100" onclick="clearContentFilters()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Табличное отображение содержимого -->
+                <div class="table-responsive" id="tableViewContainer">
+                    <table class="table table-sm table-hover" id="dictionaryContentTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Код</th>
+                                <th>Название</th>
+                                <th>Родитель</th>
+                                <th>Дата начала</th>
+                                <th>Дата окончания</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dictionaryContentTableBody">
+                            <!-- Здесь будет загружаться содержимое справочника -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Древовидное отображение содержимого -->
+                <div id="treeViewContainer" style="display: none;">
+                    <!-- Кнопки управления деревом -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="expandAllTreeNodes()">
+                                <i class="fas fa-expand-arrows-alt"></i> Раскрыть все
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="collapseAllTreeNodes()">
+                                <i class="fas fa-compress-arrows-alt"></i> Свернуть все
+                            </button>
+                        </div>
+                        <div class="text-muted small" id="treeNodeCount">
+                            <!-- Здесь будет отображаться количество узлов -->
+                        </div>
+                    </div>
+                    
+                    <div class="tree-container" id="dictionaryContentTree">
+                        <!-- Здесь будет отображаться дерево справочника -->
+                    </div>
+                </div>
+                
+                <!-- Индикатор загрузки -->
+                <div id="contentLoadingIndicator" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                    <p class="mt-2">Загрузка содержимого справочника...</p>
+                </div>
+                
+                <!-- Сообщение об ошибке -->
+                <div id="contentErrorMessage" class="alert alert-danger" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="contentErrorText"></span>
+                </div>
+                
+                <!-- Пагинация -->
+                <nav aria-label="Навигация по содержимому" class="mt-3">
+                    <ul class="pagination justify-content-center" id="contentPagination">
+                        <!-- Пагинация будет добавляться динамически -->
+                    </ul>
+                </nav>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cleanupModalState()">Закрыть</button>
+                <button type="button" class="btn btn-primary" id="addPositionBtn">Добавить позицию</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 let dictionaryToDelete = null;
 
 function createNewDictionary() {
-    // Перенаправляем на страницу создания словаря
-    window.location.href = '/dictionaries/create/';
+    try {
+        // Перенаправляем на страницу создания словаря
+        window.location.href = '/dictionaries/create/';
+    } catch (error) {
+        console.error('Ошибка при перенаправлении на страницу создания словаря:', error);
+        alert('Ошибка при переходе на страницу создания словаря');
+    }
 }
 
 function exportDictionaries(format = 'csv') {
     const table = document.querySelector('table');
-    if (!table) return;
+    if (!table) {
+        console.warn('Таблица не найдена для экспорта');
+        alert('Таблица не найдена для экспорта');
+        return;
+    }
     
     let data, mimeType, filename;
     
@@ -584,16 +865,38 @@ function exportDictionaries(format = 'csv') {
         data = 'Код,Название,Описание,Статус,Тип,Дата создания\n';
         
         const rows = table.querySelectorAll('tbody tr');
-        rows.forEach(row => {
+        if (rows.length === 0) {
+            console.warn('Нет строк для экспорта в CSV');
+            alert('Нет данных для экспорта');
+            return;
+        }
+        
+        rows.forEach((row, index) => {
             if (row.style.display !== 'none') { // Только видимые строки
-                const code = row.querySelector('td:nth-child(1) .badge').textContent;
-                const name = row.querySelector('td:nth-child(2) strong').textContent;
-                const description = row.querySelector('td:nth-child(3) span').textContent;
-                const status = row.querySelector('td:nth-child(4) .badge').textContent;
-                const type = row.querySelector('td:nth-child(5) .badge').textContent;
-                const date = row.querySelector('td:nth-child(6) small').textContent;
-                
-                data += `"${code}","${name}","${description}","${status}","${type}","${date}"\n`;
+                try {
+                    const codeElement = row.querySelector('td:nth-child(1) .badge');
+                    const nameElement = row.querySelector('td:nth-child(2) strong');
+                    const descriptionElement = row.querySelector('td:nth-child(3) span');
+                    const statusElement = row.querySelector('td:nth-child(4) .badge');
+                    const typeElement = row.querySelector('td:nth-child(5) .badge');
+                    const dateElement = row.querySelector('td:nth-child(6) small');
+                    
+                    if (!codeElement || !nameElement || !descriptionElement || !statusElement || !typeElement || !dateElement) {
+                        console.warn(`Не все элементы найдены в строке ${index} для экспорта CSV`);
+                        return;
+                    }
+                    
+                    const code = codeElement.textContent || '';
+                    const name = nameElement.textContent || '';
+                    const description = descriptionElement.textContent || '';
+                    const status = statusElement.textContent || '';
+                    const type = typeElement.textContent || '';
+                    const date = dateElement.textContent || '';
+                    
+                    data += `"${code}","${name}","${description}","${status}","${type}","${date}"\n`;
+                } catch (error) {
+                    console.warn(`Ошибка при обработке строки ${index} для экспорта CSV:`, error);
+                }
             }
         });
         
@@ -605,29 +908,57 @@ function exportDictionaries(format = 'csv') {
         const dictionaries = [];
         const rows = table.querySelectorAll('tbody tr');
         
-        rows.forEach(row => {
+        if (rows.length === 0) {
+            console.warn('Нет строк для экспорта в JSON');
+            alert('Нет данных для экспорта');
+            return;
+        }
+        
+        rows.forEach((row, index) => {
             if (row.style.display !== 'none') {
-                const code = row.querySelector('td:nth-child(1) .badge').textContent;
-                const name = row.querySelector('td:nth-child(2) strong').textContent;
-                const description = row.querySelector('td:nth-child(3) span').textContent;
-                const status = row.querySelector('td:nth-child(4) .badge').textContent;
-                const type = row.querySelector('td:nth-child(5) .badge').textContent;
-                const date = row.querySelector('td:nth-child(6) small').textContent;
-                
-                dictionaries.push({
-                    code: code,
-                    name: name,
-                    description: description,
-                    status: status,
-                    type: type,
-                    date: date
-                });
+                try {
+                    const codeElement = row.querySelector('td:nth-child(1) .badge');
+                    const nameElement = row.querySelector('td:nth-child(2) strong');
+                    const descriptionElement = row.querySelector('td:nth-child(3) span');
+                    const statusElement = row.querySelector('td:nth-child(4) .badge');
+                    const typeElement = row.querySelector('td:nth-child(5) .badge');
+                    const dateElement = row.querySelector('td:nth-child(6) small');
+                    
+                    if (!codeElement || !nameElement || !descriptionElement || !statusElement || !typeElement || !dateElement) {
+                        console.warn(`Не все элементы найдены в строке ${index} для экспорта JSON`);
+                        return;
+                    }
+                    
+                    const code = codeElement.textContent || '';
+                    const name = nameElement.textContent || '';
+                    const description = descriptionElement.textContent || '';
+                    const status = statusElement.textContent || '';
+                    const type = typeElement.textContent || '';
+                    const date = dateElement.textContent || '';
+                    
+                    dictionaries.push({
+                        code: code,
+                        name: name,
+                        description: description,
+                        status: status,
+                        type: type,
+                        date: date
+                    });
+                } catch (error) {
+                    console.warn(`Ошибка при обработке строки ${index} для экспорта JSON:`, error);
+                }
             }
         });
         
-        data = JSON.stringify(dictionaries, null, 2);
-        mimeType = 'application/json;charset=utf-8;';
-        filename = 'словари_системы.json';
+        try {
+            data = JSON.stringify(dictionaries, null, 2);
+            mimeType = 'application/json;charset=utf-8;';
+            filename = 'словари_системы.json';
+        } catch (error) {
+            console.error('Ошибка при создании JSON:', error);
+            alert('Ошибка при создании JSON файла');
+            return;
+        }
         
     } else if (format === 'xlsx') {
         // Для Excel пока используем CSV (можно добавить библиотеку для создания XLSX)
@@ -636,88 +967,798 @@ function exportDictionaries(format = 'csv') {
     }
     
     // Создаем и скачиваем файл
-    const blob = new Blob([data], { type: mimeType });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+        if (!data) {
+            console.error('Нет данных для экспорта');
+            alert('Нет данных для экспорта');
+            return;
+        }
+        
+        const blob = new Blob([data], { type: mimeType });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Очищаем URL объект
+        URL.revokeObjectURL(url);
+        
+        console.log(`Файл ${filename} успешно экспортирован`);
+    } catch (error) {
+        console.error('Ошибка при создании и скачивании файла:', error);
+        alert('Ошибка при экспорте файла');
+    }
 }
 
 function refreshDictionaries() {
-    // Показываем индикатор загрузки
-    const refreshBtn = document.querySelector('button[onclick="refreshDictionaries()"]');
-    const originalContent = refreshBtn.innerHTML;
-    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Обновление...';
-    refreshBtn.disabled = true;
-    
-    // Обновляем страницу для получения свежих данных
-    // В будущем можно заменить на AJAX запрос
-    setTimeout(() => {
-        location.reload();
-    }, 500);
+    try {
+        // Показываем индикатор загрузки
+        const refreshBtn = document.querySelector('button[onclick="refreshDictionaries()"]');
+        if (!refreshBtn) {
+            console.warn('Кнопка обновления не найдена');
+            return;
+        }
+        
+        const originalContent = refreshBtn.innerHTML;
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Обновление...';
+        refreshBtn.disabled = true;
+        
+        // Обновляем страницу для получения свежих данных
+        // В будущем можно заменить на AJAX запрос
+        setTimeout(() => {
+            try {
+                location.reload();
+            } catch (error) {
+                console.error('Ошибка при обновлении страницы:', error);
+                // Восстанавливаем кнопку при ошибке
+                refreshBtn.innerHTML = originalContent;
+                refreshBtn.disabled = false;
+            }
+        }, 500);
+    } catch (error) {
+        console.error('Ошибка при обновлении словарей:', error);
+    }
 }
 
-function viewDictionary(dictionaryId) {
-    // Перенаправляем на страницу просмотра словаря
-    window.location.href = `/dictionaries/${dictionaryId}/`;
+function viewDictionary(dictionaryId, dictionaryName) {
+    // Проверяем корректность параметров
+    if (!dictionaryId || !dictionaryName) {
+        console.error('Не переданы обязательные параметры для просмотра справочника');
+        alert('Ошибка: не указаны параметры справочника');
+        return;
+    }
+    
+    // Принудительно очищаем состояние перед открытием нового модального окна
+    console.log('Подготовка к открытию модального окна: очищаем предыдущее состояние');
+    enableMainPageInteraction();
+    cleanupModalState();
+    
+    // Проверяем, что модальное окно существует
+    const modalElement = document.getElementById('dictionaryContentModal');
+    if (!modalElement) {
+        console.error('Модальное окно для просмотра справочника не найдено');
+        alert('Ошибка: не найдено модальное окно');
+        return;
+    }
+    
+    // Показываем модальное окно с содержимым справочника
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Добавляем обработчики событий для корректного закрытия
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        console.log('Модальное окно закрыто, очищаем состояние');
+        cleanupModalState();
+        
+        // Убеждаемся, что основная страница доступна
+        setTimeout(() => {
+            enableMainPageInteraction();
+        }, 100);
+    });
+    
+    // Добавляем обработчик для полного скрытия модального окна
+    modalElement.addEventListener('transitionend', function (event) {
+        if (event.propertyName === 'opacity' && !modalElement.classList.contains('show')) {
+            console.log('Переход модального окна завершен, восстанавливаем взаимодействие');
+            enableMainPageInteraction();
+        }
+    });
+    
+    // Добавляем обработчик для клавиши Escape
+    modalElement.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            console.log('Нажата клавиша Escape, очищаем состояние');
+            cleanupModalState();
+        }
+    });
+    
+    // Добавляем обработчик для клика вне модального окна
+    modalElement.addEventListener('click', function (event) {
+        if (event.target === modalElement) {
+            console.log('Клик вне модального окна, очищаем состояние');
+            cleanupModalState();
+        }
+    });
+    
+    modal.show();
+    
+    // Устанавливаем заголовок
+    const titleElement = document.getElementById('dictionaryContentTitle');
+    if (titleElement) {
+        titleElement.textContent = `Содержимое справочника: ${dictionaryName}`;
+    }
+    
+    // Преобразуем ID в число и загружаем содержимое справочника
+    const numericId = parseInt(dictionaryId, 10);
+    if (isNaN(numericId) || numericId <= 0) {
+        console.error(`Некорректный ID справочника: ${dictionaryId}`);
+        alert('Ошибка: некорректный ID справочника');
+        return;
+    }
+    
+    loadDictionaryContent(numericId);
 }
 
 function editDictionary(dictionaryId) {
-    // Перенаправляем на страницу редактирования словаря
-    window.location.href = `/dictionaries/${dictionaryId}/edit/`;
+    if (!dictionaryId) {
+        console.error('Не передан ID справочника для редактирования');
+        alert('Ошибка: не указан ID справочника');
+        return;
+    }
+    
+    try {
+        // Перенаправляем на страницу редактирования словаря
+        window.location.href = `/dictionaries/${dictionaryId}/edit/`;
+    } catch (error) {
+        console.error('Ошибка при перенаправлении на страницу редактирования:', error);
+        alert('Ошибка при переходе на страницу редактирования');
+    }
 }
 
 function deleteDictionary(dictionaryId, dictionaryName) {
-    dictionaryToDelete = dictionaryId;
-    document.getElementById('deleteDictionaryName').textContent = dictionaryName;
+    if (!dictionaryId || !dictionaryName) {
+        console.error('Не переданы обязательные параметры для удаления справочника:', { dictionaryId, dictionaryName });
+        alert('Ошибка: не указаны параметры справочника');
+        return;
+    }
     
-    // Показываем модальное окно подтверждения
-    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    modal.show();
+    try {
+        dictionaryToDelete = dictionaryId;
+        
+        const deleteNameElement = document.getElementById('deleteDictionaryName');
+        if (deleteNameElement) {
+            deleteNameElement.textContent = dictionaryName;
+        }
+        
+        // Показываем модальное окно подтверждения
+        const modalElement = document.getElementById('deleteConfirmModal');
+        if (!modalElement) {
+            console.error('Модальное окно подтверждения удаления не найдено');
+            alert('Ошибка: не найдено модальное окно подтверждения');
+            return;
+        }
+        
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    } catch (error) {
+        console.error('Ошибка при показе модального окна удаления:', error);
+        alert('Ошибка при показе окна подтверждения удаления');
+    }
+}
+
+// Функция очистки состояния модального окна
+function cleanupModalState() {
+    console.log('Очистка состояния модального окна');
+    
+    try {
+        // Сбрасываем глобальные переменные
+        currentDictionaryId = null;
+        currentDictionaryContent = [];
+        
+        // Очищаем содержимое таблицы
+        const tableBody = document.getElementById('dictionaryContentTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = '';
+        }
+        
+        // Очищаем содержимое дерева
+        const treeContainer = document.getElementById('dictionaryContentTree');
+        if (treeContainer) {
+            treeContainer.innerHTML = '';
+        }
+        
+        // Сбрасываем режим отображения на табличный
+        currentViewMode = 'table';
+        const tableBtn = document.getElementById('tableViewMode');
+        const treeBtn = document.getElementById('treeViewMode');
+        if (tableBtn) tableBtn.checked = true;
+        if (treeBtn) treeBtn.checked = false;
+        
+        // Показываем таблицу и скрываем дерево
+        const tableContainer = document.getElementById('tableViewContainer');
+        const treeViewContainer = document.getElementById('treeViewContainer');
+        if (tableContainer) tableContainer.style.display = 'block';
+        if (treeViewContainer) treeViewContainer.style.display = 'none';
+        
+        // Скрываем индикатор загрузки
+        const loadingIndicator = document.getElementById('contentLoadingIndicator');
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+        
+        // Скрываем сообщение об ошибке
+        const errorMessage = document.getElementById('contentErrorMessage');
+        if (errorMessage) {
+            errorMessage.style.display = 'none';
+        }
+        
+        // Очищаем фильтры
+        const searchInput = document.getElementById('contentSearchInput');
+        const dateFilter = document.getElementById('contentDateFilter');
+        const parentFilter = document.getElementById('contentParentFilter');
+        
+        if (searchInput) searchInput.value = '';
+        if (dateFilter) dateFilter.value = '';
+        if (parentFilter) {
+            parentFilter.innerHTML = '<option value="">Все родители</option>';
+        }
+        
+        // Очищаем заголовок
+        const titleElement = document.getElementById('dictionaryContentTitle');
+        if (titleElement) {
+            titleElement.textContent = 'Содержимое справочника';
+        }
+        
+        // Очищаем бейджи
+        const codeBadge = document.getElementById('dictionaryContentCode');
+        const statusBadge = document.getElementById('dictionaryContentStatus');
+        const typeBadge = document.getElementById('dictionaryContentType');
+        
+        if (codeBadge) codeBadge.textContent = '';
+        if (statusBadge) statusBadge.textContent = '';
+        if (typeBadge) typeBadge.textContent = '';
+        
+        console.log('Состояние модального окна очищено');
+        
+    } catch (error) {
+        console.error('Ошибка при очистке состояния модального окна:', error);
+    }
+}
+
+// Функция принудительного закрытия модального окна
+function forceCloseModal() {
+    try {
+        const modalElement = document.getElementById('dictionaryContentModal');
+        if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+        }
+        cleanupModalState();
+        console.log('Модальное окно принудительно закрыто');
+    } catch (error) {
+        console.error('Ошибка при принудительном закрытии модального окна:', error);
+    }
+}
+
+// Функция восстановления взаимодействия с основной страницей
+function enableMainPageInteraction() {
+    try {
+        console.log('Восстанавливаем взаимодействие с основной страницей');
+        
+        // Убираем все возможные блокировки
+        const modalBackdrops = document.querySelectorAll('.modal-backdrop');
+        modalBackdrops.forEach(backdrop => {
+            backdrop.remove();
+        });
+        
+        // Убираем класс modal-open с body
+        document.body.classList.remove('modal-open');
+        
+        // Убираем padding-right с body
+        document.body.style.paddingRight = '';
+        
+        // Убираем overflow: hidden с body
+        document.body.style.overflow = '';
+        
+        // Убираем position: fixed с body
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+        
+        // Убираем все inline стили, которые могли быть добавлены Bootstrap
+        const body = document.body;
+        body.removeAttribute('style');
+        
+        console.log('Взаимодействие с основной страницей восстановлено');
+        
+    } catch (error) {
+        console.error('Ошибка при восстановлении взаимодействия с основной страницей:', error);
+    }
+}
+
+// Функция проверки взаимодействия с основной страницей
+function checkPageInteraction() {
+    try {
+        // Проверяем, есть ли модальные окна, которые должны быть закрыты
+        const modal = document.getElementById('dictionaryContentModal');
+        const hasModalOpen = document.body.classList.contains('modal-open');
+        const hasBackdrop = document.querySelector('.modal-backdrop');
+        
+        // Если нет открытых модальных окон, но есть блокировки - убираем их
+        if (!modal || !modal.classList.contains('show')) {
+            if (hasModalOpen || hasBackdrop) {
+                console.log('Обнаружена блокировка без открытого модального окна, восстанавливаем взаимодействие');
+                enableMainPageInteraction();
+            }
+        }
+        
+        // Проверяем, не заблокирован ли скролл
+        if (document.body.style.overflow === 'hidden' && (!modal || !modal.classList.contains('show'))) {
+            console.log('Обнаружена блокировка скролла без открытого модального окна, восстанавливаем');
+            enableMainPageInteraction();
+        }
+        
+    } catch (error) {
+        console.warn('Ошибка при проверке взаимодействия с основной страницей:', error);
+    }
+}
+
+// ===== ФУНКЦИИ ДЛЯ ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ ОТОБРАЖЕНИЯ =====
+
+// Переключение на табличный вид
+function switchToTableView() {
+    try {
+        console.log('Переключение на табличный вид');
+        
+        currentViewMode = 'table';
+        
+        // Показываем таблицу
+        const tableContainer = document.getElementById('tableViewContainer');
+        const treeContainer = document.getElementById('treeViewContainer');
+        
+        if (tableContainer) tableContainer.style.display = 'block';
+        if (treeContainer) treeContainer.style.display = 'none';
+        
+        // Обновляем состояние кнопок
+        const tableBtn = document.getElementById('tableViewMode');
+        const treeBtn = document.getElementById('treeViewMode');
+        
+        if (tableBtn) tableBtn.checked = true;
+        if (treeBtn) treeBtn.checked = false;
+        
+        console.log('Переключение на табличный вид завершено');
+        
+    } catch (error) {
+        console.error('Ошибка при переключении на табличный вид:', error);
+    }
+}
+
+// Переключение на древовидный вид
+function switchToTreeView() {
+    try {
+        console.log('Переключение на древовидный вид');
+        
+        currentViewMode = 'tree';
+        
+        // Показываем дерево
+        const tableContainer = document.getElementById('tableViewContainer');
+        const treeContainer = document.getElementById('treeViewContainer');
+        
+        if (tableContainer) tableContainer.style.display = 'none';
+        if (treeContainer) treeContainer.style.display = 'block';
+        
+        // Обновляем состояние кнопок
+        const tableBtn = document.getElementById('tableViewMode');
+        const treeBtn = document.getElementById('treeViewMode');
+        
+        if (tableBtn) tableBtn.checked = false;
+        if (treeBtn) treeBtn.checked = true;
+        
+        // Перестраиваем дерево с текущими данными
+        if (currentDictionaryContent && currentDictionaryContent.length > 0) {
+            displayDictionaryTree(currentDictionaryContent);
+        }
+        
+        console.log('Переключение на древовидный вид завершено');
+        
+    } catch (error) {
+        console.error('Ошибка при переключении на древовидный вид:', error);
+    }
+}
+
+// ===== ФУНКЦИИ ДЛЯ РАБОТЫ С ДЕРЕВОМ =====
+
+// Построение дерева из плоского массива данных
+function buildTree(data) {
+    try {
+        console.log('Построение дерева из данных:', data.length, 'элементов');
+        
+        // Создаем карту для быстрого поиска элементов по ID
+        const itemsMap = new Map();
+        const rootItems = [];
+        
+        // Сначала создаем все узлы
+        data.forEach(item => {
+            const treeNode = {
+                id: item.id,
+                parent_id: item.parent_id,
+                code: getAttributeValue(item.attrs, 'Код') || item.code || '',
+                name: getAttributeValue(item.attrs, 'Наименование') || item.name || '',
+                start_date: item.start_date,
+                end_date: item.end_date,
+                children: [],
+                originalData: item
+            };
+            itemsMap.set(item.id, treeNode);
+        });
+        
+        // Теперь строим иерархию
+        itemsMap.forEach(node => {
+            if (node.parent_id === null || node.parent_id === undefined) {
+                // Корневой элемент
+                rootItems.push(node);
+            } else {
+                // Дочерний элемент
+                const parent = itemsMap.get(node.parent_id);
+                if (parent) {
+                    parent.children.push(node);
+                } else {
+                    // Родитель не найден, считаем корневым
+                    rootItems.push(node);
+                }
+            }
+        });
+        
+        console.log('Дерево построено:', rootItems.length, 'корневых элементов');
+        return rootItems;
+        
+    } catch (error) {
+        console.error('Ошибка при построении дерева:', error);
+        return [];
+    }
+}
+
+// Получение значения атрибута из массива атрибутов
+function getAttributeValue(attrs, attributeName) {
+    if (!attrs || !Array.isArray(attrs)) return null;
+    
+    const attribute = attrs.find(attr => attr.name === attributeName);
+    return attribute ? attribute.value : null;
+}
+
+// Отображение дерева
+function displayDictionaryTree(data) {
+    try {
+        console.log('Отображение дерева справочника');
+        
+        const treeContainer = document.getElementById('dictionaryContentTree');
+        if (!treeContainer) {
+            console.error('Контейнер для дерева не найден');
+            return;
+        }
+        
+        // Очищаем контейнер
+        treeContainer.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+            treeContainer.innerHTML = '<div class="tree-empty">Справочник пуст</div>';
+            return;
+        }
+        
+        // Строим дерево
+        const treeData = buildTree(data);
+        
+        if (treeData.length === 0) {
+            treeContainer.innerHTML = '<div class="tree-empty">Не удалось построить дерево</div>';
+            return;
+        }
+        
+        // Создаем корневой узел
+        const rootNode = document.createElement('ul');
+        rootNode.className = 'tree-node tree-root';
+        
+        // Добавляем все корневые элементы
+        treeData.forEach(item => {
+            const treeItem = createTreeItem(item);
+            rootNode.appendChild(treeItem);
+        });
+        
+        treeContainer.appendChild(rootNode);
+        
+        // Обновляем счетчик узлов
+        updateTreeNodeCount(data.length, treeData.length);
+        
+        console.log('Дерево отображено успешно');
+        
+    } catch (error) {
+        console.error('Ошибка при отображении дерева:', error);
+        
+        const treeContainer = document.getElementById('dictionaryContentTree');
+        if (treeContainer) {
+            treeContainer.innerHTML = '<div class="tree-empty">Ошибка при построении дерева</div>';
+        }
+    }
+}
+
+// Создание элемента дерева
+function createTreeItem(item) {
+    const li = document.createElement('li');
+    li.className = 'tree-item';
+    
+    const content = document.createElement('div');
+    content.className = 'tree-item-content';
+    
+    // Кнопка раскрытия/свертывания
+    const toggle = document.createElement('button');
+    toggle.className = item.children.length > 0 ? 'tree-toggle collapsed' : 'tree-toggle leaf';
+    toggle.onclick = () => toggleTreeItem(li, toggle);
+    
+    // Информация об элементе
+    const info = document.createElement('div');
+    info.className = 'tree-item-info';
+    
+    const main = document.createElement('div');
+    main.className = 'tree-item-main';
+    
+    const title = document.createElement('div');
+    title.className = 'tree-item-title';
+    title.textContent = item.name || 'Без названия';
+    
+    const code = document.createElement('div');
+    code.className = 'tree-item-code';
+    code.textContent = item.code || '';
+    
+    main.appendChild(title);
+    if (item.code) main.appendChild(code);
+    
+    // Метаинформация
+    const meta = document.createElement('div');
+    meta.className = 'tree-item-meta';
+    
+    if (item.start_date) {
+        const startDate = document.createElement('span');
+        startDate.textContent = `С: ${formatDate(item.start_date)}`;
+        meta.appendChild(startDate);
+    }
+    
+    if (item.end_date) {
+        const endDate = document.createElement('span');
+        endDate.textContent = `До: ${formatDate(item.end_date)}`;
+        meta.appendChild(endDate);
+    }
+    
+    if (meta.children.length > 0) {
+        main.appendChild(meta);
+    }
+    
+    // Действия
+    const actions = document.createElement('div');
+    actions.className = 'tree-item-actions';
+    
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn btn-sm btn-outline-primary me-1';
+    viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+    viewBtn.title = 'Просмотр';
+    viewBtn.onclick = (e) => {
+        e.stopPropagation();
+        viewPosition(item.originalData);
+    };
+    
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-sm btn-outline-secondary me-1';
+    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+    editBtn.title = 'Редактировать';
+    editBtn.onclick = (e) => {
+        e.stopPropagation();
+        editPosition(item.originalData);
+    };
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-sm btn-outline-danger';
+    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+    deleteBtn.title = 'Удалить';
+    deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        deletePosition(item.originalData);
+    };
+    
+    actions.appendChild(viewBtn);
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+    
+    info.appendChild(main);
+    info.appendChild(actions);
+    
+    content.appendChild(toggle);
+    content.appendChild(info);
+    
+    li.appendChild(content);
+    
+    // Дочерние элементы
+    if (item.children.length > 0) {
+        const childrenContainer = document.createElement('ul');
+        childrenContainer.className = 'tree-children tree-node';
+        
+        item.children.forEach(child => {
+            const childItem = createTreeItem(child);
+            childrenContainer.appendChild(childItem);
+        });
+        
+        li.appendChild(childrenContainer);
+    }
+    
+    return li;
+}
+
+// Переключение состояния узла дерева
+function toggleTreeItem(item, toggle) {
+    try {
+        const children = item.querySelector('.tree-children');
+        if (!children) return;
+        
+        if (toggle.classList.contains('collapsed')) {
+            // Раскрываем
+            toggle.classList.remove('collapsed');
+            toggle.classList.add('expanded');
+            children.classList.add('expanded');
+        } else {
+            // Свертываем
+            toggle.classList.remove('expanded');
+            toggle.classList.add('collapsed');
+            children.classList.remove('expanded');
+        }
+    } catch (error) {
+        console.error('Ошибка при переключении узла дерева:', error);
+    }
+}
+
+// Раскрытие всех узлов дерева
+function expandAllTreeNodes() {
+    try {
+        console.log('Раскрытие всех узлов дерева');
+        
+        const treeContainer = document.getElementById('dictionaryContentTree');
+        if (!treeContainer) return;
+        
+        const toggles = treeContainer.querySelectorAll('.tree-toggle:not(.leaf)');
+        const children = treeContainer.querySelectorAll('.tree-children');
+        
+        toggles.forEach(toggle => {
+            toggle.classList.remove('collapsed');
+            toggle.classList.add('expanded');
+        });
+        
+        children.forEach(child => {
+            child.classList.add('expanded');
+        });
+        
+        console.log('Все узлы дерева раскрыты');
+        
+    } catch (error) {
+        console.error('Ошибка при раскрытии всех узлов дерева:', error);
+    }
+}
+
+// Сворачивание всех узлов дерева
+function collapseAllTreeNodes() {
+    try {
+        console.log('Сворачивание всех узлов дерева');
+        
+        const treeContainer = document.getElementById('dictionaryContentTree');
+        if (!treeContainer) return;
+        
+        const toggles = treeContainer.querySelectorAll('.tree-toggle:not(.leaf)');
+        const children = treeContainer.querySelectorAll('.tree-children');
+        
+        toggles.forEach(toggle => {
+            toggle.classList.remove('expanded');
+            toggle.classList.add('collapsed');
+        });
+        
+        children.forEach(child => {
+            child.classList.remove('expanded');
+        });
+        
+        console.log('Все узлы дерева свернуты');
+        
+    } catch (error) {
+        console.error('Ошибка при сворачивании всех узлов дерева:', error);
+    }
+}
+
+// Обновление счетчика узлов дерева
+function updateTreeNodeCount(totalNodes, rootNodes) {
+    try {
+        const countElement = document.getElementById('treeNodeCount');
+        if (countElement) {
+            countElement.textContent = `Всего узлов: ${totalNodes}, корневых: ${rootNodes}`;
+        }
+    } catch (error) {
+        console.error('Ошибка при обновлении счетчика узлов:', error);
+    }
 }
 
 // Функция фильтрации словарей
 function filterDictionaries() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    const typeFilter = document.getElementById('typeFilter').value;
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    
+    if (!searchInput || !statusFilter || !typeFilter) {
+        console.warn('Не все элементы фильтров найдены');
+        return;
+    }
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const statusValue = statusFilter.value;
+    const typeValue = typeFilter.value;
     
     const tbody = document.querySelector('tbody');
+    if (!tbody) {
+        console.warn('Таблица не найдена');
+        return;
+    }
+    
     const rows = tbody.querySelectorAll('tr');
     let visibleCount = 0;
     
-    rows.forEach(row => {
-        const name = row.querySelector('td:nth-child(2) strong').textContent.toLowerCase();
-        const code = row.querySelector('td:nth-child(1) .badge').textContent.toLowerCase();
-        const status = row.querySelector('td:nth-child(4) .badge').textContent.toLowerCase();
-        const type = row.querySelector('td:nth-child(5) .badge').textContent.toLowerCase();
-        
-        let showRow = true;
-        
-        // Поиск по названию или коду
-        if (searchTerm && !name.includes(searchTerm) && !code.includes(searchTerm)) {
-            showRow = false;
-        }
-        
-        // Фильтр по статусу
-        if (statusFilter && status !== statusFilter) {
-            showRow = false;
-        }
-        
-        // Фильтр по типу
-        if (typeFilter && type !== typeFilter) {
-            showRow = false;
-        }
-        
-        if (showRow) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
+    rows.forEach((row, index) => {
+        try {
+            const nameElement = row.querySelector('td:nth-child(2) strong');
+            const codeElement = row.querySelector('td:nth-child(1) .badge');
+            const statusElement = row.querySelector('td:nth-child(4) .badge');
+            const typeElement = row.querySelector('td:nth-child(5) .badge');
+            
+            if (!nameElement || !codeElement || !statusElement || !typeElement) {
+                console.warn(`Не все элементы найдены в строке ${index}`);
+                return;
+            }
+            
+            const name = nameElement.textContent.toLowerCase();
+            const code = codeElement.textContent.toLowerCase();
+            const status = statusElement.textContent.toLowerCase();
+            const type = typeElement.textContent.toLowerCase();
+            
+            let showRow = true;
+            
+            // Поиск по названию или коду
+            if (searchTerm && !name.includes(searchTerm) && !code.includes(searchTerm)) {
+                showRow = false;
+            }
+            
+            // Фильтр по статусу
+            if (statusValue && status !== statusValue) {
+                showRow = false;
+            }
+            
+            // Фильтр по типу
+            if (typeValue && type !== typeValue) {
+                showRow = false;
+            }
+            
+            if (showRow) {
+                try {
+                    row.style.display = '';
+                    visibleCount++;
+                } catch (error) {
+                    console.warn(`Ошибка при показе строки ${index}:`, error);
+                }
+            } else {
+                try {
+                    row.style.display = 'none';
+                } catch (error) {
+                    console.warn(`Ошибка при скрытии строки ${index}:`, error);
+                }
+            }
+        } catch (error) {
+            console.warn(`Ошибка при обработке строки ${index}:`, error);
         }
     });
     
@@ -730,48 +1771,73 @@ function filterDictionaries() {
 
 // Обработчик подтверждения удаления
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-    if (dictionaryToDelete) {
+    if (dictionaryToDelete && dictionaryToDelete !== null && dictionaryToDelete !== undefined) {
         // Здесь можно добавить AJAX запрос для удаления
         // Пока просто перенаправляем на страницу удаления
         window.location.href = `/dictionaries/${dictionaryToDelete}/delete/`;
+    } else {
+        console.error('Не выбран справочник для удаления');
+        alert('Ошибка: не выбран справочник для удаления');
     }
 });
 
 // Обновляем страницу каждые 30 секунд для синхронизации данных
 setInterval(function() {
-    // Можно добавить AJAX запрос для обновления списка без перезагрузки страницы
+    try {
+        // Можно добавить AJAX запрос для обновления списка без перезагрузки страницы
+        // Пока просто логируем для отладки
+        console.log('Автообновление: проверка новых данных...');
+    } catch (error) {
+        console.error('Ошибка при автообновлении:', error);
+    }
 }, 30000);
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     // Добавляем обработчики для клавиш
-    document.getElementById('searchInput').addEventListener('keyup', function(e) {
-        if (e.key === 'Escape') {
-            this.value = '';
-            filterDictionaries();
-        }
-    });
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                filterDictionaries();
+            }
+        });
+    }
     
     // Добавляем обработчики для кнопок словарей
     document.querySelectorAll('.view-dict-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const dictId = this.getAttribute('data-dict-id');
-            viewDictionary(dictId);
+            const dictName = this.getAttribute('data-dict-name');
+            if (dictId && dictName) {
+                viewDictionary(dictId, dictName);
+            } else {
+                console.error('Не переданы обязательные параметры для просмотра справочника');
+            }
         });
     });
     
     document.querySelectorAll('.edit-dict-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const dictId = this.getAttribute('data-dict-id');
-            editDictionary(dictId);
+            if (dictId) {
+                editDictionary(dictId);
+            } else {
+                console.error('Не передан ID справочника для редактирования');
+            }
         });
     });
     
     document.querySelectorAll('.delete-dict-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const dictId = this.getAttribute('data-dict-id');
+            const dictId = this.getAttribute('data-dict-name');
             const dictName = this.getAttribute('data-dict-name');
-            deleteDictionary(dictId, dictName);
+            if (dictId && dictName) {
+                deleteDictionary(dictId, dictName);
+            } else {
+                console.error('Не переданы обязательные параметры для удаления справочника');
+            }
         });
     });
     
@@ -779,7 +1845,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.sortable').forEach(th => {
         th.addEventListener('click', function() {
             const sortBy = this.getAttribute('data-sort');
-            sortTable(sortBy, this);
+            if (sortBy) {
+                sortTable(sortBy, this);
+            } else {
+                console.warn('Не указан атрибут data-sort для сортировки');
+            }
         });
     });
     
@@ -792,52 +1862,93 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Функция сортировки таблицы
 function sortTable(sortBy, headerElement) {
+    if (!sortBy || !headerElement) {
+        console.error('Не переданы обязательные параметры для сортировки:', { sortBy, headerElement });
+        return;
+    }
+    
     const table = document.querySelector('table');
+    if (!table) {
+        console.warn('Таблица не найдена');
+        return;
+    }
+    
     const tbody = table.querySelector('tbody');
+    if (!tbody) {
+        console.warn('Тело таблицы не найдено');
+        return;
+    }
+    
     const rows = Array.from(tbody.querySelectorAll('tr'));
+    if (rows.length === 0) {
+        console.warn('Нет строк для сортировки');
+        return;
+    }
     
     // Определяем направление сортировки
     const isAsc = !headerElement.classList.contains('sort-asc');
     
     // Убираем все классы сортировки
     document.querySelectorAll('.sortable').forEach(th => {
-        th.classList.remove('sort-asc', 'sort-desc');
+        if (th && th.classList) {
+            th.classList.remove('sort-asc', 'sort-desc');
+        }
     });
     
     // Добавляем класс для текущего заголовка
-    headerElement.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
+    if (headerElement && headerElement.classList) {
+        headerElement.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
+    }
     
     // Сортируем строки
     rows.sort((a, b) => {
         let aValue, bValue;
         
-        switch(sortBy) {
-            case 'code':
-                aValue = a.querySelector('td:nth-child(1) .badge').textContent;
-                bValue = b.querySelector('td:nth-child(1) .badge').textContent;
-                break;
-            case 'name':
-                aValue = a.querySelector('td:nth-child(2) strong').textContent;
-                bValue = b.querySelector('td:nth-child(2) strong').textContent;
-                break;
-            case 'description':
-                aValue = a.querySelector('td:nth-child(3) span').textContent;
-                bValue = b.querySelector('td:nth-child(3) span').textContent;
-                break;
-            case 'status':
-                aValue = a.querySelector('td:nth-child(4) .badge').textContent;
-                bValue = b.querySelector('td:nth-child(4) .badge').textContent;
-                break;
-            case 'type':
-                aValue = a.querySelector('td:nth-child(5) .badge').textContent;
-                bValue = b.querySelector('td:nth-child(5) .badge').textContent;
-                break;
-            case 'date':
-                aValue = a.querySelector('td:nth-child(6) small').textContent;
-                bValue = b.querySelector('td:nth-child(6) small').textContent;
-                break;
-            default:
-                return 0;
+        try {
+            switch(sortBy) {
+                case 'code':
+                    const aCodeElement = a.querySelector('td:nth-child(1) .badge');
+                    const bCodeElement = b.querySelector('td:nth-child(1) .badge');
+                    aValue = aCodeElement ? aCodeElement.textContent : '';
+                    bValue = bCodeElement ? bCodeElement.textContent : '';
+                    break;
+                case 'name':
+                    const aNameElement = a.querySelector('td:nth-child(2) strong');
+                    const bNameElement = b.querySelector('td:nth-child(2) strong');
+                    aValue = aNameElement ? aNameElement.textContent : '';
+                    bValue = bNameElement ? bNameElement.textContent : '';
+                    break;
+                case 'description':
+                    const aDescElement = a.querySelector('td:nth-child(3) span');
+                    const bDescElement = b.querySelector('td:nth-child(3) span');
+                    aValue = aDescElement ? aDescElement.textContent : '';
+                    bValue = bDescElement ? bDescElement.textContent : '';
+                    break;
+                case 'status':
+                    const aStatusElement = a.querySelector('td:nth-child(4) .badge');
+                    const bStatusElement = b.querySelector('td:nth-child(4) .badge');
+                    aValue = aStatusElement ? aStatusElement.textContent : '';
+                    bValue = bStatusElement ? bStatusElement.textContent : '';
+                    break;
+                case 'type':
+                    const aTypeElement = a.querySelector('td:nth-child(5) .badge');
+                    const bTypeElement = b.querySelector('td:nth-child(5) .badge');
+                    aValue = aTypeElement ? aTypeElement.textContent : '';
+                    bValue = bTypeElement ? bTypeElement.textContent : '';
+                    break;
+                case 'date':
+                    const aDateElement = a.querySelector('td:nth-child(6) small');
+                    const bDateElement = b.querySelector('td:nth-child(6) small');
+                    aValue = aDateElement ? aDateElement.textContent : '';
+                    bValue = bDateElement ? bDateElement.textContent : '';
+                    break;
+                default:
+                    console.warn(`Неизвестный тип сортировки: ${sortBy}`);
+                    return 0;
+            }
+        } catch (error) {
+            console.warn(`Ошибка при получении значений для сортировки:`, error);
+            return 0;
         }
         
         if (aValue < bValue) return isAsc ? -1 : 1;
@@ -846,54 +1957,121 @@ function sortTable(sortBy, headerElement) {
     });
     
     // Перестраиваем таблицу
-    rows.forEach(row => tbody.appendChild(row));
+    try {
+        rows.forEach((row, index) => {
+            if (row && tbody) {
+                try {
+                    tbody.appendChild(row);
+                } catch (error) {
+                    console.warn(`Ошибка при добавлении строки ${index} в таблицу:`, error);
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Ошибка при перестройке таблицы:', error);
+    }
 }
 
 // Функция подсчета статистики
 function calculateStatistics() {
     const table = document.querySelector('table');
-    if (!table) return;
+    if (!table) {
+        console.warn('Таблица не найдена для подсчета статистики');
+        return;
+    }
     
-    const rows = table.querySelectorAll('tbody tr');
+    const tbody = table.querySelector('tbody');
+    if (!tbody) {
+        console.warn('Тело таблицы не найдено для подсчета статистики');
+        return;
+    }
+    
+    const rows = tbody.querySelectorAll('tr');
+    if (rows.length === 0) {
+        console.warn('Нет строк для подсчета статистики');
+        return;
+    }
+    
     let activeCount = 0;
     let draftCount = 0;
     let classifierCount = 0;
     
-    rows.forEach(row => {
-        const status = row.querySelector('td:nth-child(4) .badge').textContent.toLowerCase();
-        const type = row.querySelector('td:nth-child(5) .badge').textContent.toLowerCase();
-        
-        if (status === 'активный' || status === 'active') {
-            activeCount++;
-        } else if (status === 'черновик' || status === 'draft') {
-            draftCount++;
-        }
-        
-        if (type === 'классификатор' || type === 'classifier') {
-            classifierCount++;
+    rows.forEach((row, index) => {
+        try {
+            const statusElement = row.querySelector('td:nth-child(4) .badge');
+            const typeElement = row.querySelector('td:nth-child(5) .badge');
+            
+            if (!statusElement || !typeElement) {
+                console.warn(`Не все элементы найдены в строке ${index} для статистики`);
+                return;
+            }
+            
+            const status = statusElement.textContent.toLowerCase();
+            const type = typeElement.textContent.toLowerCase();
+            
+            if (status === 'активный' || status === 'active') {
+                activeCount++;
+            } else if (status === 'черновик' || status === 'draft') {
+                draftCount++;
+            }
+            
+            if (type === 'классификатор' || type === 'classifier') {
+                classifierCount++;
+            }
+            
+            // Дополнительная проверка корректности подсчета
+            if (activeCount < 0 || draftCount < 0 || classifierCount < 0) {
+                console.warn(`Некорректные значения счетчиков в строке ${index}:`, { activeCount, draftCount, classifierCount });
+            }
+        } catch (error) {
+            console.warn(`Ошибка при обработке строки ${index} для статистики:`, error);
         }
     });
     
     // Обновляем статистику
-    document.getElementById('activeCount').textContent = activeCount;
-    document.getElementById('draftCount').textContent = draftCount;
-    document.getElementById('classifierCount').textContent = classifierCount;
+    const activeElement = document.getElementById('activeCount');
+    const draftElement = document.getElementById('draftCount');
+    const classifierElement = document.getElementById('classifierCount');
+    
+    try {
+        if (activeElement) activeElement.textContent = activeCount;
+        if (draftElement) draftElement.textContent = draftCount;
+        if (classifierElement) classifierElement.textContent = classifierCount;
+        
+        console.log(`Статистика обновлена: Активных: ${activeCount}, Черновиков: ${draftCount}, Классификаторов: ${classifierCount}`);
+    } catch (error) {
+        console.error('Ошибка при обновлении статистики:', error);
+    }
 }
 
 // Функция показа сообщений
 function showMessage(type, text, duration = 5000) {
+    if (!type || !text) {
+        console.warn('Не переданы обязательные параметры для showMessage:', { type, text });
+        return;
+    }
+    
     const messageId = type + 'Message';
     const messageElement = document.getElementById(messageId);
     const textElement = document.getElementById(type + 'Text');
     
-    if (messageElement && textElement) {
+    if (!messageElement || !textElement) {
+        console.warn(`Элементы сообщения не найдены: ${messageId}, ${type}Text`);
+        return;
+    }
+    
+    try {
         textElement.textContent = text;
         messageElement.style.display = 'block';
         
         // Автоматически скрываем сообщение
         setTimeout(() => {
-            messageElement.style.display = 'none';
+            if (messageElement) {
+                messageElement.style.display = 'none';
+            }
         }, duration);
+    } catch (error) {
+        console.error('Ошибка при показе сообщения:', error);
     }
 }
 
@@ -903,13 +2081,22 @@ function hideAllMessages() {
     messageTypes.forEach(type => {
         const messageElement = document.getElementById(type + 'Message');
         if (messageElement) {
-            messageElement.style.display = 'none';
+            try {
+                messageElement.style.display = 'none';
+            } catch (error) {
+                console.warn(`Ошибка при скрытии сообщения ${type}:`, error);
+            }
         }
     });
 }
 
 // Функция валидации данных
 function validateDictionaryData(dictionary) {
+    if (!dictionary || typeof dictionary !== 'object') {
+        console.error('Некорректные данные для валидации:', dictionary);
+        return ['Некорректные данные для валидации'];
+    }
+    
     const errors = [];
     
     if (!dictionary.name || dictionary.name.trim() === '') {
@@ -925,31 +2112,51 @@ function validateDictionaryData(dictionary) {
 
 // Функция форматирования даты
 function formatDate(dateString) {
-    if (!dateString) return '-';
+    if (!dateString || dateString === null || dateString === undefined) {
+        return '-';
+    }
     
     try {
         const date = new Date(dateString);
+        
+        // Проверяем, что дата корректная
+        if (isNaN(date.getTime())) {
+            console.warn(`Некорректная дата: ${dateString}`);
+            return dateString || '-';
+        }
+        
         return date.toLocaleDateString('ru-RU');
     } catch (e) {
-        return dateString;
+        console.warn(`Ошибка форматирования даты ${dateString}:`, e);
+        return dateString || '-';
     }
 }
 
 // Функция очистки фильтров
 function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('typeFilter').value = '';
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (statusFilter) statusFilter.value = '';
+    if (typeFilter) typeFilter.value = '';
+    
     filterDictionaries();
 }
 
 // Функция показа статистики
 function showStatistics() {
+    const totalElement = document.querySelector('.badge.bg-primary');
+    const activeElement = document.getElementById('activeCount');
+    const draftElement = document.getElementById('draftCount');
+    const classifierElement = document.getElementById('classifierCount');
+    
     const stats = {
-        total: document.querySelector('.badge.bg-primary').textContent,
-        active: document.getElementById('activeCount').textContent,
-        draft: document.getElementById('draftCount').textContent,
-        classifier: document.getElementById('classifierCount').textContent
+        total: totalElement ? totalElement.textContent : 'неизвестно',
+        active: activeElement ? activeElement.textContent : 'неизвестно',
+        draft: draftElement ? draftElement.textContent : 'неизвестно',
+        classifier: classifierElement ? classifierElement.textContent : 'неизвестно'
     };
     
     const message = `Статистика словарей:\n` +
@@ -971,13 +2178,20 @@ function showSettings() {
         'Цветовая схема': 'Стандартная'
     };
     
-    let message = 'Текущие настройки:\n\n';
-    for (const [key, value] of Object.entries(settings)) {
-        message += `${key}: ${value}\n`;
+    try {
+        let message = 'Текущие настройки:\n\n';
+        for (const [key, value] of Object.entries(settings)) {
+            if (key && value) {
+                message += `${key}: ${value}\n`;
+            }
+        }
+        message += '\nДля изменения настроек обратитесь к администратору системы.';
+        
+        alert(message);
+    } catch (error) {
+        console.error('Ошибка при показе настроек:', error);
+        alert('Ошибка при загрузке настроек');
     }
-    message += '\nДля изменения настроек обратитесь к администратору системы.';
-    
-    alert(message);
 }
 
 // Функция для проверки доступности API
@@ -987,6 +2201,12 @@ function checkApiAvailability() {
     const infoMessage = document.getElementById('infoMessage');
     const successMessage = document.getElementById('successMessage');
     const warningMessage = document.getElementById('warningMessage');
+
+    // Проверяем, что все элементы найдены
+    if (!loadingIndicator || !errorMessage || !infoMessage || !successMessage || !warningMessage) {
+        console.error('Не все элементы для проверки API найдены');
+        return;
+    }
 
     loadingIndicator.style.display = 'block';
     errorMessage.style.display = 'none';
@@ -1002,26 +2222,33 @@ function checkApiAvailability() {
             return response.json();
         })
         .then(data => {
-            loadingIndicator.style.display = 'none';
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            
+            if (!data || typeof data !== 'object') {
+                console.error('Некорректный ответ API:', data);
+                if (errorMessage) errorMessage.style.display = 'block';
+                return;
+            }
+            
             if (data.status === 'available') {
-                successMessage.style.display = 'block';
-                infoMessage.style.display = 'none';
-                warningMessage.style.display = 'none';
-                showMessage('success', 'API доступен. Последнее обновление: ' + data.last_updated);
+                if (successMessage) successMessage.style.display = 'block';
+                if (infoMessage) infoMessage.style.display = 'none';
+                if (warningMessage) warningMessage.style.display = 'none';
+                showMessage('success', 'API доступен. Последнее обновление: ' + (data.last_updated || 'неизвестно'));
             } else {
-                errorMessage.style.display = 'block';
-                infoMessage.style.display = 'none';
-                successMessage.style.display = 'none';
-                warningMessage.style.display = 'none';
-                showMessage('error', 'API недоступен. Статус: ' + data.status + ' (последнее обновление: ' + data.last_updated + ')');
+                if (errorMessage) errorMessage.style.display = 'block';
+                if (infoMessage) infoMessage.style.display = 'none';
+                if (successMessage) successMessage.style.display = 'none';
+                if (warningMessage) warningMessage.style.display = 'none';
+                showMessage('error', 'API недоступен. Статус: ' + (data.status || 'неизвестно') + ' (последнее обновление: ' + (data.last_updated || 'неизвестно') + ')');
             }
         })
         .catch(error => {
-            loadingIndicator.style.display = 'none';
-            errorMessage.style.display = 'block';
-            infoMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            warningMessage.style.display = 'none';
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (errorMessage) errorMessage.style.display = 'block';
+            if (infoMessage) infoMessage.style.display = 'none';
+            if (successMessage) successMessage.style.display = 'none';
+            if (warningMessage) warningMessage.style.display = 'none';
             showMessage('error', 'Произошла ошибка при проверке доступности API: ' + error.message);
         });
 }
@@ -1033,6 +2260,598 @@ function toggleDebugInfo() {
         debugInfoDiv.style.display = debugInfoDiv.style.display === 'block' ? 'none' : 'block';
     }
 }
+
+// ===== ФУНКЦИИ ДЛЯ РАБОТЫ С СОДЕРЖИМЫМ СПРАВОЧНИКА =====
+
+let currentDictionaryId = null;
+let currentDictionaryContent = [];
+let currentViewMode = 'table'; // 'table' или 'tree'
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    // Сбрасываем состояние при загрузке страницы
+    currentDictionaryId = null;
+    currentDictionaryContent = [];
+    
+    // Добавляем глобальный обработчик для восстановления взаимодействия
+    // в случае зависания модального окна
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modal = document.getElementById('dictionaryContentModal');
+            if (modal && modal.classList.contains('show')) {
+                console.log('Глобальный обработчик: принудительно закрываем модальное окно');
+                forceCloseModal();
+            }
+        }
+        
+        // Комбинация клавиш Ctrl+Alt+R для принудительного восстановления взаимодействия
+        if (event.ctrlKey && event.altKey && event.key === 'r') {
+            event.preventDefault();
+            console.log('Принудительное восстановление взаимодействия по комбинации клавиш');
+            forceCloseModal();
+            enableMainPageInteraction();
+            alert('Взаимодействие с основной страницей восстановлено');
+        }
+    });
+    
+    // Добавляем обработчик для клика по backdrop
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal-backdrop')) {
+            console.log('Клик по backdrop: принудительно закрываем модальное окно');
+            forceCloseModal();
+        }
+    });
+    
+    // Проверяем состояние страницы каждые 5 секунд
+    setInterval(function() {
+        checkPageInteraction();
+    }, 5000);
+});
+
+// Загрузка содержимого справочника
+async function loadDictionaryContent(dictionaryId) {
+    // Проверяем, что передан корректный ID справочника
+    if (!dictionaryId || dictionaryId === null || dictionaryId === undefined) {
+        console.error('Не передан ID справочника');
+        showContentError('Ошибка: не указан ID справочника');
+        return;
+    }
+    
+    // Преобразуем в число, если передана строка
+    const numericId = parseInt(dictionaryId, 10);
+    if (isNaN(numericId) || numericId <= 0) {
+        console.error(`Некорректный ID справочника: ${dictionaryId}`);
+        showContentError('Ошибка: некорректный ID справочника');
+        return;
+    }
+    
+    // Используем числовой ID для API запроса
+    const apiDictionaryId = numericId;
+    
+    currentDictionaryId = dictionaryId;
+    
+    // Показываем индикатор загрузки
+    const loadingIndicator = document.getElementById('contentLoadingIndicator');
+    const errorMessage = document.getElementById('contentErrorMessage');
+    const tableBody = document.getElementById('dictionaryContentTableBody');
+    
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    if (errorMessage) errorMessage.style.display = 'none';
+    if (tableBody) tableBody.innerHTML = '';
+    
+    try {
+        // Получаем токен доступа
+        const accessToken = getAccessToken();
+        
+        if (!accessToken) {
+            throw new Error('Токен доступа не найден. Пожалуйста, войдите в систему.');
+        }
+        
+        console.log('Токен доступа получен успешно');
+        
+        // Получаем содержимое справочника через API
+        // backend_api_url автоматически добавляется через Django context processor
+        const apiUrl = `{{ backend_api_url }}/api/v2/models/dictionary/?dictionary=${apiDictionaryId}`;
+        console.log(`Запрос к API: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log(`Ответ API: статус ${response.status}`);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Ошибка API: ${response.status} - ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log(`Получены данные: ${data ? data.length : 'null'} позиций`);
+        
+        if (!data || !Array.isArray(data)) {
+            console.warn('API вернул некорректные данные');
+            currentDictionaryContent = [];
+            displayDictionaryContent([]);
+            return;
+        }
+        
+        currentDictionaryContent = data;
+        
+        // Отображаем содержимое
+        displayDictionaryContent(data);
+        
+        // Обновляем фильтры
+        updateContentFilters(data);
+        
+    } catch (error) {
+        console.error('Ошибка загрузки содержимого справочника:', error);
+        
+        // Сбрасываем состояние при ошибке
+        currentDictionaryContent = [];
+        
+        // Показываем ошибку пользователю
+        showContentError(`Ошибка загрузки содержимого: ${error.message}`);
+        
+        // Очищаем таблицу
+        const tableBody = document.getElementById('dictionaryContentTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger py-4">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Ошибка загрузки данных</p>
+                        <small>${error.message}</small>
+                    </td>
+                </tr>
+            `;
+        }
+    } finally {
+        const loadingIndicator = document.getElementById('contentLoadingIndicator');
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+}
+
+// Отображение содержимого справочника
+function displayDictionaryContent(content) {
+    console.log('Отображение содержимого справочника в режиме:', currentViewMode);
+    
+    // Отображаем содержимое в зависимости от текущего режима
+    if (currentViewMode === 'tree') {
+        displayDictionaryTree(content);
+    } else {
+        displayDictionaryTable(content);
+    }
+}
+
+// Отображение содержимого в виде таблицы
+function displayDictionaryTable(content) {
+    const tbody = document.getElementById('dictionaryContentTableBody');
+    if (!tbody) {
+        console.error('Таблица для отображения содержимого не найдена');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (!content || content.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <p>Справочник пуст</p>
+                    <small>Данные не найдены или справочник не содержит позиций</small>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    content.forEach((position, index) => {
+        try {
+            // Проверяем корректность данных позиции
+            if (!position || typeof position !== 'object') {
+                console.warn(`Некорректные данные позиции с индексом ${index}:`, position);
+                return;
+            }
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <span class="badge bg-primary">${position.code || '-'}</span>
+                </td>
+                <td>
+                    <strong>${position.name || 'Без названия'}</strong>
+                    ${position.description ? `<br><small class="text-muted">${position.description}</small>` : ''}
+                </td>
+                <td>
+                    ${position.parent_code ? `<span class="badge bg-secondary">${position.parent_code}</span>` : '-'}
+                </td>
+                <td>
+                    <small class="text-muted">${formatDate(position.start_date)}</small>
+                </td>
+                <td>
+                    <small class="text-muted">${formatDate(position.end_date)}</small>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-primary btn-sm" onclick="viewPosition(${index})" title="Просмотр">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm" onclick="editPosition(${index})" title="Редактировать">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deletePosition(${index})" title="Удалить">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        } catch (error) {
+            console.error(`Ошибка при отображении позиции ${index}:`, error);
+        }
+    });
+    
+    // Обновляем статистику
+    updateContentStatistics(content);
+}
+
+// Обновление фильтров для содержимого
+function updateContentFilters(content) {
+    // Фильтр по родителям
+    const parentFilter = document.getElementById('contentParentFilter');
+    if (!parentFilter) {
+        console.warn('Фильтр по родителям не найден');
+        return;
+    }
+    
+    parentFilter.innerHTML = '<option value="">Все родители</option>';
+    
+    const parents = [...new Set(content
+        .filter(item => {
+            try {
+                return item && typeof item === 'object' && item.parent_code;
+            } catch (error) {
+                console.warn('Ошибка при фильтрации родительских позиций:', error);
+                return false;
+            }
+        })
+        .map(item => {
+            try {
+                return item.parent_code;
+            } catch (error) {
+                console.warn('Ошибка при получении parent_code:', error);
+                return null;
+            }
+        })
+        .filter(Boolean)
+    )];
+    
+    parents.forEach(parent => {
+        if (parent && parent !== '') {
+            try {
+                const option = document.createElement('option');
+                option.value = parent;
+                option.textContent = parent;
+                parentFilter.appendChild(option);
+            } catch (error) {
+                console.warn(`Ошибка при создании опции для родителя ${parent}:`, error);
+            }
+        }
+    });
+    
+    // Устанавливаем текущую дату в фильтр дат
+    const dateFilter = document.getElementById('contentDateFilter');
+    if (dateFilter) {
+        dateFilter.value = new Date().toISOString().split('T')[0];
+    }
+}
+
+// Фильтрация содержимого справочника
+function filterDictionaryContent() {
+    const searchInput = document.getElementById('contentSearchInput');
+    const dateFilter = document.getElementById('contentDateFilter');
+    const parentFilter = document.getElementById('contentParentFilter');
+    
+    if (!searchInput || !dateFilter || !parentFilter) {
+        console.warn('Не все элементы фильтров найдены');
+        return;
+    }
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const dateValue = dateFilter.value;
+    const parentValue = parentFilter.value;
+    
+    if (!currentDictionaryContent || currentDictionaryContent.length === 0) {
+        console.warn('Нет данных для фильтрации');
+        return;
+    }
+    
+    const filteredContent = currentDictionaryContent.filter(position => {
+        try {
+            // Проверяем корректность данных позиции
+            if (!position || typeof position !== 'object') {
+                return false;
+            }
+            
+            // Поиск по коду и названию
+            const matchesSearch = !searchTerm || 
+                (position.code && position.code.toLowerCase().includes(searchTerm)) ||
+                (position.name && position.name.toLowerCase().includes(searchTerm));
+            
+            // Фильтр по дате
+            const matchesDate = !dateValue || 
+                (position.start_date && position.start_date <= dateValue && 
+                 position.end_date && position.end_date >= dateValue);
+            
+            // Фильтр по родителю
+            const matchesParent = !parentValue || position.parent_code === parentValue;
+            
+            return matchesSearch && matchesDate && matchesParent;
+        } catch (error) {
+            console.warn('Ошибка при фильтрации позиции:', error);
+            return false;
+        }
+    });
+    
+    // Отображаем отфильтрованный контент в зависимости от режима
+    if (currentViewMode === 'tree') {
+        displayDictionaryTree(filteredContent);
+    } else {
+        displayDictionaryTable(filteredContent);
+    }
+}
+
+// Очистка фильтров содержимого
+function clearContentFilters() {
+    const searchInput = document.getElementById('contentSearchInput');
+    const dateFilter = document.getElementById('contentDateFilter');
+    const parentFilter = document.getElementById('contentParentFilter');
+    
+    if (searchInput) searchInput.value = '';
+    if (dateFilter) dateFilter.value = new Date().toISOString().split('T')[0];
+    if (parentFilter) parentFilter.value = '';
+    
+    // Показываем все содержимое, если есть данные
+    if (currentDictionaryContent && currentDictionaryContent.length > 0) {
+        displayDictionaryContent(currentDictionaryContent);
+    }
+}
+
+// Обновление содержимого справочника
+function refreshDictionaryContent() {
+    if (currentDictionaryId && currentDictionaryId !== null && currentDictionaryId !== undefined) {
+        console.log(`Обновление содержимого справочника с ID: ${currentDictionaryId}`);
+        loadDictionaryContent(currentDictionaryId);
+    } else {
+        console.warn('Не выбран справочник для обновления');
+        // Показываем сообщение пользователю
+        showContentError('Сначала выберите справочник для просмотра');
+    }
+}
+
+// Экспорт содержимого справочника
+function exportDictionaryContent() {
+    if (!currentDictionaryId || currentDictionaryId === null || currentDictionaryId === undefined) {
+        alert('Не выбран справочник для экспорта');
+        return;
+    }
+    
+    if (!currentDictionaryContent || currentDictionaryContent.length === 0) {
+        alert('Нет данных для экспорта');
+        return;
+    }
+    
+    const csvContent = 'Код,Название,Описание,Родитель,Дата начала,Дата окончания\n';
+    const csvData = currentDictionaryContent
+        .filter(position => {
+            try {
+                return position && typeof position === 'object';
+            } catch (error) {
+                console.warn('Ошибка при фильтрации позиций для экспорта:', error);
+                return false;
+            }
+        })
+        .map((position, index) => {
+            try {
+                return `"${position.code || ''}","${position.name || ''}","${position.description || ''}","${position.parent_code || ''}","${position.start_date || ''}","${position.end_date || ''}"`;
+            } catch (error) {
+                console.warn(`Ошибка при обработке позиции ${index} для экспорта:`, error);
+                return '';
+            }
+        })
+        .filter(row => row !== '')
+        .join('\n');
+    
+    try {
+        const blob = new Blob([csvContent + csvData], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `содержимое_справочника_${currentDictionaryId || 'unknown'}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Очищаем URL объект
+        URL.revokeObjectURL(url);
+        
+        console.log('Содержимое справочника успешно экспортировано в CSV');
+    } catch (error) {
+        console.error('Ошибка при экспорте содержимого справочника:', error);
+        alert('Ошибка при экспорте файла');
+    }
+}
+
+// Обновление статистики содержимого
+function updateContentStatistics(content) {
+    if (!content || !Array.isArray(content)) {
+        console.warn('Некорректные данные для статистики');
+        return;
+    }
+    
+    const totalCount = content.length;
+                const activeCount = content.filter(item => {
+        if (!item || typeof item !== 'object') return false;
+        
+        try {
+            return item.start_date && item.end_date && 
+                new Date() >= new Date(item.start_date) && 
+                new Date() <= new Date(item.end_date);
+        } catch (error) {
+            console.warn(`Ошибка при проверке дат позиции:`, error);
+            return false;
+        }
+    }).length;
+    
+    // Дополнительная проверка корректности подсчета
+    if (totalCount < 0 || activeCount < 0) {
+        console.warn(`Некорректные значения счетчиков:`, { totalCount, activeCount });
+    }
+    
+    // Можно добавить отображение статистики в модальном окне
+    console.log(`Всего позиций: ${totalCount}, Активных: ${activeCount}`);
+    
+    // Возвращаем статистику для возможного использования
+    try {
+        return {
+            total: totalCount,
+            active: activeCount
+        };
+    } catch (error) {
+        console.error('Ошибка при возврате статистики:', error);
+        return {
+            total: 0,
+            active: 0
+        };
+    }
+}
+
+// Показать ошибку содержимого
+function showContentError(message) {
+    const errorText = document.getElementById('contentErrorText');
+    const errorMessage = document.getElementById('contentErrorMessage');
+    
+    if (errorText) errorText.textContent = message;
+    if (errorMessage) errorMessage.style.display = 'block';
+}
+
+// Функции для работы с позициями (заглушки)
+function viewPosition(index) {
+    if (!currentDictionaryContent || !Array.isArray(currentDictionaryContent)) {
+        console.error('Нет данных о позициях справочника');
+        alert('Ошибка: нет данных о позициях');
+        return;
+    }
+    
+    const position = currentDictionaryContent[index];
+    if (!position) {
+        console.error(`Позиция с индексом ${index} не найдена`);
+        alert('Ошибка: позиция не найдена');
+        return;
+    }
+    
+    alert(`Просмотр позиции: ${position.name || position.code}`);
+}
+
+function editPosition(index) {
+    if (!currentDictionaryContent || !Array.isArray(currentDictionaryContent)) {
+        console.error('Нет данных о позициях справочника');
+        alert('Ошибка: нет данных о позициях');
+        return;
+    }
+    
+    const position = currentDictionaryContent[index];
+    if (!position) {
+        console.error(`Позиция с индексом ${index} не найдена`);
+        alert('Ошибка: позиция не найдена');
+        return;
+    }
+    
+    alert(`Редактирование позиции: ${position.name || position.code}`);
+}
+
+function deletePosition(index) {
+    if (!currentDictionaryContent || !Array.isArray(currentDictionaryContent)) {
+        console.error('Нет данных о позициях справочника');
+        alert('Ошибка: нет данных о позициях');
+        return;
+    }
+    
+    const position = currentDictionaryContent[index];
+    if (!position) {
+        console.error(`Позиция с индексом ${index} не найдена`);
+        alert('Ошибка: позиция не найдена');
+        return;
+    }
+    
+    if (confirm(`Удалить позицию "${position.name || position.code}"?`)) {
+        // Здесь будет логика удаления
+        alert('Функция удаления пока не реализована');
+    }
+}
+
+// Получение токена доступа
+function getAccessToken() {
+    // Получаем токен из Django сессии через контекст
+    const token = '{{ access_token }}';
+    
+    if (!token || token === 'None' || token === '') {
+        console.error('Токен доступа не найден в контексте');
+        return null;
+    }
+    
+    return token;
+}
+
+// Добавляем обработчики событий после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработчики для фильтров содержимого справочника
+    const contentSearchInput = document.getElementById('contentSearchInput');
+    const contentDateFilter = document.getElementById('contentDateFilter');
+    const contentParentFilter = document.getElementById('contentParentFilter');
+    
+    if (contentSearchInput) {
+        contentSearchInput.addEventListener('input', filterDictionaryContent);
+    }
+    
+    if (contentDateFilter) {
+        contentDateFilter.addEventListener('change', filterDictionaryContent);
+    }
+    
+    if (contentParentFilter) {
+        contentParentFilter.addEventListener('change', filterDictionaryContent);
+    }
+    
+    // Обработчики для кнопок действий в таблице справочников
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.view-dict-btn')) {
+            const button = e.target.closest('.view-dict-btn');
+            const dictId = button.getAttribute('data-dict-id');
+            const dictName = button.getAttribute('data-dict-name');
+            viewDictionary(dictId, dictName);
+        }
+        
+        if (e.target.closest('.edit-dict-btn')) {
+            const button = e.target.closest('.edit-dict-btn');
+            const dictId = button.getAttribute('data-dict-id');
+            editDictionary(dictId);
+        }
+        
+        if (e.target.closest('.delete-dict-btn')) {
+            const button = e.target.closest('.delete-dict-btn');
+            const dictId = button.getAttribute('data-dict-id');
+            const dictName = button.getAttribute('data-dict-name');
+            deleteDictionary(dictId, dictName);
+        }
+    });
+});
 </script>
 
 <style>
@@ -1120,6 +2939,57 @@ function toggleDebugInfo() {
     .sortable.sort-desc i::before {
         content: "\f0dd"; /* fa-sort-down */
         opacity: 1;
+    }
+    
+    /* Стили для модального окна содержимого справочника */
+    .modal-xl {
+        max-width: 95%;
+    }
+    
+    #dictionaryContentTable {
+        font-size: 0.875rem;
+    }
+    
+    #dictionaryContentTable th {
+        font-size: 0.8rem;
+        font-weight: 600;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    #dictionaryContentTable td {
+        vertical-align: middle;
+        padding: 0.5rem;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    #contentLoadingIndicator {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+    
+    #contentErrorMessage {
+        border-radius: 0.5rem;
+    }
+    
+    .badge {
+        font-size: 0.75em;
+        padding: 0.35em 0.65em;
+    }
+    
+    /* Анимации для загрузки */
+    .spinner-border {
+        animation: spinner-border 0.75s linear infinite;
+    }
+    
+    @keyframes spinner-border {
+        to {
+            transform: rotate(360deg);
+        }
     }
 </style>
 {% endblock %}

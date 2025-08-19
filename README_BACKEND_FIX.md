@@ -4,6 +4,7 @@
 1. **Конфигурация Pydantic** - добавлены все недостающие поля в `config.py`
 2. **Имена полей** - исправлены во всех файлах (например, `log_level` → `LOG_LEVEL`)
 3. **Скрипт запуска** - исправлен `start_app.sh`
+4. **Конфигурация API** - IP адрес и порт бэкенда теперь берутся из конфигурации Django
 
 ## Как запустить:
 
@@ -35,3 +36,29 @@ curl http://localhost:8000/health
 ## Логи:
 - Backend: `logs/backend.log`
 - Frontend: `logs/frontend.log`
+
+## Конфигурация API
+
+### Переменные окружения
+Для настройки URL API используются переменные окружения:
+
+```bash
+# API для справочников (FastAPI)
+BACKEND_API_URL=http://127.0.0.1:8000/api/v2
+
+# API для авторизации (Auth Service)
+AUTH_API_URL=http://127.0.0.1:9090/api/v1/auth
+```
+
+### Проверка конфигурации
+Запустите скрипт проверки конфигурации:
+
+```bash
+cd frontend
+python check_config.py
+```
+
+### Автоматическое добавление в шаблоны
+Переменная `backend_api_url` автоматически добавляется во все шаблоны Django через context processor.
+
+Подробная документация: `frontend/API_CONFIG.md`

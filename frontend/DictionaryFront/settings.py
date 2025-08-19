@@ -11,9 +11,18 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Загружаем переменные окружения из .env файла
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # python-dotenv не установлен, используем системные переменные окружения
+    pass
 
 
 # Quick-start development settings - unsuitable for production
@@ -71,6 +80,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'DictionaryFront.context_processors.backend_api_url',
             ],
         },
     },
@@ -159,14 +169,16 @@ AUTH_CONFIG = {
     }
 }
 
-# API для словарей
+# API для словарей (FastAPI backend)
+# Можно переопределить через переменную окружения BACKEND_API_URL
 API_DICT = {
-    'BASE_URL': 'http://127.0.0.1:8000/api/v2'
+    'BASE_URL': os.environ.get('BACKEND_API_URL', 'http://127.0.0.1:8000/api/v2')
 }
 
-# Устаревшие настройки (для обратной совместимости)
+# API для авторизации (Auth Service)
+# Можно переопределить через переменную окружения AUTH_API_URL
 API_OATH = {
-    'BASE_URL': 'http://127.0.0.1:9090/api/v1/auth'
+    'BASE_URL': os.environ.get('AUTH_API_URL', 'http://127.0.0.1:9090/api/v1/auth')
 }
 
 import os

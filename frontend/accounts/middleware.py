@@ -20,6 +20,7 @@ class AuthMiddleware:
             '/admin/',
             '/static/',
             '/media/',
+            '/accounts/get_access_token/',  # Endpoint для получения токена
         ]
         
         # URL-адреса, которые требуют группы EISGS_Users

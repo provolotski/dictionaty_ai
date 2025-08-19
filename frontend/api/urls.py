@@ -12,4 +12,7 @@ urlpatterns = [
     
     # Специальный endpoint для создания словаря
     path('v2/models/newDictionary', views.create_dictionary, name='create_dictionary'),
+    
+    # Специальный endpoint для получения содержимого справочника
+    path('v2/models/dictionary/', views.get_dictionary_content, name='get_dictionary_content'),
 ]

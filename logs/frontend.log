@@ -1,29 +1,28 @@
 INFO Watching for file changes with StatReloader
-INFO "GET /dictionaries/create/ HTTP/1.1" 200 89009
-INFO "GET /api/v2/models/list HTTP/1.1" 200 5953
-WARNING Bad Request: /api/v2/models/newDictionary
-WARNING "POST /api/v2/models/newDictionary HTTP/1.1" 400 218
-INFO /mnt/e/projects/belstat/python/dictionaty_ai/frontend/api/views.py changed, reloading.
-Performing system checks...
-
-System check identified no issues (0 silenced).
-August 18, 2025 - 11:16:11
-Django version 5.2.5, using settings 'DictionaryFront.settings'
-Starting development server at http://0.0.0.0:8001/
-Quit the server with CONTROL-C.
-
-WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
-For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
-INFO Watching for file changes with StatReloader
-INFO /mnt/e/projects/belstat/python/dictionaty_ai/frontend/api/views.py changed, reloading.
-Performing system checks...
-
-System check identified no issues (0 silenced).
-August 18, 2025 - 11:17:37
-Django version 5.2.5, using settings 'DictionaryFront.settings'
-Starting development server at http://0.0.0.0:8001/
-Quit the server with CONTROL-C.
-
-WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
-For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
-INFO Watching for file changes with StatReloader
+INFO "GET / HTTP/1.1" 200 52129
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 177577
+INFO "GET /dictionaries/ HTTP/1.1" 200 177577
+INFO "GET /dictionaries/ HTTP/1.1" 200 177904
+INFO "GET /dictionaries/ HTTP/1.1" 200 187978
+INFO "GET /analytics HTTP/1.1" 302 0
+INFO "GET /accounts/login/ HTTP/1.1" 200 60143
+INFO "POST /accounts/login/ HTTP/1.1" 200 162
+INFO "GET / HTTP/1.1" 200 52129
+INFO "GET /analytics HTTP/1.1" 301 0
+INFO "GET /analytics/ HTTP/1.1" 200 46309
+INFO "GET /export HTTP/1.1" 301 0
+INFO "GET /export/ HTTP/1.1" 200 46290
+INFO "GET /import HTTP/1.1" 301 0
+INFO "GET /import/ HTTP/1.1" 200 46276
+INFO "GET /import HTTP/1.1" 301 0
+INFO "GET /import/ HTTP/1.1" 200 46276
+INFO "GET /import HTTP/1.1" 301 0
+INFO "GET /import/ HTTP/1.1" 200 46276
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 192367
+INFO "GET /dictionaries/ HTTP/1.1" 200 208919
+INFO "GET /static/css/main.css HTTP/1.1" 200 19477
+INFO "GET /static/js/bootstrap.bundle.min.js HTTP/1.1" 200 80821
+INFO "GET /static/css/bootstrap.min.css HTTP/1.1" 200 232018
+INFO "GET /static/favicon.ico HTTP/1.1" 200 4286

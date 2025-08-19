@@ -13,6 +13,7 @@ from database import database
 from config import settings
 from models.model_attribute import AttributeManager
 from schemas import DictionaryPosition
+import json
 
 logging.basicConfig(
     level=settings.LOG_LEVEL,
@@ -328,7 +329,7 @@ class DictionaryService:
         :param date:
         :return:
         """
-        logger.debug(
+        logger.info(
             f"получение всех значений справочника с id ={dictionary_id}  на дату {date}"
         )
 
@@ -377,7 +378,46 @@ class DictionaryService:
             sql, {"id_dictionary": dictionary_id, "dt": date}
         )
         logger.debug("количество строк %d", len(rows))
-        return [schemas.DictionaryPosition(**dict(row)) for row in rows]
+        # Преобразуем данные в формат DictionaryPosition
+        positions = []
+        for row in rows:
+            row_dict = dict(row)
+            logger.debug(f"row_dict: {row_dict}")
+            # Извлекаем данные из атрибутов
+            if isinstance(row_dict['attrs'], str):
+                attrs = json.loads(row_dict['attrs'])
+            else:
+                attrs = row_dict['attrs']
+            logger.debug(f"attrs: {attrs}")
+            code = None
+            name = None
+            description = None
+            
+            for attr in attrs:
+                attr_name = attr.get('name', '').lower()
+                attr_value = attr.get('value')
+                
+                if attr_name == 'код':
+                    code = attr_value
+                elif attr_name == 'наименование':
+                    name = attr_value
+                elif attr_name == 'описание':
+                    description = attr_value
+            
+            # Создаем объект DictionaryPosition с fallback значениями
+            position = schemas.DictionaryPosition(
+                id=row_dict['id'],
+                code=code or f"POS_{row_dict['id']}",  # Fallback если код не найден
+                name=name or f"Позиция {row_dict['id']}",  # Fallback если название не найдено
+                description=description,
+                start_date=date,  # Используем переданную дату как start_date
+                finish_date=date,  # Используем переданную дату как finish_date
+                parent_id=row_dict['parent_id'],
+                dictionary_id=dictionary_id  # Используем переданный dictionary_id
+            )
+            positions.append(position)
+        
+        return positions
 
     @staticmethod
     async def get_dictionary_structure(dictionary_id: int) -> list[schemas.AttributeIn]:

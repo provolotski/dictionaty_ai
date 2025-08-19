@@ -6,3 +6,5 @@ logs/backend.log
 frontend/logs/belstat.log
 frontend/logs/auth.log
 frontend/accounts/__pycache__/
+frontend/logs/belstat.log
+frontend/db.sqlite3

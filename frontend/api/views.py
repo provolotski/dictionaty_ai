@@ -10,6 +10,7 @@ from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views import View
 import logging
+from datetime import date
 
 logger = logging.getLogger(__name__)
 
@@ -106,87 +107,95 @@ def proxy_api_request(request, path):
                     'response_text': response.text
                 }, status=response.status_code)
         
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Ошибка при проксировании запроса: {e}")
+    except requests.exceptions.Timeout:
+        logger.error("Таймаут при обращении к backend")
         return JsonResponse({
-            'error': 'Ошибка подключения к backend API',
-            'details': str(e)
+            'error': 'Backend timeout',
+            'status_code': 504
+        }, status=504)
+        
+    except requests.exceptions.ConnectionError:
+        logger.error("Ошибка подключения к backend")
+        return JsonResponse({
+            'error': 'Backend connection error',
+            'status_code': 503
         }, status=503)
         
     except Exception as e:
-        logger.error(f"Неожиданная ошибка: {e}")
+        logger.error(f"Неожиданная ошибка: {str(e)}", exc_info=True)
         return JsonResponse({
-            'error': 'Внутренняя ошибка сервера',
-            'details': str(e)
+            'error': 'Internal server error',
+            'status_code': 500
         }, status=500)
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def create_dictionary(request):
     """
-    Специальный endpoint для создания словаря
+    Создает новый справочник
     """
-    logger.info(f"=== СОЗДАНИЕ СЛОВАРЯ ЧЕРЕЗ DJANGO API ===")
+    logger.info(f"=== СОЗДАНИЕ НОВОГО СПРАВОЧНИКА ===")
     logger.info(f"Метод запроса: {request.method}")
-    logger.info(f"URL запроса: {request.path}")
     logger.info(f"Заголовки запроса:")
     for key, value in request.META.items():
         if key.startswith('HTTP_'):
             logger.info(f"  {key}: {value}")
     
-    logger.info(f"Content-Type: {request.META.get('CONTENT_TYPE', 'Не указан')}")
-    logger.info(f"Content-Length: {request.META.get('CONTENT_LENGTH', 'Не указан')}")
-    
     try:
-        # Получаем данные из запроса
-        logger.debug(f"Чтение тела запроса...")
-        body = request.body.decode('utf-8')
-        logger.debug(f"Тело запроса (raw): {body}")
+        # Парсим JSON из тела запроса
+        if not request.body:
+            logger.error("Отсутствует тело запроса")
+            return JsonResponse({
+                'error': 'Request body is required',
+                'status_code': 400
+            }, status=400)
         
-        data = json.loads(body)
-        logger.info(f"Данные запроса (parsed): {data}")
-        logger.debug(f"Тип данных: {type(data)}")
-        logger.debug(f"Ключи данных: {list(data.keys())}")
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            logger.info(f"Получены данные: {data}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Ошибка парсинга JSON: {e}")
+            return JsonResponse({
+                'error': 'Invalid JSON format',
+                'details': str(e)
+            }, status=400)
         
-        # Валидируем обязательные поля
+        # Проверяем обязательные поля
         required_fields = ['name', 'code']
-        missing_fields = [field for field in required_fields if not data.get(field)]
+        missing_fields = []
+        
+        for field in required_fields:
+            if field not in data or not data[field]:
+                missing_fields.append(field)
         
         if missing_fields:
-            logger.warning(f"Отсутствуют обязательные поля: {missing_fields}")
+            logger.error(f"Отсутствуют обязательные поля: {missing_fields}")
             return JsonResponse({
-                'error': 'Отсутствуют обязательные поля',
+                'error': 'Missing required fields',
                 'missing_fields': missing_fields,
-                'required_fields': required_fields
+                'status_code': 400
             }, status=400)
         
-        # Проверяем, что данные не пустые
-        if not data:
-            logger.warning("Получены пустые данные")
-            return JsonResponse({
-                'error': 'Данные не могут быть пустыми'
-            }, status=400)
-        
-        # Добавляем значения по умолчанию для обязательных полей backend
-        from datetime import date
+        # Добавляем значения по умолчанию для отсутствующих полей
         data_with_defaults = data.copy()
         
-        # Если не указана дата начала, используем сегодняшнюю
+        # Если не указана, используем сегодняшнюю дату для start_date
         if 'start_date' not in data_with_defaults or not data_with_defaults['start_date']:
             data_with_defaults['start_date'] = date.today().isoformat()
         
-        # Если не указан тип, используем 0 (по умолчанию)
+        # Если не указан, используем 0 (по умолчанию) для id_type
         if 'id_type' not in data_with_defaults or not data_with_defaults['id_type']:
             data_with_defaults['id_type'] = 0
         
-        # Если не указана дата окончания или она пустая/null, используем далекое будущее
+        # Если не указана, используем далекую будущую дату для finish_date
         if 'finish_date' not in data_with_defaults or not data_with_defaults['finish_date']:
             data_with_defaults['finish_date'] = '9999-12-31'
         
-        # Если не указано описание или оно пустое, используем пустую строку
+        # Если не указано, используем пустую строку для description
         if 'description' not in data_with_defaults or not data_with_defaults['description']:
             data_with_defaults['description'] = ''
-        
+
         # Убираем поля с пустыми значениями, которые могут вызвать проблемы
         for key in list(data_with_defaults.keys()):
             if data_with_defaults[key] == '' or data_with_defaults[key] is None:
@@ -196,9 +205,26 @@ def create_dictionary(request):
                 else:
                     # Для необязательных полей устанавливаем пустую строку
                     data_with_defaults[key] = ''
+
+        # Финальная проверка обязательных полей
+        final_required_fields = ['name', 'code', 'start_date', 'finish_date', 'id_type', 'description']
+        missing_final_fields = []
         
-        # Фильтруем только те поля, которые нужны для схемы DictionaryIn
-        # Убираем поля, которые не должны передаваться к backend
+        for field in final_required_fields:
+            if field not in data_with_defaults or not data_with_defaults[field]:
+                missing_final_fields.append(field)
+        
+        if missing_final_fields:
+            logger.error(f"После обработки по умолчанию отсутствуют обязательные поля: {missing_final_fields}")
+            return JsonResponse({
+                'error': 'Failed to prepare required fields',
+                'missing_fields': missing_final_fields,
+                'processed_data': data_with_defaults
+            }, status=400)
+        
+        logger.info("Все обязательные поля подготовлены успешно")
+
+        # Фильтруем только поля, нужные для схемы DictionaryIn
         allowed_fields = [
             'name', 'code', 'description', 'start_date', 'finish_date',
             'name_eng', 'name_bel', 'description_eng', 'description_bel',
@@ -220,33 +246,15 @@ def create_dictionary(request):
         if filtered_out_fields:
             logger.info(f"Отфильтрованы лишние поля: {filtered_out_fields}")
         
-        logger.info(f"Данные с значениями по умолчанию: {data_with_defaults}")
+        logger.info(f"Данные с дефолтами: {data_with_defaults}")
         logger.info(f"Отфильтрованные данные для backend: {filtered_data}")
         logger.debug(f"Проверка обязательных полей:")
         logger.debug(f"  - start_date: {filtered_data.get('start_date')} (тип: {type(filtered_data.get('start_date'))})")
         logger.debug(f"  - finish_date: {filtered_data.get('finish_date')} (тип: {type(filtered_data.get('finish_date'))})")
         logger.debug(f"  - id_type: {filtered_data.get('id_type')} (тип: {type(filtered_data.get('id_type'))})")
         logger.debug(f"  - description: {filtered_data.get('description')} (тип: {type(filtered_data.get('description'))})")
-        
-        # Финальная проверка обязательных полей
-        final_required_fields = ['name', 'code', 'start_date', 'finish_date', 'id_type', 'description']
-        missing_final_fields = []
-        
-        for field in final_required_fields:
-            if field not in filtered_data or not filtered_data[field]:
-                missing_final_fields.append(field)
-        
-        if missing_final_fields:
-            logger.error(f"После обработки по умолчанию отсутствуют обязательные поля: {missing_final_fields}")
-            return JsonResponse({
-                'error': 'Не удалось подготовить обязательные поля',
-                'missing_fields': missing_final_fields,
-                'processed_data': filtered_data
-            }, status=400)
-        
-        logger.info("Все обязательные поля подготовлены успешно")
-        
-        # Формируем URL для backend
+
+        # Отправляем запрос к backend
         backend_url = f"{settings.API_DICT['BASE_URL']}/models/newDictionary"
         logger.info(f"URL backend: {backend_url}")
         
@@ -345,4 +353,161 @@ def create_dictionary(request):
         return JsonResponse({
             'error': 'Внутренняя ошибка сервера',
             'details': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_dictionary_content(request):
+    """
+    Получает содержимое справочника
+    """
+    logger.info(f"=== ПОЛУЧЕНИЕ СОДЕРЖИМОГО СПРАВОЧНИКА ===")
+    logger.info(f"Метод запроса: {request.method}")
+    logger.info(f"Параметры запроса: {dict(request.GET)}")
+    logger.info(f"Все заголовки запроса: {dict(request.META)}")
+    logger.info(f"URL запроса: {request.build_absolute_uri()}")
+    logger.info(f"Путь запроса: {request.path}")
+    logger.info(f"Полный URL: {request.get_full_path()}")
+    
+    try:
+        # Получаем ID справочника из параметров
+        dictionary_id = request.GET.get('dictionary')
+        if not dictionary_id:
+            logger.error("Отсутствует параметр 'dictionary'")
+            return JsonResponse({
+                'error': 'Missing required parameter: dictionary',
+                'status_code': 400
+            }, status=400)
+        
+        logger.info(f"ID справочника: {dictionary_id}")
+        
+        # Формируем URL для backend
+        # Используем прямой URL к FastAPI backend на порту 8000
+        # Нужно добавить /api/v2, так как это префикс FastAPI роутера
+        backend_url = f"http://127.0.0.1:8000/api/v2/models/dictionary/?dictionary={dictionary_id}"
+        logger.info(f"URL backend: {backend_url}")
+        
+        # Логируем детали запроса для отладки
+        logger.info(f"=== ДЕТАЛИ ЗАПРОСА К BACKEND ===")
+        logger.info(f"URL: {backend_url}")
+        logger.info(f"Метод: GET")
+        logger.info(f"Параметр dictionary: {dictionary_id}")
+        logger.info(f"Заголовки: {headers}")
+        
+        # Логируем параметры для отладки
+        logger.debug(f"Параметр dictionary: {dictionary_id}")
+        logger.debug(f"Тип параметра: {type(dictionary_id)}")
+        logger.debug(f"Все GET параметры: {dict(request.GET)}")
+        
+        # Дополнительная диагностика
+        logger.info(f"=== ДИАГНОСТИКА ПАРАМЕТРОВ ===")
+        logger.info(f"request.GET.items(): {list(request.GET.items())}")
+        logger.info(f"request.GET.get('dictionary'): {request.GET.get('dictionary')}")
+        logger.info(f"request.GET.getlist('dictionary'): {request.GET.getlist('dictionary')}")
+        
+        # Проверяем, что параметр действительно получен
+        if not dictionary_id:
+            logger.error("Параметр 'dictionary' не найден в запросе!")
+            logger.error(f"Все доступные параметры: {dict(request.GET)}")
+            return JsonResponse({
+                'error': 'Missing required parameter: dictionary',
+                'status_code': 400
+            }, status=400)
+        
+        # Логируем детали параметра
+        logger.info(f"=== ДЕТАЛИ ПАРАМЕТРА DICTIONARY ===")
+        logger.info(f"Значение: {dictionary_id}")
+        logger.info(f"Тип: {type(dictionary_id)}")
+        logger.info(f"Строковое представление: {repr(dictionary_id)}")
+        logger.info(f"Пустой ли: {not dictionary_id}")
+        logger.info(f"None ли: {dictionary_id is None}")
+        
+        # Дополнительная диагностика
+        logger.info(f"=== ДОПОЛНИТЕЛЬНАЯ ДИАГНОСТИКА ===")
+        logger.info(f"request.GET.items(): {list(request.GET.items())}")
+        logger.info(f"request.GET.get('dictionary'): {request.GET.get('dictionary')}")
+        logger.info(f"request.GET.getlist('dictionary'): {request.GET.getlist('dictionary')}")
+        logger.info(f"request.GET.get('dictionary', 'NOT_FOUND'): {request.GET.get('dictionary', 'NOT_FOUND')}")
+        
+        # Получаем заголовки авторизации
+        headers = {}
+        auth_header = request.META.get('HTTP_AUTHORIZATION')
+        if auth_header:
+            headers['Authorization'] = auth_header
+            logger.info(f"Заголовок авторизации: {auth_header}")
+        else:
+            logger.warning("Отсутствует заголовок авторизации")
+        
+        headers['Accept'] = 'application/json'
+        
+        # Отправляем запрос к backend
+        logger.info(f"Отправка запроса к backend...")
+        response = requests.get(
+            url=backend_url,
+            headers=headers,
+            timeout=30
+        )
+        
+        # Логируем ответ
+        logger.info(f"Ответ от backend: {response.status_code}")
+        logger.debug(f"Заголовки ответа: {dict(response.headers)}")
+        logger.debug(f"Тело ответа: {response.text}")
+        
+        # Если есть ошибка, логируем детали
+        if response.status_code >= 400:
+            logger.error(f"=== ОШИБКА ОТ BACKEND ===")
+            logger.error(f"URL: {backend_url}")
+            logger.error(f"Статус: {response.status_code}")
+            logger.error(f"Заголовки запроса: {headers}")
+            logger.error(f"Параметр dictionary: {dictionary_id}")
+        
+        # Проверяем статус ответа
+        if response.status_code >= 200 and response.status_code < 300:
+            # Успешный ответ
+            try:
+                response_data = response.json() if response.content else []
+                logger.info(f"Успешно получено содержимое справочника: {len(response_data)} позиций")
+                return JsonResponse(response_data, status=response.status_code, safe=False)
+            except json.JSONDecodeError:
+                logger.warning(f"Не удалось распарсить JSON ответа: {response.text}")
+                return JsonResponse({
+                    'error': 'Invalid JSON response from backend',
+                    'response_text': response.text,
+                    'status_code': 500
+                }, status=500)
+        else:
+            # Ошибка от backend
+            logger.error(f"Ошибка от backend: HTTP {response.status_code}")
+            try:
+                error_data = response.json() if response.content else {}
+                logger.error(f"Данные ошибки: {error_data}")
+                return JsonResponse(error_data, status=response.status_code, safe=False)
+            except json.JSONDecodeError:
+                logger.error(f"Не удалось распарсить JSON ошибки: {response.text}")
+                return JsonResponse({
+                    'error': 'Backend error',
+                    'status_code': response.status_code,
+                    'response_text': response.text
+                }, status=response.status_code)
+                
+    except requests.exceptions.Timeout:
+        logger.error("Таймаут при обращении к backend")
+        return JsonResponse({
+            'error': 'Backend timeout',
+            'status_code': 504
+        }, status=504)
+        
+    except requests.exceptions.ConnectionError:
+        logger.error("Ошибка подключения к backend")
+        return JsonResponse({
+            'error': 'Backend connection error',
+            'status_code': 503
+        }, status=503)
+        
+    except Exception as e:
+        logger.error(f"Неожиданная ошибка: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'error': 'Internal server error',
+            'status_code': 500
         }, status=500)
