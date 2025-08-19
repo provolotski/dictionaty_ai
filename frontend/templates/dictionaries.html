@@ -742,6 +742,9 @@
                         <button class="btn btn-sm btn-outline-secondary" onclick="refreshDictionaryContent()">
                             <i class="fas fa-sync-alt"></i> Обновить
                         </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="testSearch()" title="Тестирование поиска (отладка)">
+                            <i class="fas fa-bug"></i> Тест
+                        </button>
                     </div>
                 </div>
                 
@@ -2373,6 +2376,15 @@ async function loadDictionaryContent(dictionaryId) {
         const data = await response.json();
         console.log(`Получены данные: ${data ? data.length : 'null'} позиций`);
         
+        // Логируем структуру первой позиции для отладки
+        if (data && data.length > 0) {
+            console.log('Структура первой позиции:', data[0]);
+            console.log('Поля позиции:', Object.keys(data[0]));
+            if (data[0].attrs) {
+                console.log('Атрибуты первой позиции:', data[0].attrs);
+            }
+        }
+        
         if (!data || !Array.isArray(data)) {
             console.warn('API вернул некорректные данные');
             currentDictionaryContent = [];
@@ -2459,17 +2471,53 @@ function displayDictionaryTable(content) {
                 return;
             }
             
+            // Получаем код и название из разных возможных источников
+            let code = '';
+            let name = '';
+            
+            // Проверяем прямые поля
+            if (position.code) {
+                code = position.code;
+            } else if (position.attrs && Array.isArray(position.attrs)) {
+                // Ищем в атрибутах
+                const codeAttr = position.attrs.find(attr => attr.name === 'Код');
+                if (codeAttr) code = codeAttr.value;
+            }
+            
+            if (position.name) {
+                name = position.name;
+            } else if (position.attrs && Array.isArray(position.attrs)) {
+                // Ищем в атрибутах
+                const nameAttr = position.attrs.find(attr => attr.name === 'Наименование');
+                if (nameAttr) name = nameAttr.value;
+            }
+            
+            // Получаем parent_code из разных возможных источников
+            let parentCode = '';
+            if (position.parent_code) {
+                parentCode = position.parent_code;
+            } else if (position.parent_id) {
+                // Используем parent_id для поиска по коду родителя
+                const parentPosition = currentDictionaryContent.find(p => p.id === position.parent_id);
+                if (parentPosition) {
+                    parentCode = parentPosition.code || '';
+                }
+            } else if (position.attrs && Array.isArray(position.attrs)) {
+                const parentAttr = position.attrs.find(attr => attr.name === 'Родитель');
+                if (parentAttr) parentCode = parentAttr.value;
+            }
+            
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>
-                    <span class="badge bg-primary">${position.code || '-'}</span>
+                    <span class="badge bg-primary">${code || '-'}</span>
                 </td>
                 <td>
-                    <strong>${position.name || 'Без названия'}</strong>
+                    <strong>${name || 'Без названия'}</strong>
                     ${position.description ? `<br><small class="text-muted">${position.description}</small>` : ''}
                 </td>
                 <td>
-                    ${position.parent_code ? `<span class="badge bg-secondary">${position.parent_code}</span>` : '-'}
+                    ${parentCode ? `<span class="badge bg-secondary">${parentCode}</span>` : '-'}
                 </td>
                 <td>
                     <small class="text-muted">${formatDate(position.start_date)}</small>
@@ -2482,7 +2530,7 @@ function displayDictionaryTable(content) {
                         <button class="btn btn-outline-primary btn-sm" onclick="viewPosition(${index})" title="Просмотр">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-outline-warning btn-sm" onclick="editPosition(${index})" title="Редактировать">
+                        <button class="btn btn-outline-primary btn-sm" onclick="editPosition(${index})" title="Редактировать">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-outline-danger btn-sm" onclick="deletePosition(${index})" title="Удалить">
@@ -2515,7 +2563,12 @@ function updateContentFilters(content) {
     const parents = [...new Set(content
         .filter(item => {
             try {
-                return item && typeof item === 'object' && item.parent_code;
+                return item && typeof item === 'object' && (
+                    item.parent_code || 
+                    item.parent_id ||
+                    (item.attrs && Array.isArray(item.attrs) && 
+                     item.attrs.find(attr => attr.name === 'Родитель'))
+                );
             } catch (error) {
                 console.warn('Ошибка при фильтрации родительских позиций:', error);
                 return false;
@@ -2523,7 +2576,26 @@ function updateContentFilters(content) {
         })
         .map(item => {
             try {
-                return item.parent_code;
+                // Сначала проверяем прямое поле
+                if (item.parent_code) {
+                    return item.parent_code;
+                }
+                
+                // Затем проверяем parent_id
+                if (item.parent_id) {
+                    const parentPosition = content.find(p => p.id === item.parent_id);
+                    if (parentPosition) {
+                        return parentPosition.code || '';
+                    }
+                }
+                
+                // Затем проверяем в атрибутах
+                if (item.attrs && Array.isArray(item.attrs)) {
+                    const parentAttr = item.attrs.find(attr => attr.name === 'Родитель');
+                    if (parentAttr) return parentAttr.value;
+                }
+                
+                return null;
             } catch (error) {
                 console.warn('Ошибка при получении parent_code:', error);
                 return null;
@@ -2567,11 +2639,19 @@ function filterDictionaryContent() {
     const dateValue = dateFilter.value;
     const parentValue = parentFilter.value;
     
+    console.log('Фильтрация содержимого:', {
+        searchTerm,
+        dateValue,
+        parentValue,
+        totalItems: currentDictionaryContent ? currentDictionaryContent.length : 0
+    });
+    
     if (!currentDictionaryContent || currentDictionaryContent.length === 0) {
         console.warn('Нет данных для фильтрации');
         return;
     }
     
+    let debugCounter = 0;
     const filteredContent = currentDictionaryContent.filter(position => {
         try {
             // Проверяем корректность данных позиции
@@ -2579,18 +2659,86 @@ function filterDictionaryContent() {
                 return false;
             }
             
+            // Получаем код и название из разных возможных источников
+            let code = '';
+            let name = '';
+            
+            // Проверяем прямые поля
+            if (position.code) {
+                code = position.code;
+            } else if (position.attrs && Array.isArray(position.attrs)) {
+                // Ищем в атрибутах
+                const codeAttr = position.attrs.find(attr => attr.name === 'Код');
+                if (codeAttr) code = codeAttr.value;
+            }
+            
+            if (position.name) {
+                name = position.name;
+            } else if (position.attrs && Array.isArray(position.attrs)) {
+                // Ищем в атрибутах
+                const nameAttr = position.attrs.find(attr => attr.name === 'Наименование');
+                if (nameAttr) name = nameAttr.value;
+            }
+            
             // Поиск по коду и названию
             const matchesSearch = !searchTerm || 
-                (position.code && position.code.toLowerCase().includes(searchTerm)) ||
-                (position.name && position.name.toLowerCase().includes(searchTerm));
+                (code && code.toLowerCase().includes(searchTerm)) ||
+                (name && name.toLowerCase().includes(searchTerm));
             
             // Фильтр по дате
-            const matchesDate = !dateValue || 
-                (position.start_date && position.start_date <= dateValue && 
-                 position.end_date && position.end_date >= dateValue);
+            let matchesDate = true;
+            if (dateValue) {
+                try {
+                    const filterDate = new Date(dateValue);
+                    const startDate = position.start_date ? new Date(position.start_date) : null;
+                    const endDate = position.end_date ? new Date(position.end_date) : null;
+                    
+                    // Проверяем, что позиция активна на выбранную дату
+                    if (startDate && endDate) {
+                        matchesDate = startDate <= filterDate && endDate >= filterDate;
+                    } else if (startDate) {
+                        matchesDate = startDate <= filterDate;
+                    } else if (endDate) {
+                        matchesDate = endDate >= filterDate;
+                    } else {
+                        matchesDate = false; // Нет дат - не показываем
+                    }
+                } catch (error) {
+                    console.warn('Ошибка при проверке даты:', error);
+                    matchesDate = false;
+                }
+            }
+            
+            // Получаем parent_code из разных возможных источников
+            let parentCode = '';
+            if (position.parent_code) {
+                parentCode = position.parent_code;
+            } else if (position.parent_id) {
+                // Используем parent_id для поиска по коду родителя
+                const parentPosition = currentDictionaryContent.find(p => p.id === position.parent_id);
+                if (parentPosition) {
+                    parentCode = parentPosition.code || '';
+                }
+            } else if (position.attrs && Array.isArray(position.attrs)) {
+                const parentAttr = position.attrs.find(attr => attr.name === 'Родитель');
+                if (parentAttr) parentCode = parentAttr.value;
+            }
             
             // Фильтр по родителю
-            const matchesParent = !parentValue || position.parent_code === parentValue;
+            const matchesParent = !parentValue || parentCode === parentValue;
+            
+            // Логируем для отладки только первые несколько позиций
+            if (searchTerm && debugCounter < 5) {
+                console.log('Проверка позиции:', {
+                    id: position.id,
+                    code,
+                    name,
+                    matchesSearch,
+                    matchesDate,
+                    matchesParent
+                });
+                debugCounter++;
+            }
             
             return matchesSearch && matchesDate && matchesParent;
         } catch (error) {
@@ -2598,6 +2746,15 @@ function filterDictionaryContent() {
             return false;
         }
     });
+    
+    console.log(`Отфильтровано: ${filteredContent.length} из ${currentDictionaryContent.length} позиций`);
+    
+    // Показываем сообщение о результатах поиска
+    if (searchTerm && filteredContent.length === 0) {
+        showContentMessage(`Поиск по "${searchTerm}" не дал результатов`, 'warning');
+    } else if (searchTerm && filteredContent.length > 0) {
+        showContentMessage(`Найдено ${filteredContent.length} позиций по запросу "${searchTerm}"`, 'info');
+    }
     
     // Отображаем отфильтрованный контент в зависимости от режима
     if (currentViewMode === 'tree') {
@@ -2617,10 +2774,130 @@ function clearContentFilters() {
     if (dateFilter) dateFilter.value = new Date().toISOString().split('T')[0];
     if (parentFilter) parentFilter.value = '';
     
+    // Скрываем сообщения об ошибках
+    const errorMessage = document.getElementById('contentErrorMessage');
+    if (errorMessage) {
+        errorMessage.style.display = 'none';
+    }
+    
     // Показываем все содержимое, если есть данные
     if (currentDictionaryContent && currentDictionaryContent.length > 0) {
         displayDictionaryContent(currentDictionaryContent);
     }
+}
+
+// Функция для оптимизации поиска (создание индекса)
+function createSearchIndex(content) {
+    try {
+        const searchIndex = new Map();
+        
+        content.forEach((position, positionIndex) => {
+            if (!position || typeof position !== 'object') return;
+            
+            // Индексируем код
+            if (position.code) {
+                const codeKey = position.code.toLowerCase();
+                if (!searchIndex.has(codeKey)) searchIndex.set(codeKey, []);
+                searchIndex.get(codeKey).push(position.id);
+            }
+            
+            // Индексируем название
+            if (position.name) {
+                const nameKey = position.name.toLowerCase();
+                if (!searchIndex.has(nameKey)) searchIndex.set(nameKey, []);
+                searchIndex.get(nameKey).push(position.id);
+            }
+        });
+        
+        console.log('Поисковый индекс создан:', searchIndex.size, 'ключей');
+        return searchIndex;
+    } catch (error) {
+        console.error('Ошибка при создании поискового индекса:', error);
+        return null;
+    }
+}
+
+// Функция для отображения сообщений пользователю
+function showContentMessage(message, type = 'info') {
+    try {
+        const messageElement = document.getElementById('contentErrorMessage');
+        if (!messageElement) return;
+        
+        // Очищаем предыдущие классы
+        messageElement.className = 'alert';
+        
+        // Добавляем нужный класс
+        switch (type) {
+            case 'success':
+                messageElement.classList.add('alert-success');
+                break;
+            case 'warning':
+                messageElement.classList.add('alert-warning');
+                break;
+            case 'danger':
+                messageElement.classList.add('alert-danger');
+                break;
+            default:
+                messageElement.classList.add('alert-info');
+        }
+        
+        // Устанавливаем сообщение
+        const errorText = messageElement.querySelector('#contentErrorText');
+        if (errorText) {
+            errorText.textContent = message;
+        }
+        
+        // Показываем сообщение
+        messageElement.style.display = 'block';
+        
+        // Автоматически скрываем через 5 секунд
+        setTimeout(() => {
+            messageElement.style.display = 'none';
+        }, 5000);
+        
+    } catch (error) {
+        console.error('Ошибка при отображении сообщения:', error);
+    }
+}
+
+// Функция для тестирования поиска (отладка)
+function testSearch() {
+    console.log('=== ТЕСТИРОВАНИЕ ПОИСКА ===');
+    
+    if (!currentDictionaryContent || currentDictionaryContent.length === 0) {
+        console.log('Нет данных для тестирования');
+        return;
+    }
+    
+    console.log('Всего позиций:', currentDictionaryContent.length);
+    
+    // Проверяем первую позицию
+    const firstPosition = currentDictionaryContent[0];
+    console.log('Первая позиция:', firstPosition);
+    
+    // Проверяем поля
+    console.log('Прямые поля:');
+    console.log('- code:', firstPosition.code);
+    console.log('- name:', firstPosition.name);
+    console.log('- parent_code:', firstPosition.parent_code);
+    
+    // Проверяем атрибуты
+    if (firstPosition.attrs && Array.isArray(firstPosition.attrs)) {
+        console.log('Атрибуты:');
+        firstPosition.attrs.forEach((attr, index) => {
+            console.log(`  ${index}: ${attr.name} = ${attr.value}`);
+        });
+    }
+    
+    // Тестируем поиск
+    const searchInput = document.getElementById('contentSearchInput');
+    if (searchInput) {
+        console.log('Текущий поисковый запрос:', searchInput.value);
+        console.log('Вызываем фильтрацию...');
+        filterDictionaryContent();
+    }
+    
+    console.log('=== КОНЕЦ ТЕСТИРОВАНИЯ ===');
 }
 
 // Обновление содержимого справочника
