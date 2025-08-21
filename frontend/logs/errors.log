@@ -1,26 +1,2 @@
-ERROR 2025-08-19 18:29:56 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:29:56 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:29:56 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:29:56 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:31:35 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:31:35 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:31:35 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:31:35 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:31:38 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:31:38 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:31:38 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:31:38 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:48:27 middleware _refresh_token 228 Token refresh failed: 401
-ERROR 2025-08-19 18:48:38 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:48:38 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:48:38 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:48:38 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:49:12 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:49:12 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:49:12 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:49:12 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:53:14 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:53:14 views proxy_api_request 96 Ошибка от backend: HTTP 422
-ERROR 2025-08-19 18:53:14 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 18:53:14 views proxy_api_request 99 Данные ошибки: {'detail': [{'type': 'missing', 'loc': ['query', 'dictionary'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.5/v/missing'}]}
-ERROR 2025-08-19 19:20:43 middleware _refresh_token 228 Token refresh failed: 500
+ERROR 2025-08-21 14:32:57 permissions _update_user_department_in_db 169 Ошибка обновления подразделения: 405 - {"detail":"Method Not Allowed"}
+ERROR 2025-08-21 14:35:49 permissions _update_user_department_in_db 178 Ошибка обновления подразделения: 405 - {"detail":"Method Not Allowed"}

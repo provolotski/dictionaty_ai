@@ -813,6 +813,25 @@ h2::before {
     transform: translateY(-50%) scale(1.1);
 }
 
+.search-info {
+    margin-top: 8px;
+    text-align: center;
+}
+
+.search-info small {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.highlight-search {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 /* Анимация появления поиска */
 @keyframes slideInFromTop {
     from {
@@ -1007,11 +1026,17 @@ h2::before {
             <input type="text" 
                    id="searchInput" 
                    class="search-input" 
-                   placeholder="Поиск по названию справочника..."
+                   placeholder="Поиск по названию, коду, описанию, организации, ГКО..."
                    autocomplete="off">
             <button class="search-clear" id="searchClear" style="display: none;">
                 <i class="bi bi-x-circle"></i>
             </button>
+        </div>
+        <div class="search-info">
+            <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Поиск работает по всем полям: название (рус/англ/бел), код, описание, организация, ГКО
+            </small>
         </div>
     </div>
 
@@ -1033,6 +1058,8 @@ h2::before {
                         <option value="name">Название</option>
                         <option value="code">Код</option>
                         <option value="description">Описание</option>
+                        <option value="organization">Организация</option>
+                        <option value="gko">ГКО</option>
                     </select>
                 </div>
                 
@@ -1091,6 +1118,8 @@ h2::before {
                 <th><i class="bi bi-book me-1"></i>Название</th>
                 <th><i class="bi bi-code me-1"></i>Код</th>
                 <th><i class="bi bi-info-circle me-1"></i>Описание</th>
+                <th><i class="bi bi-building me-1"></i>Организация</th>
+                <th><i class="bi bi-diagram-2 me-1"></i>ГКО</th>
                 <th><i class="bi bi-gear me-1"></i>Действия</th>
             </tr>
         </thead>
@@ -1104,9 +1133,16 @@ h2::before {
                         {{ dict.name }} 
                         <i class="bi bi-box-arrow-up-right ms-1" style="font-size: 0.8em;"></i>
                     </a>
+                    <!-- Скрытые поля для поиска по всем языкам -->
+                    <div style="display: none;">
+                        <span class="search-field" data-field="name_eng">{{ dict.name_eng|default:"" }}</span>
+                        <span class="search-field" data-field="name_bel">{{ dict.name_bel|default:"" }}</span>
+                    </div>
                 </td>
                 <td><code>{{ dict.code }}</code></td>
                 <td>{{ dict.description|truncatechars:50 }}</td>
+                <td>{{ dict.organization|default:"—"|truncatechars:30 }}</td>
+                <td>{{ dict.gko|default:"—"|truncatechars:30 }}</td>
                 <td>
                     <div class="action-buttons">
                         <a href="{% url 'dictionary_table' dict.id %}" 
@@ -1146,7 +1182,7 @@ h2::before {
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4" class="text-center">
+                <td colspan="6" class="text-center">
                     <div class="py-4">
                         <i class="bi bi-inbox display-4 text-muted"></i>
                         <p class="mt-3 text-muted">Нет справочников</p>
@@ -1236,14 +1272,32 @@ function applyFilters() {
     
     // Применяем фильтры
     filteredRows = filteredRows.filter(row => {
+        // Получаем все поля для поиска
         const name = row.querySelector('.dictionary-link').textContent.toLowerCase();
         const code = row.querySelector('code').textContent.toLowerCase();
         const description = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+        const organization = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+        const gko = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
         
-        // Фильтр по поиску
-        if (currentFilters.search && !name.includes(currentFilters.search) && 
-            !code.includes(currentFilters.search) && !description.includes(currentFilters.search)) {
-            return false;
+        // Получаем названия на других языках (скрытые поля)
+        const nameEng = row.querySelector('.search-field[data-field="name_eng"]')?.textContent.toLowerCase() || '';
+        const nameBel = row.querySelector('.search-field[data-field="name_bel"]')?.textContent.toLowerCase() || '';
+        
+        // Фильтр по поиску - ищем по всем полям
+        if (currentFilters.search) {
+            const searchTerm = currentFilters.search.toLowerCase();
+            const matchesSearch = 
+                name.includes(searchTerm) ||
+                code.includes(searchTerm) ||
+                description.includes(searchTerm) ||
+                organization.includes(searchTerm) ||
+                gko.includes(searchTerm) ||
+                nameEng.includes(searchTerm) ||
+                nameBel.includes(searchTerm);
+            
+            if (!matchesSearch) {
+                return false;
+            }
         }
         
         // Фильтр по коду
@@ -1277,6 +1331,14 @@ function applyFilters() {
                     aValue = a.querySelector('td:nth-child(3)').textContent.toLowerCase();
                     bValue = b.querySelector('td:nth-child(3)').textContent.toLowerCase();
                     break;
+                case 'organization':
+                    aValue = a.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                    bValue = b.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                    break;
+                case 'gko':
+                    aValue = a.querySelector('td:nth-child(5)').textContent.toLowerCase();
+                    bValue = b.querySelector('td:nth-child(5)').textContent.toLowerCase();
+                    break;
                 default:
                     return 0;
             }
@@ -1305,21 +1367,33 @@ function updateTableDisplay(filteredRows) {
         row.style.display = 'none';
     });
     
-    // Показываем отфильтрованные строки с анимацией
-    filteredRows.forEach((row, index) => {
-        row.style.display = 'table-row';
-        row.style.animation = `fadeInRow 0.3s ease-out ${index * 0.05}s`;
-    });
+            // Показываем отфильтрованные строки с анимацией
+        filteredRows.forEach((row, index) => {
+            row.style.display = 'table-row';
+            row.style.animation = `fadeInRow 0.3s ease-out ${index * 0.05}s`;
+            
+            // Подсвечиваем найденный текст, если есть поисковый запрос
+            if (currentFilters.search) {
+                highlightSearchResults(row, currentFilters.search);
+            }
+        });
     
-    // Показываем сообщение, если ничего не найдено
-    if (filteredRows.length === 0) {
-        showNoResultsMessage(true, currentFilters.search);
-    } else {
-        showNoResultsMessage(false);
-    }
-    
-    // Обновляем счетчик
-    updateResultsCounter(filteredRows.length, allRows.length);
+            // Показываем сообщение, если ничего не найдено
+        if (filteredRows.length === 0) {
+            showNoResultsMessage(true, currentFilters.search);
+        } else {
+            showNoResultsMessage(false);
+        }
+        
+        // Обновляем счетчик
+        updateResultsCounter(filteredRows.length, allRows.length);
+        
+        // Показываем информацию о поиске
+        if (currentFilters.search && filteredRows.length > 0) {
+            showSearchInfo(currentFilters.search, filteredRows.length, allRows.length);
+        } else {
+            hideSearchInfo();
+        }
 }
 
 function updateActiveFilters() {
@@ -1339,7 +1413,9 @@ function updateActiveFilters() {
         const sortLabels = {
             'name': 'Название',
             'code': 'Код',
-            'description': 'Описание'
+            'description': 'Описание',
+            'organization': 'Организация',
+            'gko': 'ГКО'
         };
         const orderLabel = currentFilters.sortOrder === 'asc' ? '↑' : '↓';
         activeFilters.push(`Сортировка: ${sortLabels[currentFilters.sortField]} ${orderLabel}`);
@@ -1373,11 +1449,17 @@ function clearAllFilters() {
         sortOrder: 'asc'
     };
     
+    // Очищаем подсветку поиска
+    clearSearchHighlights();
+    
     // Применяем изменения
     applyFilters();
     
     // Скрываем панель фильтров
     document.getElementById('filtersPanel').style.display = 'none';
+    
+    // Восстанавливаем стандартную информацию о поиске
+    hideSearchInfo();
 }
 
 function initializeSearch() {
@@ -1488,6 +1570,61 @@ function updateResultsCounter(visible, total) {
     } else {
         counter.style.display = 'none';
     }
+}
+
+function showSearchInfo(searchTerm, found, total) {
+    const searchInfo = document.querySelector('.search-info');
+    if (searchInfo) {
+        searchInfo.innerHTML = `
+            <small class="text-success">
+                <i class="bi bi-check-circle me-1"></i>
+                По запросу "${searchTerm}" найдено ${found} из ${total} справочников
+            </small>
+        `;
+        searchInfo.style.display = 'block';
+    }
+}
+
+function hideSearchInfo() {
+    const searchInfo = document.querySelector('.search-info');
+    if (searchInfo) {
+        searchInfo.innerHTML = `
+            <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                Поиск работает по всем полям: название (рус/англ/бел), код, описание, организация, ГКО
+            </small>
+        `;
+        searchInfo.style.display = 'block';
+    }
+}
+
+function highlightSearchResults(row, searchTerm) {
+    if (!searchTerm) return;
+    
+    // Убираем предыдущую подсветку
+    row.querySelectorAll('.highlight-search').forEach(el => {
+        const parent = el.parentNode;
+        parent.replaceChild(document.createTextNode(el.textContent), el);
+        parent.normalize();
+    });
+    
+    // Подсвечиваем текст во всех ячейках
+    const cells = row.querySelectorAll('td');
+    cells.forEach(cell => {
+        if (cell.textContent.toLowerCase().includes(searchTerm.toLowerCase())) {
+            const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            cell.innerHTML = cell.textContent.replace(regex, '<span class="highlight-search">$1</span>');
+        }
+    });
+}
+
+function clearSearchHighlights() {
+    // Убираем подсветку со всех строк
+    document.querySelectorAll('.highlight-search').forEach(el => {
+        const parent = el.parentNode;
+        parent.replaceChild(document.createTextNode(el.textContent), el);
+        parent.normalize();
+    });
 }
 
 function animateTableRows() {

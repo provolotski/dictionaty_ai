@@ -17,7 +17,7 @@ import json
 import logging
 
 from .models import Dictionary, DictionaryIn
-from .forms import DictionaryForm
+from .forms import DictionaryForm, DictionaryDescriptionForm
 from accounts.utils import api_get, api_post, api_post_create_dict,api_post_dict
 
 logger = logging.getLogger('myapp')
@@ -65,20 +65,44 @@ def dictionary_create(request):
         if form.is_valid():
             try:
                 dictionary = form.cleaned_data
+                logger.debug(f'Очищенные данные формы: {dictionary}')
 
                 # Преобразуем даты в ISO формат
                 if 'start_date' in dictionary and dictionary['start_date']:
                     dictionary['start_date'] = dictionary['start_date'].isoformat()
+                    logger.debug(f'Дата начала преобразована: {dictionary["start_date"]}')
                 if 'finish_date' in dictionary and dictionary['finish_date']:
                     dictionary['finish_date'] = dictionary['finish_date'].isoformat()
+                    logger.debug(f'Дата окончания преобразована: {dictionary["finish_date"]}')
+                
+                # Преобразуем числовые поля в int
+                if 'id_status' in dictionary and dictionary['id_status']:
+                    dictionary['id_status'] = int(dictionary['id_status'])
+                    logger.debug(f'Статус преобразован: {dictionary["id_status"]}')
+                if 'id_type' in dictionary and dictionary['id_type']:
+                    dictionary['id_type'] = int(dictionary['id_type'])
+                    logger.debug(f'Тип преобразован: {dictionary["id_type"]}')
+                
+                # Обрабатываем пустые строки для текстовых полей
+                text_fields = ['description', 'name_eng', 'name_bel', 'description_eng', 'description_bel', 'gko', 'classifier', 'organization']
+                for field in text_fields:
+                    if field in dictionary and dictionary[field] == '':
+                        dictionary[field] = None
+                        logger.debug(f'Поле {field} преобразовано в None')
+                
+                logger.debug(f'Данные после преобразования: {dictionary}')
 
                 # Валидируем данные через Pydantic
+                logger.debug(f'Данные для валидации: {dictionary}')
                 dictionary_base = DictionaryIn.model_validate(dictionary)
+                logger.debug(f'Pydantic модель создана: {type(dictionary_base)}')
+                logger.debug(f'Валидированные данные: {dictionary_base.model_dump()}')
 
                 # Отправляем на API
                 response = api_post_create_dict('/models/newDictionary', data=dictionary_base)
-
-                if response.status_code in [200, 201]:
+                logger.debug(f'Ответ API получен: {response}')
+                
+                if response and response.status_code in [200, 201]:
                     success_msg = f'Справочник "{dictionary["name"]}" создан успешно!'
 
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -89,8 +113,15 @@ def dictionary_create(request):
                         })
                     messages.success(request, success_msg)
                     return redirect('dictionary_list')
-                else:
+                elif response:
                     error_msg = f'Ошибка API: {response.text}'
+                    logger.error(f'Ошибка API при создании справочника: {error_msg}')
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({'success': False, 'error': error_msg})
+                    messages.error(request, error_msg)
+                else:
+                    error_msg = 'API не вернул ответ'
+                    logger.error('API не вернул ответ при создании справочника')
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                         return JsonResponse({'success': False, 'error': error_msg})
                     messages.error(request, error_msg)
@@ -120,7 +151,8 @@ def dictionary_create(request):
             'dictionary_id': None
         })
 
-    return render(request, 'dictionaries/form_modal.html', {
+    # Для обычных запросов используем полноценную страницу с навигацией
+    return render(request, 'dictionaries/create_form.html', {
         'form': form
     })
 
@@ -200,6 +232,107 @@ def dictionary_edit(request, pk):
         'form': form,
         'dictionary_id': pk,
         'dictionary_data': dictionary_data
+    })
+
+
+@require_users_group
+def dictionary_edit_description(request, pk):
+    """Редактирование только описания справочника"""
+    logger.debug(f'dictionary_edit_description pk={pk}')
+
+    # Получаем данные справочника из API
+    response = api_get(request, f'/models/getMetaDictionary?dictionary_id={pk}', service='dict')
+    if response.status_code != 200:
+        error_msg = 'Справочник не найден'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': error_msg})
+        messages.error(request, error_msg)
+        return redirect('dictionary_list')
+
+    dictionary_data = response.json()
+
+    if request.method == 'POST':
+        form = DictionaryDescriptionForm(request.POST)
+        if form.is_valid():
+            try:
+                cleaned_data = form.cleaned_data
+                
+                # Добавляем существующие данные справочника
+                full_data = {
+                    'name': dictionary_data.get('name', ''),
+                    'code': dictionary_data.get('code', ''),
+                    'start_date': dictionary_data.get('start_date', ''),
+                    'finish_date': dictionary_data.get('finish_date', ''),
+                    'name_eng': dictionary_data.get('name_eng', ''),
+                    'name_bel': dictionary_data.get('name_bel', ''),
+                    'gko': dictionary_data.get('gko', ''),
+                    'classifier': dictionary_data.get('classifier', ''),
+                    'id_status': dictionary_data.get('id_status', 1),
+                    'id_type': dictionary_data.get('id_type', 0),
+                    'organization': dictionary_data.get('organization', ''),
+                }
+                
+                # Обновляем только поля описания
+                full_data.update(cleaned_data)
+
+                # Отправляем обновленные данные в API
+                response = api_post_dict(f'/models/EditDictionary?dictionary_id={pk}',
+                                    data=full_data, service='dict')
+
+                if response.status_code in [200, 201]:
+                    success_msg = f'Описание справочника "{dictionary_data.get("name", "")}" обновлено успешно!'
+
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({
+                            'success': True,
+                            'message': success_msg,
+                            'data': cleaned_data
+                        })
+
+                    messages.success(request, success_msg)
+                    return redirect('dictionary_list')
+                else:
+                    error_msg = f'Ошибка при обновлении описания: {response.text}'
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({'success': False, 'error': error_msg})
+                    messages.error(request, error_msg)
+
+            except requests.RequestException as e:
+                error_msg = f'Ошибка соединения: {str(e)}'
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': error_msg})
+                messages.error(request, error_msg)
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': form.errors})
+            messages.error(request, 'Ошибка валидации формы')
+    else:
+        # Предзаполняем форму данными из API
+        form = DictionaryDescriptionForm(initial=dictionary_data)
+
+    # Для AJAX возвращаем форму в модальном окне
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dictionaries/edit_description_modal.html', {
+            'form': form,
+            'dictionary_id': pk,
+            'dictionary_data': dictionary_data
+        })
+
+    return render(request, 'dictionaries/edit_description.html', {
+        'form': form,
+        'dictionary_id': pk,
+        'dictionary_data': dictionary_data
+    })
+
+
+def test_description_url(request, pk):
+    """Тестовое представление для проверки URL"""
+    return JsonResponse({
+        'success': True,
+        'message': f'URL работает! ID: {pk}',
+        'url': request.path,
+        'method': request.method,
+        'headers': dict(request.headers)
     })
 
 

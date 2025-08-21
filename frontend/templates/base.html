@@ -124,6 +124,15 @@
                                          Гость
                                      {% endif %}
                                  </div>
+                                 {% if request.session.user_department %}
+                                 <div class="user-department">
+                                     <small class="text-muted">{{ request.session.user_department }}</small>
+                                 </div>
+                                 {% elif request.session.user_info.guid %}
+                                 <div class="user-department">
+                                     <small class="text-muted">Загрузка подразделения...</small>
+                                 </div>
+                                 {% endif %}
                              </div>
                              
                              <div class="dropdown-divider"></div>
@@ -763,6 +772,12 @@
         .user-role {
             font-size: 0.875rem;
             color: var(--gray-600);
+        }
+        
+        .user-department {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--gray-500);
         }
         
         .dropdown-divider {

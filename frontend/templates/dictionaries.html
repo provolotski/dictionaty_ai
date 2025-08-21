@@ -223,6 +223,7 @@
                     <small class="text-muted">
                         <i class="fas fa-info-circle"></i>
                         Используйте поиск и фильтры для быстрого нахождения нужных словарей. 
+                        <strong>Кликните на код или название справочника для просмотра его значений.</strong>
                         Нажмите на заголовки столбцов для сортировки.
                     </small>
                 </div>
@@ -245,10 +246,10 @@
                         <thead class="table-light">
                             <tr>
                                 <th class="sortable" data-sort="code">
-                                    Код <i class="fas fa-sort"></i>
+                                    Код <i class="fas fa-sort"></i> <small class="text-muted">(кликните для просмотра)</small>
                                 </th>
                                 <th class="sortable" data-sort="name">
-                                    Название <i class="fas fa-sort"></i>
+                                    Название <i class="fas fa-sort"></i> <small class="text-muted">(кликните для просмотра)</small>
                                 </th>
                                 <th class="sortable" data-sort="description">
                                     Описание <i class="fas fa-sort"></i>
@@ -262,17 +263,29 @@
                                 <th class="sortable" data-sort="date">
                                     Дата создания <i class="fas fa-sort"></i>
                                 </th>
-                                <th>Действия</th>
+                                <th>Управление</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for dictionary in dictionaries %}
                             <tr>
                                 <td>
-                                    <span class="badge bg-secondary">{{ dictionary.code|default:"-" }}</span>
+                                    <span class="badge bg-secondary clickable-code" 
+                                          data-dict-id="{{ dictionary.id }}" 
+                                          data-dict-name="{{ dictionary.name|default:'Словарь' }}"
+                                          title="Кликните для просмотра значений справочника"
+                                          style="cursor: pointer;">
+                                        {{ dictionary.code|default:"-" }}
+                                    </span>
                                 </td>
                                 <td>
-                                    <strong>{{ dictionary.name|default:"Без названия" }}</strong>
+                                    <strong class="clickable-name" 
+                                            data-dict-id="{{ dictionary.id }}" 
+                                            data-dict-name="{{ dictionary.name|default:'Словарь' }}"
+                                            title="Кликните для просмотра значений справочника"
+                                            style="cursor: pointer; color: #007bff;">
+                                        {{ dictionary.name|default:"Без названия" }}
+                                    </strong>
                                     {% if dictionary.description %}
                                         <br><small class="text-muted">{{ dictionary.description|truncatechars:100 }}</small>
                                     {% endif %}
@@ -323,11 +336,11 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-primary view-dict-btn" 
+                                        <button class="btn btn-sm btn-outline-info edit-description-btn" 
                                                 data-dict-id="{{ dictionary.id }}" 
                                                 data-dict-name="{{ dictionary.name|default:'Словарь' }}"
-                                                title="Просмотр">
-                                            <i class="fas fa-eye"></i>
+                                                title="Редактировать описание">
+                                            <i class="fas fa-align-left"></i>
                                         </button>
                                         <button class="btn btn-sm btn-outline-warning edit-dict-btn" 
                                                 data-dict-id="{{ dictionary.id }}" 
@@ -840,13 +853,24 @@
     </div>
 </div>
 
+<!-- Модальное окно для форм -->
+<div class="modal fade" id="modalContainer" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div id="modalContent">
+                <!-- Содержимое модального окна будет загружаться динамически -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 let dictionaryToDelete = null;
 
 function createNewDictionary() {
     try {
         // Перенаправляем на страницу создания словаря
-        window.location.href = '/dictionaries/create/';
+        window.location.href = '/dictionary/create/';
     } catch (error) {
         console.error('Ошибка при перенаправлении на страницу создания словаря:', error);
         alert('Ошибка при переходе на страницу создания словаря');
@@ -875,8 +899,10 @@ function exportDictionaries(format = 'csv') {
         }
         
         rows.forEach((row, index) => {
-            if (row.style.display !== 'none') { // Только видимые строки
+            // Проверяем, что это строка с данными (не заголовок) и она видима
+            if (row.style.display !== 'none' && row.querySelector('td') && !row.querySelector('th')) {
                 try {
+                    // Используем более надежные селекторы
                     const codeElement = row.querySelector('td:nth-child(1) .badge');
                     const nameElement = row.querySelector('td:nth-child(2) strong');
                     const descriptionElement = row.querySelector('td:nth-child(3) span');
@@ -884,21 +910,37 @@ function exportDictionaries(format = 'csv') {
                     const typeElement = row.querySelector('td:nth-child(5) .badge');
                     const dateElement = row.querySelector('td:nth-child(6) small');
                     
-                    if (!codeElement || !nameElement || !descriptionElement || !statusElement || !typeElement || !dateElement) {
-                        console.warn(`Не все элементы найдены в строке ${index} для экспорта CSV`);
+                    // Проверяем наличие элементов с более детальным логированием
+                    const elements = {
+                        code: codeElement,
+                        name: nameElement,
+                        description: descriptionElement,
+                        status: statusElement,
+                        type: typeElement,
+                        date: dateElement
+                    };
+                    
+                    const missingElements = Object.entries(elements)
+                        .filter(([key, element]) => !element)
+                        .map(([key]) => key);
+                    
+                    if (missingElements.length > 0) {
+                        console.warn(`Не все элементы найдены в строке ${index} для экспорта CSV. Отсутствуют:`, missingElements);
+                        console.log('Строка:', row.innerHTML);
                         return;
                     }
                     
-                    const code = codeElement.textContent || '';
-                    const name = nameElement.textContent || '';
-                    const description = descriptionElement.textContent || '';
-                    const status = statusElement.textContent || '';
-                    const type = typeElement.textContent || '';
-                    const date = dateElement.textContent || '';
+                    const code = codeElement.textContent.trim() || '';
+                    const name = nameElement.textContent.trim() || '';
+                    const description = descriptionElement.textContent.trim() || '';
+                    const status = statusElement.textContent.trim() || '';
+                    const type = typeElement.textContent.trim() || '';
+                    const date = dateElement.textContent.trim() || '';
                     
                     data += `"${code}","${name}","${description}","${status}","${type}","${date}"\n`;
                 } catch (error) {
                     console.warn(`Ошибка при обработке строки ${index} для экспорта CSV:`, error);
+                    console.log('Строка:', row.innerHTML);
                 }
             }
         });
@@ -918,8 +960,10 @@ function exportDictionaries(format = 'csv') {
         }
         
         rows.forEach((row, index) => {
-            if (row.style.display !== 'none') {
+            // Проверяем, что это строка с данными (не заголовок) и она видима
+            if (row.style.display !== 'none' && row.querySelector('td') && !row.querySelector('th')) {
                 try {
+                    // Используем более надежные селекторы
                     const codeElement = row.querySelector('td:nth-child(1) .badge');
                     const nameElement = row.querySelector('td:nth-child(2) strong');
                     const descriptionElement = row.querySelector('td:nth-child(3) span');
@@ -927,17 +971,32 @@ function exportDictionaries(format = 'csv') {
                     const typeElement = row.querySelector('td:nth-child(5) .badge');
                     const dateElement = row.querySelector('td:nth-child(6) small');
                     
-                    if (!codeElement || !nameElement || !descriptionElement || !statusElement || !typeElement || !dateElement) {
-                        console.warn(`Не все элементы найдены в строке ${index} для экспорта JSON`);
+                    // Проверяем наличие элементов с более детальным логированием
+                    const elements = {
+                        code: codeElement,
+                        name: nameElement,
+                        description: descriptionElement,
+                        status: statusElement,
+                        type: typeElement,
+                        date: dateElement
+                    };
+                    
+                    const missingElements = Object.entries(elements)
+                        .filter(([key, element]) => !element)
+                        .map(([key]) => key);
+                    
+                    if (missingElements.length > 0) {
+                        console.warn(`Не все элементы найдены в строке ${index} для экспорта JSON. Отсутствуют:`, missingElements);
+                        console.log('Строка:', row.innerHTML);
                         return;
                     }
                     
-                    const code = codeElement.textContent || '';
-                    const name = nameElement.textContent || '';
-                    const description = descriptionElement.textContent || '';
-                    const status = statusElement.textContent || '';
-                    const type = typeElement.textContent || '';
-                    const date = dateElement.textContent || '';
+                    const code = codeElement.textContent.trim() || '';
+                    const name = nameElement.textContent.trim() || '';
+                    const description = descriptionElement.textContent.trim() || '';
+                    const status = statusElement.textContent.trim() || '';
+                    const type = typeElement.textContent.trim() || '';
+                    const date = dateElement.textContent.trim() || '';
                     
                     dictionaries.push({
                         code: code,
@@ -949,6 +1008,7 @@ function exportDictionaries(format = 'csv') {
                     });
                 } catch (error) {
                     console.warn(`Ошибка при обработке строки ${index} для экспорта JSON:`, error);
+                    console.log('Строка:', row.innerHTML);
                 }
             }
         });
@@ -1114,11 +1174,128 @@ function editDictionary(dictionaryId) {
     
     try {
         // Перенаправляем на страницу редактирования словаря
-        window.location.href = `/dictionaries/${dictionaryId}/edit/`;
+        window.location.href = `/dictionary/${dictionaryId}/edit/`;
     } catch (error) {
         console.error('Ошибка при перенаправлении на страницу редактирования:', error);
         alert('Ошибка при переходе на страницу редактирования');
     }
+}
+
+function editDictionaryDescription(dictionaryId, dictionaryName) {
+    if (!dictionaryId) {
+        console.error('Не передан ID справочника для редактирования описания');
+        alert('Ошибка: не указан ID справочника');
+        return;
+    }
+    
+    try {
+        // Загружаем форму редактирования описания в модальное окно
+        loadModalForm(`/dictionary/${dictionaryId}/edit-description/`);
+        
+        // Показываем модальное окно
+        const modal = new bootstrap.Modal(document.getElementById('modalContainer'));
+        modal.show();
+        
+        console.log(`Открытие формы редактирования описания для справочника: ${dictionaryName} (ID: ${dictionaryId})`);
+        
+    } catch (error) {
+        console.error('Ошибка при открытии формы редактирования описания:', error);
+        alert('Ошибка при открытии формы редактирования описания');
+    }
+}
+
+function loadModalForm(url) {
+    console.log('Загрузка модальной формы по URL:', url);
+    
+    // Добавляем эффект загрузки
+    const modalContent = document.getElementById('modalContent');
+    if (!modalContent) {
+        console.error('Элемент modalContent не найден');
+        return;
+    }
+    
+    modalContent.innerHTML = `
+        <div class="modal-header">
+            <h5 class="modal-title">Загрузка...</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body loading">
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+                <p class="mt-3">Загрузка формы...</p>
+            </div>
+        </div>
+    `;
+    
+    console.log('Отправка fetch запроса к:', url);
+    
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Получен ответ от сервера:', {
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url,
+            headers: Object.fromEntries(response.headers.entries())
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.text();
+    })
+    .then(html => {
+        console.log('Получен HTML ответ, длина:', html.length);
+        console.log('Первые 200 символов HTML:', html.substring(0, 200));
+        
+        // Анимация появления контента
+        modalContent.style.opacity = '0';
+        modalContent.innerHTML = html;
+        
+        setTimeout(() => {
+            modalContent.style.opacity = '1';
+            modalContent.style.transition = 'opacity 0.3s ease';
+        }, 100);
+        
+        console.log('Форма успешно загружена');
+    })
+    .catch(error => {
+        console.error('Ошибка загрузки формы:', error);
+        console.error('Полная информация об ошибке:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h5 class="modal-title">Ошибка загрузки</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Не удалось загрузить форму</strong><br>
+                    <small class="text-muted">${error.message}</small>
+                </div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        <i class="fas fa-redo me-1"></i>
+                        Обновить страницу
+                    </button>
+                    <button class="btn btn-outline-secondary ms-2" onclick="console.log('URL для отладки:', '${url}')">
+                        <i class="fas fa-bug me-1"></i>
+                        Отладка
+                    </button>
+                </div>
+            </div>
+        `;
+    });
 }
 
 function deleteDictionary(dictionaryId, dictionaryName) {
@@ -1714,13 +1891,31 @@ function filterDictionaries() {
     
     rows.forEach((row, index) => {
         try {
+            // Проверяем, что это строка с данными (не заголовок)
+            if (!row.querySelector('td') || row.querySelector('th')) {
+                return; // Пропускаем заголовки и пустые строки
+            }
+            
             const nameElement = row.querySelector('td:nth-child(2) strong');
             const codeElement = row.querySelector('td:nth-child(1) .badge');
             const statusElement = row.querySelector('td:nth-child(4) .badge');
             const typeElement = row.querySelector('td:nth-child(5) .badge');
             
-            if (!nameElement || !codeElement || !statusElement || !typeElement) {
-                console.warn(`Не все элементы найдены в строке ${index}`);
+            // Проверяем наличие элементов с более детальным логированием
+            const elements = {
+                name: nameElement,
+                code: codeElement,
+                status: statusElement,
+                type: typeElement
+            };
+            
+            const missingElements = Object.entries(elements)
+                .filter(([key, element]) => !element)
+                .map(([key]) => key);
+            
+            if (missingElements.length > 0) {
+                console.warn(`Не все элементы найдены в строке ${index}. Отсутствуют:`, missingElements);
+                console.log('Строка:', row.innerHTML);
                 return;
             }
             
@@ -1762,6 +1957,7 @@ function filterDictionaries() {
             }
         } catch (error) {
             console.warn(`Ошибка при обработке строки ${index}:`, error);
+            console.log('Строка:', row.innerHTML);
         }
     });
     
@@ -1808,9 +2004,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Добавляем обработчики для кнопок словарей
-    document.querySelectorAll('.view-dict-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+    // Добавляем обработчики для кликабельных элементов (код и название справочника)
+    document.querySelectorAll('.clickable-code, .clickable-name').forEach(element => {
+        element.addEventListener('click', function() {
             const dictId = this.getAttribute('data-dict-id');
             const dictName = this.getAttribute('data-dict-name');
             if (dictId && dictName) {
@@ -2001,11 +2197,27 @@ function calculateStatistics() {
     
     rows.forEach((row, index) => {
         try {
+            // Проверяем, что это строка с данными (не заголовок)
+            if (!row.querySelector('td') || row.querySelector('th')) {
+                return; // Пропускаем заголовки и пустые строки
+            }
+            
             const statusElement = row.querySelector('td:nth-child(4) .badge');
             const typeElement = row.querySelector('td:nth-child(5) .badge');
             
-            if (!statusElement || !typeElement) {
-                console.warn(`Не все элементы найдены в строке ${index} для статистики`);
+            // Проверяем наличие элементов с более детальным логированием
+            const elements = {
+                status: statusElement,
+                type: typeElement
+            };
+            
+            const missingElements = Object.entries(elements)
+                .filter(([key, element]) => !element)
+                .map(([key]) => key);
+            
+            if (missingElements.length > 0) {
+                console.warn(`Не все элементы найдены в строке ${index} для статистики. Отсутствуют:`, missingElements);
+                console.log('Строка:', row.innerHTML);
                 return;
             }
             
@@ -2028,6 +2240,7 @@ function calculateStatistics() {
             }
         } catch (error) {
             console.warn(`Ошибка при обработке строки ${index} для статистики:`, error);
+            console.log('Строка:', row.innerHTML);
         }
     });
     
@@ -3108,11 +3321,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Обработчики для кнопок действий в таблице справочников
     document.addEventListener('click', function(e) {
-        if (e.target.closest('.view-dict-btn')) {
-            const button = e.target.closest('.view-dict-btn');
+        // Обработчик для кликабельных элементов (код и название справочника)
+        if (e.target.closest('.clickable-code, .clickable-name')) {
+            const element = e.target.closest('.clickable-code, .clickable-name');
+            const dictId = element.getAttribute('data-dict-id');
+            const dictName = element.getAttribute('data-dict-name');
+            viewDictionary(dictId, dictName);
+        }
+        
+        // Обработчик для редактирования описания
+        if (e.target.closest('.edit-description-btn')) {
+            const button = e.target.closest('.edit-description-btn');
             const dictId = button.getAttribute('data-dict-id');
             const dictName = button.getAttribute('data-dict-name');
-            viewDictionary(dictId, dictName);
+            editDictionaryDescription(dictId, dictName);
         }
         
         if (e.target.closest('.edit-dict-btn')) {
@@ -3184,6 +3406,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .btn-group .btn:last-child {
         margin-right: 0;
+    }
+    
+    /* Стили для кнопки редактирования описания */
+    .edit-description-btn {
+        transition: all 0.3s ease;
+    }
+    
+    .edit-description-btn:hover {
+        background-color: #17a2b8 !important;
+        border-color: #17a2b8 !important;
+        color: white !important;
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
     }
     
     .badge {
@@ -3267,6 +3502,103 @@ document.addEventListener('DOMContentLoaded', function() {
         to {
             transform: rotate(360deg);
         }
+    }
+    
+    /* Стили для модального окна загрузки */
+    .loading {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 8px;
+    }
+    
+    .loading .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.25rem;
+    }
+    
+    .loading p {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+    }
+    
+    /* Стили для модального окна */
+    #modalContainer .modal-dialog {
+        max-width: 800px;
+    }
+    
+    #modalContainer .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    #modalContainer .modal-header {
+        border-bottom: 2px solid #e9ecef;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    #modalContainer .modal-body {
+        padding: 1.5rem;
+    }
+    
+    #modalContainer .modal-footer {
+        border-top: 2px solid #e9ecef;
+        border-radius: 0 0 12px 12px;
+    }
+    
+    /* Стили для кликабельных элементов */
+    .clickable-code {
+        transition: all 0.3s ease;
+        user-select: none;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .clickable-code:hover {
+        background-color: #6c757d !important;
+        color: white !important;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .clickable-code::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .clickable-code:hover::before {
+        left: 100%;
+    }
+    
+    .clickable-name {
+        transition: all 0.3s ease;
+        user-select: none;
+        position: relative;
+    }
+    
+    .clickable-name:hover {
+        color: #0056b3 !important;
+        text-decoration: underline;
+        transform: scale(1.02);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .clickable-name::after {
+        content: ' 👁';
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        font-size: 0.8em;
+    }
+    
+    .clickable-name:hover::after {
+        opacity: 1;
     }
 </style>
 {% endblock %}

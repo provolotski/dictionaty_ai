@@ -71,6 +71,10 @@ class AuthMiddleware:
 
     def _requires_auth(self, path):
         """Проверяет, требует ли URL авторизации"""
+        # API endpoints для получения данных не требуют авторизации
+        if path.startswith('/accounts/users/') and path.endswith('/data/'):
+            return False
+            
         for exempt_url in self.exempt_urls:
             if path.startswith(exempt_url):
                 return False
@@ -113,6 +117,40 @@ class AuthMiddleware:
                     user_info['username'] = prev_user_info.get('username') or 'user'
                 if not user_info.get('domain'):
                     user_info['domain'] = prev_user_info.get('domain') or 'belstat'
+                
+                # Проверяем и обновляем подразделение и группы пользователя
+                from .permissions import check_user_access
+                try:
+                    result = check_user_access(
+                        user_info.get('username'), 
+                        user_info.get('domain'), 
+                        access_token, 
+                        request
+                    )
+                    if result.get('has_access'):
+                        # Используем флаги из permissions
+                        has_security_access = result.get('has_security_access', False)
+                        has_users_access = result.get('has_user_access', False)
+                        
+                        request.session['in_security'] = has_security_access
+                        request.session['has_audit_access'] = has_security_access
+                        request.session['in_users'] = has_users_access
+                        
+                        logger.info(f"Группы пользователя обновлены: in_security={has_security_access}, in_users={has_users_access}")
+                        logger.debug(f"Подразделение обновлено через permissions: {request.session.get('user_department')}")
+                    else:
+                        # Если нет доступа, устанавливаем False
+                        request.session['in_security'] = False
+                        request.session['has_audit_access'] = False
+                        request.session['in_users'] = False
+                        logger.warning("Пользователь не имеет доступа к системе")
+                except Exception as e:
+                    logger.warning(f"Не удалось обновить подразделение и группы: {e}")
+                    # При ошибке устанавливаем False для безопасности
+                    request.session['in_security'] = False
+                    request.session['has_audit_access'] = False
+                    request.session['in_users'] = False
+                
                 request.session['user_info'] = user_info
                 log_auth_event(
                     'middleware_token_valid',
@@ -153,6 +191,40 @@ class AuthMiddleware:
                         user_info['username'] = prev_user_info.get('username') or 'user'
                     if not user_info.get('domain'):
                         user_info['domain'] = prev_user_info.get('domain') or 'belstat'
+                    
+                    # Проверяем и обновляем подразделение и группы пользователя
+                    from .permissions import check_user_access
+                    try:
+                        result = check_user_access(
+                            user_info.get('username'), 
+                            user_info.get('domain'), 
+                            new_access_token, 
+                            request
+                        )
+                        if result.get('has_access'):
+                            # Используем флаги из permissions
+                            has_security_access = result.get('has_security_access', False)
+                            has_users_access = result.get('has_user_access', False)
+                            
+                            request.session['in_security'] = has_security_access
+                            request.session['has_audit_access'] = has_security_access
+                            request.session['in_users'] = has_users_access
+                            
+                            logger.info(f"Группы пользователя обновлены после refresh: in_security={has_security_access}, in_users={has_users_access}")
+                            logger.debug(f"Подразделение обновлено через permissions: {request.session.get('user_department')}")
+                        else:
+                            # Если нет доступа, устанавливаем False
+                            request.session['in_security'] = False
+                            request.session['has_audit_access'] = False
+                            request.session['in_users'] = False
+                            logger.warning("Пользователь не имеет доступа к системе после refresh")
+                    except Exception as e:
+                        logger.warning(f"Не удалось обновить подразделение и группы после refresh: {e}")
+                        # При ошибке устанавливаем False для безопасности
+                        request.session['in_security'] = False
+                        request.session['has_audit_access'] = False
+                        request.session['in_users'] = False
+                    
                     request.session['user_info'] = user_info
                     log_auth_event(
                         'middleware_token_refreshed',

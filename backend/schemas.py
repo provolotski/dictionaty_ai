@@ -254,10 +254,75 @@ class UserOut(BaseModel):
     id: int = Field(..., description="ID пользователя")
     guid: str = Field(..., description="GUID пользователя")
     name: str = Field(..., description="Имя пользователя")
-    domain: str = Field(..., description="Домен")
+    is_active: bool = Field(..., description="Активен ли пользователь")
+    is_admin: bool = Field(..., description="Является ли администратором системы")
+    department: Optional[str] = Field(None, description="Подразделение пользователя")
+    is_user: bool = Field(..., description="Входит ли в группу EISGS_Users")
     created_at: datetime = Field(..., description="Дата создания")
-    last_login_at: datetime = Field(..., description="Дата последнего входа")
-    is_admin: bool = Field(default=False, description="Признак администратора системы")
+    updated_at: datetime = Field(..., description="Дата последнего обновления")
+
+    class Config:
+        from_attributes = True
+
+
+class UserIn(BaseModel):
+    """Схема для создания/обновления пользователя"""
+    guid: str = Field(..., description="GUID пользователя")
+    name: str = Field(..., description="Имя пользователя")
+    is_active: bool = Field(True, description="Активен ли пользователь")
+    is_admin: bool = Field(False, description="Является ли администратором системы")
+    department: Optional[str] = Field(None, description="Подразделение пользователя")
+    is_user: bool = Field(False, description="Входит ли в группу EISGS_Users")
+
+    class Config:
+        from_attributes = True
+
+
+class DictionaryOwnerIn(BaseModel):
+    """Схема для создания записи владельца справочника"""
+    id_dictionary: int = Field(..., description="ID справочника")
+    id_user: int = Field(..., description="ID пользователя")
+
+
+class DictionaryOwnerOut(BaseModel):
+    """Схема для отображения записи владельца справочника"""
+    id: int = Field(..., description="ID записи")
+    id_dictionary: int = Field(..., description="ID справочника")
+    id_user: int = Field(..., description="ID пользователя")
+    created_at: datetime = Field(..., description="Дата создания")
+    updated_at: datetime = Field(..., description="Дата обновления")
+
+    class Config:
+        from_attributes = True
+
+
+class DictionaryOwnerWithInfo(BaseModel):
+    """Схема для отображения владельца справочника с информацией о справочнике"""
+    id: int = Field(..., description="ID записи")
+    id_dictionary: int = Field(..., description="ID справочника")
+    dictionary_code: str = Field(..., description="Код справочника")
+    dictionary_name: str = Field(..., description="Название справочника")
+    id_user: int = Field(..., description="ID пользователя")
+    user_name: str = Field(..., description="Имя пользователя")
+    created_at: datetime = Field(..., description="Дата создания")
+    updated_at: datetime = Field(..., description="Дата обновления")
+
+    class Config:
+        from_attributes = True
+
+
+class UserWithDictionaryOwnership(BaseModel):
+    """Схема для отображения пользователя с информацией о владении справочниками"""
+    id: int = Field(..., description="ID пользователя")
+    guid: str = Field(..., description="GUID пользователя")
+    name: str = Field(..., description="Имя пользователя")
+    is_active: bool = Field(..., description="Активен ли пользователь")
+    is_admin: bool = Field(..., description="Является ли администратором системы")
+    department: Optional[str] = Field(None, description="Подразделение пользователя")
+    is_user: bool = Field(..., description="Входит ли в группу EISGS_Users")
+    created_at: datetime = Field(..., description="Дата создания")
+    updated_at: datetime = Field(..., description="Дата последнего обновления")
+    dictionary_ownership: List[DictionaryOwnerWithInfo] = Field(default_factory=list, description="Список справочников, которыми владеет пользователь")
 
     class Config:
         from_attributes = True

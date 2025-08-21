@@ -308,7 +308,14 @@ class LoginForm {
     }
     
     handleRememberMeChange() {
-        if (!this.rememberMeCheckbox.checked) {
+        // Обработка изменения чекбокса "Запомнить меня"
+        if (this.rememberMeCheckbox.checked) {
+            // Если чекбокс отмечен, сохраняем текущие учетные данные
+            if (this.usernameInput.value.trim()) {
+                this.saveCredentials();
+            }
+        } else {
+            // Если чекбокс снят, очищаем сохраненные данные
             this.clearSavedCredentials();
         }
     }

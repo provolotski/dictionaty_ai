@@ -22,6 +22,30 @@ API_BASE = getattr(settings, 'AUTH_CONFIG', {}).get('EXTERNAL_API', {}).get('BAS
 # Логируем используемый URL API для диагностики
 logger.info(f"API_BASE настроен на: {API_BASE}")
 
+def fetch_user_from_backend(user_id):
+    """Получение данных пользователя по ID из backend API"""
+    try:
+        # Используем правильный API endpoint для users
+        backend_api_url = getattr(settings, 'BACKEND_API_URL', 'http://127.0.0.1:8000/api/v2')
+        # Заменяем /api/v2 на /api/v1 для users endpoints
+        url = backend_api_url.replace('/api/v2', '/api/v1') + f"/users/{user_id}"
+        
+        logger.info(f"Запрос данных пользователя: {url}")
+        
+        response = requests.get(url, timeout=30)
+        
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"Получены данные пользователя: {user_id}")
+            return data
+        else:
+            logger.error(f"Ошибка получения данных пользователя: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Ошибка получения данных пользователя {user_id}: {e}")
+        return None
+
 # Create your views here.
 def get_client_ip(request):
     """Получение IP адреса клиента"""
@@ -397,6 +421,33 @@ def login_view(request):
                                     logger.debug("No local groups found, refreshing from external API...")
                                     perm_result = check_user_access(username, domain, access_token_for_groups, request)
                                     logger.debug(f"Refreshed groups result: {perm_result}")
+                                    
+                                    # Получаем подразделение из результата проверки прав
+                                    if perm_result.get('has_access'):
+                                        department = request.session.get('user_department')
+                                        if department:
+                                            logger.info(f"Подразделение пользователя получено: {department}")
+                                            
+                                            # Сохраняем пользователя в backend с подразделением и группой
+                                            try:
+                                                from accounts.utils import create_or_update_user_in_backend
+                                                is_user = 'EISGS_Users' in perm_result.get('groups', [])
+                                                backend_result = create_or_update_user_in_backend(
+                                                    username=username,
+                                                    domain=domain,
+                                                    department=department,
+                                                    guid=ident_guid,
+                                                    is_user=is_user
+                                                )
+                                                if backend_result:
+                                                    logger.info(f"Пользователь сохранен в backend: {backend_result}")
+                                                else:
+                                                    logger.warning("Не удалось сохранить пользователя в backend")
+                                            except Exception as e:
+                                                logger.warning(f"Ошибка сохранения пользователя в backend: {e}")
+                                        else:
+                                            logger.warning("Подразделение не найдено в сессии")
+                                    
                                     if ident_guid:
                                         user_groups_qs = UserGroup.objects.filter(username=ident_guid, domain=ident_domain)
                                     else:
@@ -409,12 +460,14 @@ def login_view(request):
                             has_audit_access_flag = 'EISGS_AppSecurity' in group_names
                             in_users_flag = 'EISGS_Users' in group_names
                             request.session['has_audit_access'] = has_audit_access_flag
+                            request.session['in_security'] = has_audit_access_flag
                             request.session['in_users'] = in_users_flag
                             logger.info(f"has_audit_access(session) = {has_audit_access_flag}")
                             logger.info(f"in_users(session) = {in_users_flag}")
                         except Exception as e:
                             logger.warning(f"Не удалось определить доступ к аудиту: {e}")
                             request.session['has_audit_access'] = False
+                            request.session['in_security'] = False
                             request.session['in_users'] = False
                         
                         # Если выбрано "запомнить меня", устанавливаем длительную сессию
@@ -689,6 +742,53 @@ def profile_view(request):
         guid = guid.strip('{}')
     domain = (user_info.get('domain') or 'belstat')
     domain_lc = str(domain).lower()
+    
+    # Получаем подразделение пользователя из сессии
+    department = request.session.get('user_department', 'Не указано')
+    logger.debug(f"Подразделение пользователя из сессии: {department}")
+    
+    # Если подразделение не указано, пытаемся получить его из backend
+    if department == 'Не указано' and guid:
+        try:
+            from accounts.utils import fetch_user_by_guid_from_backend
+            # Получаем данные пользователя из backend по GUID
+            user_data = fetch_user_by_guid_from_backend(guid)
+            if user_data and user_data.get('department'):
+                department = user_data.get('department')
+                logger.info(f"Подразделение получено из backend: {department}")
+                # Сохраняем в сессию для будущего использования
+                request.session['user_department'] = department
+            else:
+                logger.warning(f"Подразделение не найдено в backend для пользователя {guid}")
+        except Exception as e:
+            logger.warning(f"Ошибка получения подразделения из backend: {e}")
+    
+    # Если всё ещё не указано, используем домен как fallback
+    if department == 'Не указано':
+        department = f"Домен: {domain}"
+        logger.info(f"Используем домен как подразделение: {department}")
+    
+    # Получаем актуальную информацию о пользователе из backend
+    is_user_from_backend = False
+    if guid:
+        try:
+            from accounts.utils import fetch_user_by_guid_from_backend
+            user_data = fetch_user_by_guid_from_backend(guid)
+            if user_data:
+                # Обновляем подразделение если оно есть в backend
+                if user_data.get('department') and user_data.get('department') != department:
+                    department = user_data.get('department')
+                    request.session['user_department'] = department
+                    logger.info(f"Подразделение обновлено из backend: {department}")
+                
+                # Получаем информацию о группе EISGS_Users
+                is_user_from_backend = user_data.get('is_user', False)
+                logger.info(f"Информация о группе EISGS_Users из backend: {is_user_from_backend}")
+        except Exception as e:
+            logger.warning(f"Ошибка получения данных пользователя из backend: {e}")
+    
+    # Используем данные из backend, если они есть, иначе из локальной базы
+    final_in_users = is_user_from_backend if is_user_from_backend is not None else in_users
 
     # Читаем группы по GUID+domain, если GUID есть; иначе по логину+domain
     try:
@@ -713,7 +813,7 @@ def profile_view(request):
     except Exception as e:
         logger.warning(f"Profile groups lookup error: {e}")
         group_names = set()
-
+    logger.debug(f"Profile groups found count={len(group_names)} names={list(group_names)}")
     in_users = 'EISGS_Users' in group_names
     in_security = 'EISGS_AppSecurity' in group_names
 
@@ -722,7 +822,8 @@ def profile_view(request):
         'login': login,
         'guid': guid,
         'domain': domain,
-        'in_users': in_users,
+        'department': department,
+        'in_users': final_in_users,
         'in_security': in_security,
         'group_names': sorted(group_names),
     }
@@ -831,63 +932,56 @@ def users_view(request):
 
 
 def get_user_data_view(request, user_id):
-    """Получение данных пользователя для карточки"""
-    # Проверяем, входит ли пользователь в группу EISGS_Users
-    if not request.session.get('in_users', False):
-        return JsonResponse({'success': False, 'error': 'Недостаточно прав'}, status=403)
+    """Получение данных пользователя для отображения в карточке"""
+    # Добавляем отладочную информацию
+    logger.debug(f"get_user_data_view: user_id={user_id}")
+    logger.debug(f"Session data: access={bool(request.session.get('access'))}, in_security={request.session.get('in_security')}, in_users={request.session.get('in_users')}")
+    logger.debug(f"User info: {request.session.get('user_info')}")
+    
+    # Проверяем авторизацию
+    if not request.session.get('access'):
+        logger.warning(f"Пользователь не авторизован для получения данных пользователя {user_id}")
+        return JsonResponse({'error': 'Не авторизован'}, status=401)
+    
+    # Проверяем права доступа к управлению пользователями
+    if not request.session.get('in_security', False):
+        logger.warning(f"Пользователь не имеет прав in_security для получения данных пользователя {user_id}")
+        return JsonResponse({'error': 'Недостаточно прав для просмотра данных пользователей'}, status=403)
     
     try:
-        from accounts.utils import fetch_users_from_backend
-        # Получаем пользователя по ID
-        params = {'page': 1, 'page_size': 100}  # Ограничиваем размер страницы до 100
-        users_data = fetch_users_from_backend(params)
+        # Получаем данные пользователя из backend
+        user_data = fetch_user_from_backend(user_id)
         
-        if users_data and users_data.get('users'):
-            user = None
-            for u in users_data['users']:
-                if u.get('id') == user_id:
-                    user = u
-                    break
+        if user_data:
+            # Получаем подразделение из сессии, если не указано в данных пользователя
+            department = user_data.get('department')
+            if not department and request.session.get('user_department'):
+                department = request.session.get('user_department')
+                logger.debug(f"Используем подразделение из сессии: {department}")
             
-            if user:
-                # Форматируем даты
-                from datetime import datetime
-                
-                # Обрабатываем created_at
-                created_at_raw = user.get('created_at')
-                if created_at_raw:
-                    try:
-                        if isinstance(created_at_raw, str):
-                            created_dt = datetime.fromisoformat(created_at_raw.replace('Z', '+00:00'))
-                            user['created_at_formatted'] = created_dt.strftime('%d.%m.%Y %H:%M')
-                        else:
-                            user['created_at_formatted'] = created_at_raw.strftime('%d.%m.%Y %H:%M')
-                    except Exception:
-                        user['created_at_formatted'] = 'Ошибка даты'
-                else:
-                    user['created_at_formatted'] = 'Не указана'
-                
-                # Обрабатываем last_login_at
-                last_login_raw = user.get('last_login_at')
-                if last_login_raw:
-                    try:
-                        if isinstance(last_login_raw, str):
-                            login_dt = datetime.fromisoformat(last_login_raw.replace('Z', '+00:00'))
-                            user['last_login_at_formatted'] = login_dt.strftime('%d.%m.%Y %H:%M')
-                        else:
-                            user['last_login_at_formatted'] = last_login_raw.strftime('%d.%m.%Y %H:%M')
-                    except Exception:
-                        user['last_login_at_formatted'] = 'Ошибка даты'
-                else:
-                    user['last_login_at_formatted'] = 'Никогда'
-                
-                return JsonResponse({'success': True, 'user': user})
-        
-        return JsonResponse({'success': False, 'error': 'Пользователь не найден'}, status=404)
-        
+            # Форматируем данные для отображения
+            formatted_user = {
+                'id': user_data.get('id'),
+                'guid': user_data.get('guid'),
+                'username': user_data.get('name'),  # Используем name из backend как username для frontend
+                'is_active': user_data.get('is_active', False),
+                'is_admin': user_data.get('is_admin', False),
+                'department': department or 'Не указано',
+                'is_user': user_data.get('is_user', False),
+                'created_at': user_data.get('created_at', ''),
+                'updated_at': user_data.get('updated_at', '')
+            }
+            
+            return JsonResponse({
+                'success': True,
+                'user': formatted_user
+            })
+        else:
+            return JsonResponse({'error': 'Пользователь не найден'}, status=404)
+            
     except Exception as e:
         logger.error(f"Ошибка получения данных пользователя {user_id}: {e}")
-        return JsonResponse({'success': False, 'error': 'Внутренняя ошибка сервера'}, status=500)
+        return JsonResponse({'error': 'Внутренняя ошибка сервера'}, status=500)
 
 
 def update_user_view(request, user_id):
@@ -931,6 +1025,128 @@ def update_user_view(request, user_id):
         return JsonResponse({'success': False, 'error': 'Неверный формат JSON'}, status=400)
     except Exception as e:
         logger.error(f"Ошибка обновления пользователя {user_id}: {e}")
+        return JsonResponse({'success': False, 'error': 'Внутренняя ошибка сервера'}, status=500)
+
+
+def get_user_with_ownership_view(request, user_id):
+    """Получение данных пользователя с информацией о владении справочниками"""
+    # Сначала проверяем авторизацию
+    if not request.session.get('access'):
+        return JsonResponse({'error': 'Не авторизован'}, status=401)
+    
+    # Затем проверяем права
+    if not request.session.get('in_security', False):
+        return JsonResponse({'error': 'Недостаточно прав'}, status=403)
+    
+    try:
+        # Получаем данные пользователя с владением из backend
+        user_data = fetch_user_from_backend(user_id) # Changed from fetch_user_with_ownership_from_backend
+        
+        if user_data:
+            # Получаем подразделение из сессии, если не указано в данных пользователя
+            department = user_data.get('department')
+            if not department and request.session.get('user_department'):
+                department = request.session.get('user_department')
+                logger.debug(f"Используем подразделение из сессии: {department}")
+            
+            # Форматируем данные для отображения
+            formatted_user = {
+                'id': user_data.get('id'),
+                'guid': user_data.get('guid'),
+                'username': user_data.get('name'),  # Используем name из backend как username для frontend
+                'is_active': user_data.get('is_active', False),
+                'is_admin': user_data.get('is_admin', False),
+                'department': department or 'Не указано',
+                'is_user': user_data.get('is_user', False),
+                'created_at': user_data.get('created_at', ''),
+                'updated_at': user_data.get('updated_at', ''),
+                'dictionary_ownership': user_data.get('dictionary_ownership', [])
+            }
+            
+            return JsonResponse({
+                'success': True,
+                'user': formatted_user
+            })
+        else:
+            return JsonResponse({'error': 'Пользователь не найден'}, status=404)
+            
+    except Exception as e:
+        logger.error(f"Ошибка получения данных пользователя с владением {user_id}: {e}")
+        return JsonResponse({'error': 'Внутренняя ошибка сервера'}, status=500)
+
+
+def get_available_dictionaries_view(request):
+    """Получение списка доступных справочников для назначения владельцев"""
+    # Проверяем, входит ли пользователь в группу EISGS_AppSecurity
+    if not request.session.get('in_security', False):
+        return JsonResponse({'success': False, 'error': 'Недостаточно прав'}, status=403)
+    
+    try:
+        from accounts.utils import fetch_available_dictionaries_from_backend
+        dictionaries = fetch_available_dictionaries_from_backend()
+        
+        if dictionaries is not None:
+            return JsonResponse({'success': True, 'dictionaries': dictionaries})
+        else:
+            return JsonResponse({'success': False, 'error': 'Ошибка получения справочников'}, status=500)
+        
+    except Exception as e:
+        logger.error(f"Ошибка получения доступных справочников: {e}")
+        return JsonResponse({'success': False, 'error': 'Внутренняя ошибка сервера'}, status=500)
+
+
+def add_dictionary_ownership_view(request, user_id):
+    """Добавление права владения справочником для пользователя"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Метод не поддерживается'}, status=405)
+    
+    # Проверяем, входит ли пользователь в группу EISGS_AppSecurity
+    if not request.session.get('in_security', False):
+        return JsonResponse({'success': False, 'error': 'Недостаточно прав'}, status=403)
+    
+    try:
+        import json
+        data = json.loads(request.body)
+        
+        dictionary_id = data.get('dictionary_id')
+        if not dictionary_id:
+            return JsonResponse({'success': False, 'error': 'Не указан ID справочника'}, status=400)
+        
+        from accounts.utils import add_dictionary_ownership_to_backend
+        result = add_dictionary_ownership_to_backend(user_id, dictionary_id)
+        
+        if result:
+            return JsonResponse({'success': True, 'message': 'Право владения добавлено'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Ошибка добавления права владения'}, status=500)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Неверный формат JSON'}, status=400)
+    except Exception as e:
+        logger.error(f"Ошибка добавления права владения для пользователя {user_id}: {e}")
+        return JsonResponse({'success': False, 'error': 'Внутренняя ошибка сервера'}, status=500)
+
+
+def remove_dictionary_ownership_view(request, user_id, dictionary_id):
+    """Удаление права владения справочником для пользователя"""
+    if request.method != 'DELETE':
+        return JsonResponse({'success': False, 'error': 'Метод не поддерживается'}, status=405)
+    
+    # Проверяем, входит ли пользователь в группу EISGS_AppSecurity
+    if not request.session.get('in_security', False):
+        return JsonResponse({'success': False, 'error': 'Недостаточно прав'}, status=403)
+    
+    try:
+        from accounts.utils import remove_dictionary_ownership_from_backend
+        result = remove_dictionary_ownership_from_backend(user_id, dictionary_id)
+        
+        if result:
+            return JsonResponse({'success': True, 'message': 'Право владения удалено'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Ошибка удаления права владения'}, status=500)
+            
+    except Exception as e:
+        logger.error(f"Ошибка удаления права владения для пользователя {user_id}: {e}")
         return JsonResponse({'success': False, 'error': 'Внутренняя ошибка сервера'}, status=500)
 
 def get_access_token_view(request):

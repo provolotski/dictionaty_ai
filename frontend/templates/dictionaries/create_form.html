@@ -1,38 +1,863 @@
-           <div class="modal-dialog modal-lg" style="min-height: 80vh;">
-        <div class="modal-content" style="height: 80vh;">
-           
+{% extends 'base.html' %}
+
+{% block title %}Создание справочника | BelStat{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* CSS переменные для навигации */
+    :root {
+        --primary-green: #14a856;
+        --primary-green-light: #16c065;
+        --primary-green-dark: #0f8a45;
+        --white: #ffffff;
+        --gray-100: #f8f9fa;
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    /* Основные стили страницы */
+    .create-dictionary-page {
+        background: linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 100%);
+        min-height: calc(100vh - 80px); /* Учитываем высоту навигации */
+        padding: 2rem 0;
+    }
+    
+    /* Убеждаемся, что основной контент не перекрывает навигацию */
+    .main-content {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+    
+    /* Обеспечиваем видимость навигации */
+    body .navbar {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 20px rgba(20, 168, 86, 0.3);
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .page-subtitle {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    /* Стили для формы */
+    .form-container {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-section {
+        border: 1px solid #d4edda;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        background: #f8fdf8;
+        transition: all 0.3s ease;
+    }
+    
+    .form-section:hover {
+        border-color: var(--primary-green);
+        box-shadow: 0 4px 15px rgba(20, 168, 86, 0.1);
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-right: 1rem;
+        font-size: 1.2rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+    }
+    
+    /* Стили для полей формы */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 0.2rem rgba(20, 168, 86, 0.25);
+        transform: translateY(-1px);
+    }
+    
+    .form-control:focus + .form-text {
+        color: var(--primary-green);
+    }
+    
+    .form-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+    
+    /* Специальные стили для разных типов полей */
+    .form-control[type="date"] {
+        padding: 0.75rem;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    select.form-control {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+        padding-right: 2.5rem;
+    }
+    
+    /* Стили для кнопок */
+    .form-actions {
+        background: #f0f8f0;
+        border-top: 1px solid #d4edda;
+        padding: 1.5rem 0 0;
+        margin-top: 2rem;
+        text-align: center;
+    }
+    
+    .btn {
+        padding: 0.75rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        margin: 0 0.5rem;
+        border: 2px solid transparent;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+        border-color: var(--primary-green);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-green-dark), #0a6b38);
+        border-color: var(--primary-green-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(20, 168, 86, 0.4);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border-color: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        border-color: #545b62;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+    }
+    
+    .btn-outline-info {
+        color: var(--primary-green);
+        border-color: var(--primary-green);
+        background: transparent;
+    }
+    
+    .btn-outline-info:hover {
+        color: white;
+        background-color: var(--primary-green);
+        border-color: var(--primary-green);
+        transform: translateY(-2px);
+    }
+    
+    /* Стили для информационных блоков */
+    .info-card {
+        background: linear-gradient(135deg, #e8f5e8, #d4edda);
+        border: 1px solid #a8e6a8;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-card h6 {
+        color: var(--primary-green-dark);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .info-card p {
+        color: var(--primary-green);
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+        }
+        
+        .form-container {
+            padding: 1.5rem;
+            margin: 0 1rem 2rem;
+        }
+        
+        .form-section {
+            padding: 1rem;
+        }
+        
+        .btn {
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+    }
+    
+    /* Анимации */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .form-section {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    .form-section:nth-child(2) { animation-delay: 0.1s; }
+    .form-section:nth-child(3) { animation-delay: 0.2s; }
+    .form-section:nth-child(4) { animation-delay: 0.3s; }
+    .form-section:nth-child(5) { animation-delay: 0.4s; }
+    
+    /* Дополнительные зеленые акценты */
+    .form-section .section-header {
+        border-bottom-color: var(--primary-green);
+    }
+    
+    .form-section:hover .section-header {
+        border-bottom-color: var(--primary-green-light);
+    }
+    
+    /* Стили для активных полей */
+    .form-control:focus {
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 0.2rem rgba(20, 168, 86, 0.25);
+    }
+    
+    /* Стили для иконок в заголовках секций */
+    .section-icon i {
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Дополнительные стили для навигации */
+    .main-content {
+        padding-top: 0 !important;
+    }
+    
+    /* Исправление для Bootstrap */
+    .navbar-expand {
+        flex-direction: row !important;
+    }
+    
+    .navbar-nav {
+        flex-direction: row !important;
+    }
+    
+    /* Обеспечиваем правильное отображение на мобильных устройствах */
+    @media (max-width: 768px) {
+        .create-dictionary-page {
+            margin-top: 60px;
+            min-height: calc(100vh - 60px);
+        }
+        
+        .navbar {
+            padding: 0.5rem 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-dictionary-page">
+    <!-- Заголовок страницы -->
+    <div class="page-header">
+        <div class="container">
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-8">
+                    <h1 class="page-title">
+                        <i class="fas fa-plus-circle me-3"></i>
+                        Создание нового справочника
+                    </h1>
+                    <p class="page-subtitle">
+                        Заполните форму для создания нового справочника в системе
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Информационная карточка -->
+        <div class="info-card">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="fas fa-info-circle me-2"></i>Важная информация</h6>
+                    <p><strong>Код справочника:</strong> Должен быть уникальным в системе</p>
+                    <p><strong>Название:</strong> Рекомендуется указать на русском языке</p>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="fas fa-lightbulb me-2"></i>Советы</h6>
+                    <p><strong>Описание:</strong> Заполните хотя бы на одном языке</p>
+                    <p><strong>Даты:</strong> Укажите период действия справочника</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Форма создания справочника -->
+        <div class="form-container">
             <form method="post" id="dictionaryForm">
                 {% csrf_token %}
-              <div class="modal-header">
-                    <h5 class="modal-title">
-                        {% if form.instance.pk %}Редактирование{% else %}Создание{% endif %} справочника
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                {{ form.non_field_errors }}
-
-
-                <div class="modal-body" style="max-height: calc(80vh - 120px); overflow-y: auto;">
-                    {% for field in form %}
-                        <div class="mb-3">
-                            {{ field.label_tag }}
-                            {{ field }}
-
-                            {% if field.help_text %}
-                                <small class="form-text text-muted">{{ field.help_text }}</small>
-                            {% endif %}
-
-                            {% for error in field.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
+                
+                <!-- Основная информация -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-info-circle"></i>
                         </div>
-                    {% endfor %}
+                        <h3 class="section-title">Основная информация</h3>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>
+                                    {{ form.name.label }}
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.help_text %}
+                                    <small class="form-text">{{ form.name.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.name.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">
+                                    <i class="fas fa-hashtag me-1"></i>
+                                    {{ form.code.label }}
+                                </label>
+                                {{ form.code }}
+                                {% if form.code.help_text %}
+                                    <small class="form-text">{{ form.code.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.code.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>
+                            {{ form.description.label }}
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.help_text %}
+                            <small class="form-text">{{ form.description.help_text }}</small>
+                        {% endif %}
+                        {% for error in form.description.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Сохранить</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-            </form>
+                <!-- Многоязычность -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <h3 class="section-title">Многоязычность</h3>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.name_eng.id_for_label }}" class="form-label">
+                                    <i class="fas fa-flag me-1"></i>
+                                    {{ form.name_eng.label }}
+                                </label>
+                                {{ form.name_eng }}
+                                {% if form.name_eng.help_text %}
+                                    <small class="form-text">{{ form.name_eng.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.name_eng.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.name_bel.id_for_label }}" class="form-label">
+                                    <i class="fas fa-flag me-1"></i>
+                                    {{ form.name_bel.label }}
+                                </label>
+                                {{ form.name_bel }}
+                                {% if form.name_bel.help_text %}
+                                    <small class="form-text">{{ form.name_bel.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.name_bel.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.description_eng.id_for_label }}" class="form-label">
+                                    <i class="fas fa-align-left me-1"></i>
+                                    {{ form.description_eng.label }}
+                                </label>
+                                {{ form.description_eng }}
+                                {% if form.description_eng.help_text %}
+                                    <small class="form-text">{{ form.description_eng.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.description_eng.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.description_bel.id_for_label }}" class="form-label">
+                                    <i class="fas fa-align-left me-1"></i>
+                                    {{ form.description_bel.label }}
+                                </label>
+                                {{ form.description_bel }}
+                                {% if form.description_bel.help_text %}
+                                    <small class="form-text">{{ form.description_bel.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.description_bel.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Даты действия -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h3 class="section-title">Период действия</h3>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.start_date.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar-plus me-1"></i>
+                                    {{ form.start_date.label }}
+                                </label>
+                                {{ form.start_date }}
+                                {% if form.start_date.help_text %}
+                                    <small class="form-text">{{ form.start_date.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.start_date.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.finish_date.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar-minus me-1"></i>
+                                    {{ form.finish_date.label }}
+                                </label>
+                                {{ form.finish_date }}
+                                {% if form.finish_date.help_text %}
+                                    <small class="form-text">{{ form.finish_date.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.finish_date.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Классификация и статус -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3 class="section-title">Классификация и статус</h3>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.id_status.id_for_label }}" class="form-label">
+                                    <i class="fas fa-toggle-on me-1"></i>
+                                    {{ form.id_status.label }}
+                                </label>
+                                {{ form.id_status }}
+                                {% if form.id_status.help_text %}
+                                    <small class="form-text">{{ form.id_status.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.id_status.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.id_type.id_for_label }}" class="form-label">
+                                    <i class="fas fa-sitemap me-1"></i>
+                                    {{ form.id_type.label }}
+                                </label>
+                                {{ form.id_type }}
+                                {% if form.id_type.help_text %}
+                                    <small class="form-text">{{ form.id_type.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.id_type.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Дополнительная информация -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <h3 class="section-title">Дополнительная информация</h3>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.gko.id_for_label }}" class="form-label">
+                                    <i class="fas fa-building me-1"></i>
+                                    {{ form.gko.label }}
+                                </label>
+                                {{ form.gko }}
+                                {% if form.gko.help_text %}
+                                    <small class="form-text">{{ form.gko.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.gko.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.organization.id_for_label }}" class="form-label">
+                                    <i class="fas fa-university me-1"></i>
+                                    {{ form.organization.label }}
+                                </label>
+                                {{ form.organization }}
+                                {% if form.organization.help_text %}
+                                    <small class="form-text">{{ form.organization.help_text }}</small>
+                                {% endif %}
+                                {% for error in form.organization.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.classifier.id_for_label }}" class="form-label">
+                            <i class="fas fa-list-alt me-1"></i>
+                            {{ form.classifier.label }}
+                        </label>
+                        {{ form.classifier }}
+                        {% if form.classifier.help_text %}
+                            <small class="form-text">{{ form.classifier.help_text }}</small>
+                        {% endif %}
+                        {% for error in form.classifier.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Кнопки действий -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-save me-2"></i>
+                        Создать справочник
+                    </button>
+                    <a href="{% url 'dictionary_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>
+                        Отмена
+                    </a>
+                    <button type="button" class="btn btn-outline-info" onclick="previewForm()">
+                        <i class="fas fa-eye me-2"></i>
+                        Предварительный просмотр
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно предварительного просмотра -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--primary-green); color: white;">
+                <h5 class="modal-title" id="previewModalLabel">
+                    <i class="fas fa-eye me-2"></i>
+                    Предварительный просмотр справочника
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- Содержимое предварительного просмотра будет загружено динамически -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Функция предварительного просмотра
+function previewForm() {
+    const form = document.getElementById('dictionaryForm');
+    const formData = new FormData(form);
+    const previewContent = document.getElementById('previewContent');
+    
+    // Создаем HTML для предварительного просмотра
+    let previewHTML = '<div class="row">';
+    
+    // Основная информация
+    previewHTML += `
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header" style="background: var(--primary-green); color: white;">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Основная информация</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Название:</strong> ${formData.get('name') || 'Не указано'}</p>
+                    <p><strong>Код:</strong> <span class="badge" style="background: var(--primary-green);">${formData.get('code') || 'Не указан'}</span></p>
+                    <p><strong>Описание:</strong> ${formData.get('description') || 'Не указано'}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Многоязычность
+    previewHTML += `
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header" style="background: var(--primary-green-light); color: white;">
+                    <h6 class="mb-0"><i class="fas fa-globe me-2"></i>Многоязычность</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Название (англ):</strong> ${formData.get('name_eng') || 'Не указано'}</p>
+                    <p><strong>Название (бел):</strong> ${formData.get('name_bel') || 'Не указано'}</p>
+                    <p><strong>Описание (англ):</strong> ${formData.get('description_eng') || 'Не указано'}</p>
+                    <p><strong>Описание (бел):</strong> ${formData.get('description_bel') || 'Не указано'}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Даты
+    previewHTML += `
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header" style="background: var(--primary-green-dark); color: white;">
+                    <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Период действия</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Дата начала:</strong> ${formData.get('start_date') || 'Не указана'}</p>
+                    <p><strong>Дата окончания:</strong> ${formData.get('finish_date') || 'Не указана'}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Классификация
+    previewHTML += `
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header" style="background: #0a6b38; color: white;">
+                    <h6 class="mb-0"><i class="fas fa-cogs me-2"></i>Классификация</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Статус:</strong> ${formData.get('id_status') === '1' ? 'Действующий' : 'Не действующий'}</p>
+                    <p><strong>Тип:</strong> ${formData.get('id_type') === '0' ? 'На основе классификатора' : 'Локальный справочник'}</p>
+                    <p><strong>ГКО:</strong> ${formData.get('gko') || 'Не указано'}</p>
+                    <p><strong>Организация:</strong> ${formData.get('organization') || 'Не указано'}</p>
+                    <p><strong>Классификатор:</strong> ${formData.get('classifier') || 'Не указано'}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    previewHTML += '</div>';
+    
+    previewContent.innerHTML = previewHTML;
+    
+    // Показываем модальное окно
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+}
+
+// Обработка отправки формы
+document.getElementById('dictionaryForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    // Показываем индикатор загрузки
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Создание...';
+    
+    // Форма будет отправлена обычным способом
+    // Здесь можно добавить дополнительную валидацию
+});
+
+// Добавляем подсветку полей при фокусе
+document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('focus', function() {
+        this.parentElement.classList.add('focused');
+    });
+    
+    input.addEventListener('blur', function() {
+        this.parentElement.classList.remove('focused');
+    });
+});
+
+// Проверяем загрузку навигации
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Страница создания справочника загружена');
+    
+    // Проверяем навигацию
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+        console.log('✅ Навигация найдена');
         
-</div>
-</div>
+        // Принудительно показываем навигацию
+        navbar.style.display = 'block';
+        navbar.style.visibility = 'visible';
+        navbar.style.opacity = '1';
+        navbar.style.position = 'sticky';
+        navbar.style.top = '0';
+        navbar.style.zIndex = '1000';
+        
+        console.log('Стили навигации применены');
+    } else {
+        console.error('❌ Навигация не найдена в DOM');
+        
+        // Проверяем, есть ли элемент main-content
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            console.log('✅ main-content найден');
+        } else {
+            console.error('❌ main-content не найден');
+        }
+    }
+    
+    // Проверяем базовые элементы страницы
+    const baseElements = {
+        'body': document.body,
+        'html': document.documentElement,
+        '.container': document.querySelector('.container'),
+        '.create-dictionary-page': document.querySelector('.create-dictionary-page')
+    };
+    
+    Object.entries(baseElements).forEach(([selector, element]) => {
+        if (element) {
+            console.log(`✅ ${selector} найден`);
+        } else {
+            console.error(`❌ ${selector} не найден`);
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -20,6 +20,8 @@ class PermissionChecker:
     """Класс для проверки прав доступа пользователей"""
     
     REQUIRED_GROUPS = ['EISGS_AppSecurity', 'EISGS_Users']
+    SECURITY_GROUPS = ['EISGS_AppSecurity', 'Администраторы безопасности ЦИТ']  # Альтернативные названия для админов безопасности
+    USER_GROUPS = ['EISGS_Users']  # Группы пользователей
     
     def __init__(self):
         # Используем BASE_URL из API_OATH для чтения групп
@@ -40,7 +42,7 @@ class PermissionChecker:
             logger.debug(f"PermissionChecker BASE_URL: {self.base_url}")
             
             # Получаем группы пользователя из внешнего API
-            groups = self._get_user_groups(username, domain, access_token)
+            groups, department = self._get_user_groups(username, domain, access_token)
             
             if not groups:
                 error_msg = "Не удалось получить информацию о группах пользователя"
@@ -55,11 +57,25 @@ class PermissionChecker:
             user_guid = self._get_user_guid(access_token)
             logger.debug(f"Resolved user GUID for {username}@{domain}: {user_guid}")
             
-            # Сохраняем информацию о группах (и по логину, и по GUID, если он известен)
-            self._save_user_groups(username=username, domain=domain, groups=groups, guid=user_guid)
+            # Сохраняем информацию о группах в базе данных
+            self._save_user_groups(username, domain, groups, user_guid)
+            
+            # Сохраняем подразделение в сессии
+            if hasattr(request, 'session') and department:
+                request.session['user_department'] = department
+                logger.debug(f"Подразделение сохранено в сессии: {department}")
+                
+                # Также обновляем подразделение в базе данных
+                if self._update_user_department_in_db(username, domain, department, user_guid):
+                    logger.info(f"Подразделение {department} сохранено в базе данных для пользователя {username}@{domain}")
+                else:
+                    logger.warning(f"Не удалось сохранить подразделение {department} в базе данных для пользователя {username}@{domain}")
             
             # Проверяем, есть ли у пользователя необходимые группы
-            has_access = any(group in self.REQUIRED_GROUPS for group in groups)
+            # Проверяем наличие группы безопасности (админ) или пользователей
+            has_security_access = any(group in self.SECURITY_GROUPS for group in groups)
+            has_user_access = any(group in self.USER_GROUPS for group in groups)
+            has_access = has_security_access or has_user_access
             
             # Логируем результат проверки
             if has_access:
@@ -74,6 +90,10 @@ class PermissionChecker:
             return {
                 'has_access': has_access,
                 'groups': groups,
+                'user_guid': user_guid,
+                'department': department,
+                'has_security_access': has_security_access,
+                'has_user_access': has_user_access,
                 'error_message': None if has_access else "У Вас недостаточно прав для входа в систему"
             }
             
@@ -87,6 +107,127 @@ class PermissionChecker:
                 'error_message': error_msg
             }
     
+    def _get_user_department_from_api(self, access_token):
+        """
+        Получает подразделение пользователя из API, если не удается извлечь из групп
+        """
+        try:
+            url = f"{self.base_url}/get_data"
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json'
+            }
+            resp = requests.get(url, headers=headers, timeout=self.timeout)
+            if resp.status_code != 200:
+                logger.debug(f"get_data для подразделения status={resp.status_code} body={resp.text}")
+                return None
+            data = resp.json()
+            
+            # Ищем подразделение в различных полях
+            department = None
+            user_section = data.get('user') or {}
+            
+            # Проверяем различные возможные поля
+            for field in ['department', 'ou', 'organization', 'division']:
+                if field in user_section and user_section[field]:
+                    department = user_section[field]
+                    logger.debug(f"Найдено подразделение в поле {field}: {department}")
+                    break
+                elif field in data and data[field]:
+                    department = data[field]
+                    logger.debug(f"Найдено подразделение в корневом поле {field}: {department}")
+                    break
+            
+            return department
+        except Exception as e:
+            logger.debug(f"_get_user_department_from_api error: {e}")
+            return None
+
+    def _update_user_department_in_db(self, username, domain, department, guid=None):
+        """
+        Обновляет подразделение пользователя в базе данных
+        """
+        try:
+            from django.conf import settings
+            import requests
+            
+            # Используем правильный API endpoint для users
+            backend_api_url = getattr(settings, 'BACKEND_API_URL', 'http://127.0.0.1:8000/api/v2')
+            # Заменяем /api/v2 на /api/v1 для users endpoints
+            url = backend_api_url.replace('/api/v2', '/api/v1') + "/users/update-department"
+            
+            # Данные для обновления
+            update_data = {
+                "username": username,
+                "domain": domain,
+                "department": department
+            }
+            
+            if guid:
+                update_data["guid"] = guid
+            
+            logger.info(f"Обновление подразделения пользователя: {url}, данные: {update_data}")
+            
+            # Отправляем PATCH запрос для обновления
+            response = requests.patch(url, json=update_data, timeout=30)
+            
+            if response.status_code == 200:
+                logger.info(f"Подразделение пользователя {username}@{domain} обновлено: {department}")
+                return True
+            else:
+                logger.error(f"Ошибка обновления подразделения: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Ошибка обновления подразделения пользователя {username}@{domain}: {e}")
+            return False
+
+    def _extract_department_from_groups(self, groups_data):
+        """
+        Извлекает подразделение пользователя из OU атрибута групп
+        """
+        try:
+            logger.debug(f"Извлечение подразделения из групп: {groups_data}")
+            
+            for group in groups_data:
+                if isinstance(group, dict) and 'dn' in group:
+                    dn = group['dn']
+                    logger.debug(f"Обрабатываем DN: {dn}")
+                    
+                    # Ищем OU= в DN
+                    if 'OU=' in dn:
+                        # Извлекаем все OU значения
+                        ou_parts = []
+                        dn_parts = dn.split(',')
+                        for part in dn_parts:
+                            part = part.strip()
+                            if part.startswith('OU='):
+                                ou_value = part[3:]  # Убираем 'OU='
+                                logger.debug(f"Найден OU: {ou_value}")
+                                
+                                # Фильтруем стандартные OU
+                                if ou_value and ou_value not in ['Builtin', 'Users', 'Domain Users', 'Builtin', 'Users', 'Domain Users']:
+                                    ou_parts.append(ou_value)
+                        
+                        logger.debug(f"Найденные OU части: {ou_parts}")
+                        
+                        if ou_parts:
+                            # Приоритет: сначала ищем OU с "ЦИТ" или "Белстата"
+                            for ou in ou_parts:
+                                if 'ЦИТ' in ou or 'Белстата' in ou:
+                                    logger.debug(f"Найдено приоритетное подразделение: {ou}")
+                                    return ou
+                            
+                            # Если не нашли приоритетное, возвращаем первое
+                            logger.debug(f"Возвращаем первое подразделение: {ou_parts[0]}")
+                            return ou_parts[0]
+            
+            logger.debug("Подразделение не найдено")
+            return None
+        except Exception as e:
+            logger.error(f"Ошибка при извлечении подразделения из групп: {e}")
+            return None
+
     def _get_user_groups(self, username, domain, access_token):
         """
         Получает группы пользователя из внешнего API
@@ -125,6 +266,21 @@ class PermissionChecker:
                             if isinstance(v, list):
                                 raw_groups = v
                                 break
+                    
+                    # Извлекаем подразделение из групп
+                    department = self._extract_department_from_groups(raw_groups)
+                    logger.debug(f"Извлеченное подразделение из групп: {department}")
+                    
+                    # Если не удалось получить подразделение из групп, пробуем из API
+                    if not department:
+                        department = self._get_user_department_from_api(access_token)
+                        logger.debug(f"Подразделение из API: {department}")
+                    
+                    # Если все способы не дали результата, используем домен как fallback
+                    if not department:
+                        department = domain.upper()
+                        logger.debug(f"Используем домен как подразделение: {department}")
+                    
                     groups: list[str] = []
                     if isinstance(raw_groups, list):
                         for item in raw_groups:
@@ -140,11 +296,13 @@ class PermissionChecker:
                                 if name:
                                     groups.append(str(name))
                     logger.debug(f"Нормализованные группы: {groups}")
-                    return groups
+                    
+                    # Возвращаем кортеж (группы, подразделение)
+                    return groups, department
                 elif response.status_code in (401, 403):
                     logger.warning(f"Проверка групп вернула {response.status_code} для {username}@{domain}")
                     logger.debug(f"Ответ сервера: {response.text}")
-                    return []
+                    return [], None
                 else:
                     logger.warning(f"API вернул статус {response.status_code} для {username}@{domain}")
                     logger.debug(f"Ответ сервера: {response.text}")
@@ -152,7 +310,7 @@ class PermissionChecker:
                 logger.warning(f"Ошибка запроса к API (попытка {attempt + 1}): {e}")
                 if attempt == self.retries - 1:
                     raise
-        return []
+        return [], None
 
     def _get_user_guid(self, access_token: str) -> str | None:
         """Возвращает GUID пользователя по access_token через /get_data"""

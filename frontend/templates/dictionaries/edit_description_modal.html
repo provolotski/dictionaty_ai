@@ -1,0 +1,293 @@
+<!-- Модальное окно для редактирования описания справочника -->
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title">
+        <i class="fas fa-edit me-2"></i>
+        Редактировать описание справочника
+    </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<form id="editDescriptionForm" method="post" action="{% url 'dictionary_edit_description' dictionary_id %}">
+    {% csrf_token %}
+    <div class="modal-body">
+        <!-- Информация о справочнике -->
+        <div class="alert alert-info mb-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Код:</strong> 
+                    <span class="badge bg-secondary">{{ dictionary_data.code|default:"—" }}</span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Название:</strong> 
+                    <span class="text-primary">{{ dictionary_data.name|default:"—" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Поле описания на русском языке -->
+        <div class="mb-4">
+            <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                <i class="fas fa-language me-1"></i>
+                {{ form.description.label }}
+            </label>
+            {{ form.description }}
+            {% if form.description.help_text %}
+                <div class="form-text text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    {{ form.description.help_text }}
+                </div>
+            {% endif %}
+            {% if form.description.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.description.errors %}
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Поле описания на английском языке -->
+        <div class="mb-4">
+            <label for="{{ form.description_eng.id_for_label }}" class="form-label fw-bold">
+                <i class="fas fa-language me-1"></i>
+                {{ form.description_eng.label }}
+            </label>
+            {{ form.description_eng }}
+            {% if form.description_eng.help_text %}
+                <div class="form-text text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    {{ form.description_eng.help_text }}
+                </div>
+            {% endif %}
+            {% if form.description_eng.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.description_eng.errors %}
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Поле описания на белорусском языке -->
+        <div class="mb-4">
+            <label for="{{ form.description_bel.id_for_label }}" class="form-label fw-bold">
+                <i class="fas fa-language me-1"></i>
+                {{ form.description_bel.label }}
+            </label>
+            {{ form.description_bel }}
+            {% if form.description_bel.help_text %}
+                <div class="form-text text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    {{ form.description_bel.help_text }}
+                </div>
+            {% endif %}
+            {% if form.description_bel.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.description_bel.errors %}
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Подсказка -->
+        <div class="alert alert-warning">
+            <i class="fas fa-lightbulb me-2"></i>
+            <strong>Совет:</strong> Заполните описание хотя бы на одном языке. Это поможет пользователям лучше понимать назначение справочника.
+        </div>
+    </div>
+    
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>
+            Отмена
+        </button>
+        <button type="submit" class="btn btn-primary" id="saveDescriptionBtn">
+            <i class="fas fa-save me-1"></i>
+            Сохранить описание
+        </button>
+    </div>
+</form>
+
+<script>
+document.getElementById('editDescriptionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const submitBtn = document.getElementById('saveDescriptionBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    // Показываем индикатор загрузки
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Сохранение...';
+    
+    const formData = new FormData(form);
+    const url = form.action;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Показываем уведомление об успехе
+            showNotification('success', data.message || 'Описание успешно обновлено!');
+            
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalContainer'));
+            modal.hide();
+            
+            // Перезагружаем страницу для отображения обновленных данных
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            // Показываем ошибки
+            let errorMessage = 'Ошибка при сохранении описания';
+            if (data.error) {
+                errorMessage += ': ' + data.error;
+            } else if (data.errors) {
+                errorMessage += ': ' + JSON.stringify(data.errors);
+            }
+            showNotification('error', errorMessage);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        showNotification('error', 'Ошибка соединения с сервером');
+    })
+    .finally(() => {
+        // Восстанавливаем кнопку
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
+
+// Функция для показа уведомлений
+function showNotification(type, message) {
+    // Создаем элемент уведомления
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Добавляем на страницу
+    document.body.appendChild(notification);
+    
+    // Автоматически скрываем через 5 секунд
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Добавляем подсветку полей при фокусе
+document.querySelectorAll('#editDescriptionForm textarea').forEach(textarea => {
+    textarea.addEventListener('focus', function() {
+        this.parentElement.classList.add('focused');
+    });
+    
+    textarea.addEventListener('blur', function() {
+        this.parentElement.classList.remove('focused');
+    });
+});
+</script>
+
+<style>
+/* Стили для модального окна описания */
+.modal-header.bg-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.form-label.fw-bold {
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.form-control:focus + .form-text {
+    color: #007bff;
+}
+
+.focused .form-label {
+    color: #007bff;
+    font-weight: 700;
+}
+
+.alert-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.alert-warning {
+    border-left: 4px solid #ffc107;
+}
+
+.badge {
+    font-size: 0.8rem;
+    padding: 0.4em 0.8em;
+}
+
+/* Анимации */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-body > div {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.modal-body > div:nth-child(2) { animation-delay: 0.1s; }
+.modal-body > div:nth-child(3) { animation-delay: 0.2s; }
+.modal-body > div:nth-child(4) { animation-delay: 0.3s; }
+.modal-body > div:nth-child(5) { animation-delay: 0.4s; }
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .alert {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        font-size: 0.9rem;
+    }
+}
+</style>

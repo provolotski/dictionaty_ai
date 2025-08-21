@@ -183,52 +183,95 @@
 
 <!-- Модальное окно карточки пользователя -->
 <div class="modal fade" id="userCardModal" tabindex="-1" aria-labelledby="userCardModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="userCardModalLabel">Карточка пользователя</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form id="userEditForm">
-          <div class="row mb-3">
+        <div class="row">
             <div class="col-md-6">
-              <label class="form-label">Имя пользователя</label>
-              <input type="text" class="form-control" id="userName" name="name" required>
-            </div>
+            <h6>Основная информация</h6>
+            <table class="table table-sm">
+              <tr>
+                <td><strong>ID:</strong></td>
+                <td id="user-id"></td>
+              </tr>
+              <tr>
+                <td><strong>GUID:</strong></td>
+                <td id="user-guid"></td>
+              </tr>
+              <tr>
+                <td><strong>Имя пользователя:</strong></td>
+                <td>
+                  <input type="text" id="userName" class="form-control" readonly>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Подразделение:</strong></td>
+                <td>
+                  <input type="text" id="userDepartment" class="form-control" readonly>
+                </td>
+              </tr>
+            </table>
+          </div>
             <div class="col-md-6">
-              <label class="form-label">Домен</label>
-              <input type="text" class="form-control" id="userDomain" readonly>
-            </div>
+            <h6>Права и статус</h6>
+            <table class="table table-sm">
+              <tr>
+                <td><strong>Активен:</strong></td>
+                <td id="user-is-active"></td>
+              </tr>
+              <tr>
+                <td><strong>Администратор системы:</strong></td>
+                <td>
+                  <input type="checkbox" id="userIsAdmin" class="form-check-input" disabled>
+                  <label for="userIsAdmin" class="form-check-label ms-2">
+                    <span id="user-is-admin-text"></span>
+                  </label>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Пользователь системы:</strong></td>
+                <td id="user-is-user"></td>
+              </tr>
+              <tr>
+                <td><strong>Дата создания:</strong></td>
+                <td id="user-created-at"></td>
+              </tr>
+              <tr>
+                <td><strong>Дата обновления:</strong></td>
+                <td id="user-updated-at"></td>
+              </tr>
+            </table>
+          </div>
           </div>
           
-          <div class="row mb-3">
+        <!-- Секция владения справочниками -->
+        <div id="dictionaryOwnershipSection" style="display: none;">
+          <hr>
+          <h6>Владение справочниками</h6>
+          <div class="row">
             <div class="col-md-6">
-              <label class="form-label">Дата первого входа</label>
-              <input type="text" class="form-control" id="userCreatedAt" readonly>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Дата последнего входа</label>
-              <input type="text" class="form-control" id="userLastLoginAt" readonly>
-            </div>
-          </div>
-          
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Администратор системы</label>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="userIsAdmin" name="is_admin">
-                <label class="form-check-label" for="userIsAdmin">
-                  Пользователь является администратором системы
-                </label>
+              <h6>Текущие справочники</h6>
+              <div id="currentDictionaries">
+                <!-- Здесь будет список текущих справочников -->
               </div>
             </div>
             <div class="col-md-6">
-              <label class="form-label">GUID</label>
-              <input type="text" class="form-control" id="userGuid" readonly>
+              <h6>Добавить справочник</h6>
+              <div class="form-group">
+                <select id="newDictionarySelect" class="form-control">
+                  <option value="">Загрузка справочников...</option>
+                </select>
+              </div>
+              <button type="button" id="addDictionaryBtn" class="btn btn-primary btn-sm" disabled>
+                <i class="fas fa-plus"></i> Добавить
+              </button>
             </div>
           </div>
-        </form>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
@@ -499,6 +542,9 @@ document.addEventListener('DOMContentLoaded', function() {
               userIsAdminField.style.opacity = '1';
               userIsAdminField.style.cursor = 'pointer';
             }
+            
+            // Загружаем данные о владении справочниками
+            loadUserDictionaryOwnership(userId);
           }, { once: true }); // once: true означает, что обработчик выполнится только один раз
           
           modal.show();
@@ -512,42 +558,66 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
   
-  // Заполнение карточки данными пользователя
+  // Заполнение карточки пользователя данными
   function fillUserCard(user) {
-    document.getElementById('userName').value = user.name || '';
-    document.getElementById('userDomain').value = user.domain || '';
-    document.getElementById('userCreatedAt').value = user.created_at_formatted || 'Не указана';
-    document.getElementById('userLastLoginAt').value = user.last_login_at_formatted || 'Никогда';
-    document.getElementById('userIsAdmin').checked = user.is_admin || false;
-    document.getElementById('userGuid').value = user.guid || '';
+    console.log('Заполнение карточки пользователя:', user);
     
-    // Принудительно вызываем showSaveButton для правильной настройки состояния полей
-    setTimeout(() => {
-      showSaveButton();
-      
-      // Дополнительная принудительная активация
-      if (isSecurityAdmin) {
-        const userIsAdminField = document.getElementById('userIsAdmin');
-        userIsAdminField.disabled = false;
-        userIsAdminField.removeAttribute('disabled');
-        userIsAdminField.classList.add('active');
-        userIsAdminField.style.pointerEvents = 'auto';
-        userIsAdminField.style.opacity = '1';
-        userIsAdminField.style.cursor = 'pointer';
+    // Заполняем основную информацию
+    document.getElementById('user-id').textContent = user.id || 'Не указано';
+    document.getElementById('user-guid').textContent = user.guid || 'Не указано';
+    document.getElementById('userName').value = user.username || 'Не указано'; // Изменяем поле ввода
+    document.getElementById('userDepartment').value = user.department || 'Не указано';
+    
+    // Заполняем права и статус
+    document.getElementById('user-is-active').textContent = user.is_active ? 'Да' : 'Нет';
+    document.getElementById('userIsAdmin').checked = user.is_admin;
+    document.getElementById('user-is-admin-text').textContent = user.is_admin ? 'Да' : 'Нет';
+    document.getElementById('user-is-user').textContent = user.is_user ? 'Да' : 'Нет';
+    
+    // Форматируем даты
+    if (user.created_at) {
+      try {
+        const createdDate = new Date(user.created_at);
+        document.getElementById('user-created-at').textContent = createdDate.toLocaleString('ru-RU');
+      } catch (e) {
+        document.getElementById('user-created-at').textContent = user.created_at;
       }
-    }, 100);
+    } else {
+      document.getElementById('user-created-at').textContent = 'Не указано';
+    }
+    
+    if (user.updated_at) {
+      try {
+        const updatedDate = new Date(user.updated_at);
+        document.getElementById('user-updated-at').textContent = updatedDate.toLocaleString('ru-RU');
+      } catch (e) {
+        document.getElementById('user-updated-at').textContent = user.updated_at;
+      }
+    } else {
+      document.getElementById('user-updated-at').textContent = 'Не указано';
+    }
+    
+    // Показываем/скрываем секцию владения справочниками
+    const ownershipSection = document.getElementById('dictionaryOwnershipSection');
+    if (user.is_admin) {
+      ownershipSection.style.display = 'none';
+    } else {
+      ownershipSection.style.display = 'block';
+    }
   }
   
   // Показ/скрытие кнопки сохранения
   function showSaveButton() {
     const saveBtn = document.getElementById('saveUserBtn');
     const userNameField = document.getElementById('userName');
+    const userDepartmentField = document.getElementById('userDepartment');
     const userIsAdminField = document.getElementById('userIsAdmin');
     
     if (isSecurityAdmin) {
       saveBtn.style.display = 'block';
       // Делаем поля редактируемыми для администратора безопасности
       userNameField.readOnly = false;
+      userDepartmentField.readOnly = false;
       userIsAdminField.disabled = false;
       
       // Убираем атрибут disabled и добавляем стили для активного состояния
@@ -573,6 +643,7 @@ document.addEventListener('DOMContentLoaded', function() {
       saveBtn.style.display = 'none';
       // Делаем поля только для чтения для обычных пользователей
       userNameField.readOnly = true;
+      userDepartmentField.readOnly = true;
       userIsAdminField.disabled = true;
       userIsAdminField.style.opacity = '0.6';
       userIsAdminField.style.cursor = 'not-allowed';
@@ -592,12 +663,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const formData = {
       name: document.getElementById('userName').value,
+      department: document.getElementById('userDepartment').value, // Добавляем подразделение
       is_admin: document.getElementById('userIsAdmin').checked
     };
     
     // Валидация
     if (!formData.name.trim()) {
       alert('Имя пользователя не может быть пустым');
+      return;
+    }
+    
+    if (!formData.department.trim()) {
+      alert('Подразделение не может быть пустым');
       return;
     }
     
@@ -628,7 +705,191 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  // Функция получения CSRF токена
+  // Загрузка данных о владении справочниками
+  function loadUserDictionaryOwnership(userId) {
+    console.log('Загрузка данных о владении справочниками для пользователя:', userId);
+    
+    // Загружаем текущие справочники пользователя
+    fetch(`/accounts/users/${userId}/with-ownership/`)
+      .then(response => {
+        console.log('Ответ от сервера (with-ownership):', response.status, response.statusText);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Данные о владении:', data);
+        if (data.success) {
+          displayCurrentDictionaries(data.user.dictionary_ownership || []);
+        } else {
+          console.error('Ошибка загрузки справочников:', data.error);
+          displayCurrentDictionaries([]);
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка загрузки справочников:', error);
+        displayCurrentDictionaries([]);
+      });
+    
+    // Загружаем доступные справочники для выбора
+    loadAvailableDictionaries();
+  }
+  
+  // Отображение текущих справочников пользователя
+  function displayCurrentDictionaries(dictionaries) {
+    const container = document.getElementById('currentDictionaries');
+    
+    if (dictionaries.length === 0) {
+      container.innerHTML = '<div class="text-muted text-center py-2">Пользователь не владеет ни одним справочником</div>';
+      return;
+    }
+    
+    let html = '';
+    dictionaries.forEach(dict => {
+      html += `
+        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+          <div>
+            <strong>${dict.dictionary_code}</strong> - ${dict.dictionary_name}
+          </div>
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeDictionaryOwnership(${dict.id_dictionary})">
+            <i class="fas fa-trash"></i> Убрать
+          </button>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  }
+  
+  // Загрузка доступных справочников
+  function loadAvailableDictionaries() {
+    console.log('Загрузка доступных справочников');
+    
+    fetch('/accounts/users/dictionaries/available/')
+      .then(response => {
+        console.log('Ответ от сервера (available):', response.status, response.statusText);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Доступные справочники:', data);
+        if (data.success) {
+          populateDictionarySelect(data.dictionaries);
+        } else {
+          console.error('Ошибка загрузки доступных справочников:', data.error);
+          // Показываем сообщение об ошибке
+          const select = document.getElementById('newDictionarySelect');
+          select.innerHTML = '<option value="">Ошибка загрузки справочников</option>';
+          select.disabled = true;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка загрузки доступных справочников:', error);
+        // Показываем сообщение об ошибке
+        const select = document.getElementById('newDictionarySelect');
+        select.innerHTML = '<option value="">Ошибка загрузки справочников</option>';
+        select.disabled = true;
+      });
+  }
+  
+  // Заполнение селекта справочников
+  function populateDictionarySelect(dictionaries) {
+    const select = document.getElementById('newDictionarySelect');
+    const addBtn = document.getElementById('addDictionaryBtn');
+    
+    // Очищаем существующие опции
+    select.innerHTML = '<option value="">Выберите справочник...</option>';
+    
+    // Добавляем новые опции
+    dictionaries.forEach(dict => {
+      const option = document.createElement('option');
+      option.value = dict.id;
+      option.textContent = `${dict.code} - ${dict.name}`;
+      select.appendChild(option);
+    });
+    
+    // Включаем кнопку добавления
+    addBtn.disabled = false;
+  }
+  
+  // Добавление права владения справочником
+  function addDictionaryOwnership() {
+    const select = document.getElementById('newDictionarySelect');
+    const dictionaryId = select.value;
+    
+    if (!dictionaryId) {
+      alert('Выберите справочник для добавления');
+      return;
+    }
+    
+    if (!currentUser || !currentUser.id) {
+      alert('Ошибка: пользователь не выбран');
+      return;
+    }
+    
+    fetch(`/accounts/users/${currentUser.id}/dictionary-ownership/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ dictionary_id: parseInt(dictionaryId) })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Право владения добавлено');
+        // Перезагружаем данные
+        loadUserDictionaryOwnership(currentUser.id);
+        // Сбрасываем селект
+        select.value = '';
+      } else {
+        alert('Ошибка добавления права владения: ' + data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка:', error);
+      alert('Ошибка добавления права владения');
+    });
+  }
+  
+  // Удаление права владения справочником
+  function removeDictionaryOwnership(dictionaryId) {
+    if (!currentUser || !currentUser.id) {
+      alert('Ошибка: пользователь не выбран');
+      return;
+    }
+    
+    if (!confirm('Вы уверены, что хотите убрать право владения этим справочником?')) {
+      return;
+    }
+    
+    fetch(`/accounts/users/${currentUser.id}/dictionary-ownership/${dictionaryId}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Право владения удалено');
+        // Перезагружаем данные
+        loadUserDictionaryOwnership(currentUser.id);
+      } else {
+        alert('Ошибка удаления права владения: ' + data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка:', error);
+      alert('Ошибка удаления права владения');
+    });
+  }
+  
+  // Получение CSRF токена
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -643,6 +904,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     return cookieValue;
   }
+  
+  // Обработчик события для кнопки добавления справочника
+  document.addEventListener('DOMContentLoaded', function() {
+    const addDictionaryBtn = document.getElementById('addDictionaryBtn');
+    if (addDictionaryBtn) {
+      addDictionaryBtn.addEventListener('click', addDictionaryOwnership);
+    }
+  });
 });
 </script>
 {% endblock %}
