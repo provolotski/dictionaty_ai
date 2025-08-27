@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body>
     <div class="login-container">
         <!-- Фоновая анимация -->
@@ -53,7 +55,7 @@
                         {% if form.username.errors %}
                         <div class="field-error">
                             {% for error in form.username.errors %}
-                                <span>{{ error }}</span>
+                            <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -74,7 +76,7 @@
                         {% if form.password.errors %}
                         <div class="field-error">
                             {% for error in form.password.errors %}
-                                <span>{{ error }}</span>
+                            <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -92,7 +94,7 @@
                         {% if form.domain.errors %}
                         <div class="field-error">
                             {% for error in form.domain.errors %}
-                                <span>{{ error }}</span>
+                            <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -102,7 +104,7 @@
                     <div class="form-options">
                         <label class="checkbox-container">
                             <input type="checkbox" id="rememberMe" name="remember_me">
-                            <span class="checkmark"></span>
+                            <!--        <span class="checkmark"></span>  -->
                             Запомнить меня
                         </label>
                         <a href="#" class="forgot-password">Забыли пароль?</a>
@@ -148,8 +150,9 @@
         <div class="info-panel">
             <div class="info-content">
                 <h3>Добро пожаловать в Dictionary AI</h3>
-                <p>Современная система управления иерархическими справочниками с поддержкой исторических данных и многоязычности.</p>
-                
+                <p>Современная система управления иерархическими справочниками с поддержкой исторических данных и
+                    многоязычности.</p>
+
                 <div class="features">
                     <div class="feature-item">
                         <i class="fas fa-layer-group"></i>
@@ -174,4 +177,5 @@
 
     <script src="{% static 'js/login.js' %}"></script>
 </body>
+
 </html>
