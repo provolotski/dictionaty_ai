@@ -12,4 +12,17 @@
   "editor.formatOnSave": true,
   "python.formatting.provider": "black",
   "python.linting.flake8Enabled": true
+  "editor.formatOnSave": false,
+  "editor.formatOnSaveMode": "modifications",
+  "[html]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null
+  },
+  "[django-html]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null
+  },
+  "files.associations": {
+    "*.html": "django-html"
+  }
 }

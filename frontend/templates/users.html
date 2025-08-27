@@ -42,8 +42,8 @@
       <div class="col-md-2">
         <select name="page_size" class="form-select">
           {% for size in page_sizes %}
-          <option value="{{ size }}" {% if page_size==size %}selected{% endif %}>
-            {{ size }} на стр.
+          <option value="{{ size }}" {% if page_size == size %}selected{% endif %}> 
+            {{ size }}&nbsp;на&nbsp;стр.
           </option>
           {% endfor %}
         </select>

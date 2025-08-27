@@ -72,8 +72,7 @@ ROOT_URLCONF = 'DictionaryFront.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -82,6 +81,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'DictionaryFront.context_processors.backend_api_url',
             ],
+            'autoescape': True,
+            'string_if_invalid': '',
         },
     },
 ]
@@ -158,7 +159,7 @@ CACHES = {
 AUTH_CONFIG = {
     'USE_EXTERNAL_API': True,  # True - использовать внешний API, False - локальную авторизацию
     'EXTERNAL_API': {
-        'BASE_URL': 'http://127.0.0.1:9090/api/v1/auth',
+        'BASE_URL': os.environ.get('AUTH_API_URL', 'http://127.0.0.1:9090/api/v1/auth'),
         'ENABLED': True,
         'TIMEOUT': 30,
         'RETRY_ATTEMPTS': 3,

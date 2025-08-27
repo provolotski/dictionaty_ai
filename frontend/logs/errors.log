@@ -1,5 +1,0 @@
-ERROR 2025-08-26 18:12:45 utils add_dictionary_ownership_to_backend 655 Ошибка добавления права владения: 422 - {"detail":[{"type":"missing","loc":["body","id_user"],"msg":"Field required","input":{"id_dictionary":9},"url":"https://errors.pydantic.dev/2.5/v/missing"}]}
-ERROR 2025-08-26 18:17:25 permissions _save_user_groups 373 Ошибка при сохранении групп для Админ СП_БД@belstat: UNIQUE constraint failed: user_groups.username, user_groups.domain, user_groups.group_name
-ERROR 2025-08-26 18:17:44 permissions _save_user_groups 373 Ошибка при сохранении групп для Админ СП_БД@belstat: UNIQUE constraint failed: user_groups.username, user_groups.domain, user_groups.group_name
-ERROR 2025-08-26 18:24:16 permissions _save_user_groups 373 Ошибка при сохранении групп для Админ СП_БД@belstat: UNIQUE constraint failed: user_groups.username, user_groups.domain, user_groups.group_name
-ERROR 2025-08-26 18:25:45 permissions _save_user_groups 373 Ошибка при сохранении групп для Админ СП_БД@belstat: UNIQUE constraint failed: user_groups.username, user_groups.domain, user_groups.group_name
