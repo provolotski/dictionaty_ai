@@ -14,7 +14,7 @@
 
 
   <h2>Пользователи системы</h2>
-  
+
   <div class="row mb-3">
     <div class="col-md-8">
       <p class="text-muted">
@@ -32,25 +32,19 @@
   <form method="get" class="mb-4">
     <div class="row g-3">
       <div class="col-md-4">
-        <input type="text" 
-               name="search" 
-               class="form-control" 
-               placeholder="Поиск по имени пользователя"
-               value="{{ search_query }}">
+        <input type="text" name="search" class="form-control" placeholder="Поиск по имени пользователя"
+          value="{{ search_query }}">
       </div>
       <div class="col-md-3">
-        <input type="text" 
-               name="domain" 
-               class="form-control" 
-               placeholder="Фильтр по домену"
-               value="{{ domain_filter }}">
+        <input type="text" name="domain" class="form-control" placeholder="Фильтр по домену"
+          value="{{ domain_filter }}">
       </div>
       <div class="col-md-2">
         <select name="page_size" class="form-select">
           {% for size in page_sizes %}
-            <option value="{{ size }}" {% if page_size == size %}selected{% endif %}>
-              {{ size }} на стр.
-            </option>
+          <option value="{{ size }}" {% if page_size==size %}selected{% endif %}>
+            {{ size }} на стр.
+          </option>
           {% endfor %}
         </select>
       </div>
@@ -77,7 +71,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="table-responsive">
       <table class="table table-hover table-striped">
         <thead class="table-light">
@@ -90,53 +84,54 @@
         </thead>
         <tbody>
           {% if users %}
-            {% for user in users %}
-            <tr data-user-id="{{ user.id }}">
-              <td>
-                <strong>{{ user.name }}</strong>
-              </td>
-              <td>
-                <span class="badge bg-secondary">{{ user.domain }}</span>
-              </td>
-              <td>
-                <span class="{{ user.is_admin_class }}">
-                  <i class="fas {% if user.is_admin_display == 'Да' %}fa-user-shield text-success{% else %}fa-user text-muted{% endif %}"></i>
-                  {{ user.is_admin_display }}
-                </span>
-              </td>
-              <td>
-                {% if user.last_login_at_formatted and user.last_login_at_formatted != 'Никогда' %}
-                  <span class="text-success">
-                    {{ user.last_login_at_formatted }}
-                  </span>
-                {% elif user.last_login_at_formatted == 'Никогда' %}
-                  <span class="text-muted">{{ user.last_login_at_formatted }}</span>
-                {% else %}
-                  <small class="text-muted">{{ user.last_login_at|default:"Не указана" }}</small>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
+          {% for user in users %}
+          <tr data-user-id="{{ user.id }}">
+            <td>
+              <strong>{{ user.name }}</strong>
+            </td>
+            <td>
+              <span class="badge bg-secondary">{{ user.domain }}</span>
+            </td>
+            <td>
+              <span class="{{ user.is_admin_class }}">
+                <i
+                  class="fas {% if user.is_admin_display == 'Да' %}fa-user-shield text-success{% else %}fa-user text-muted{% endif %}"></i>
+                {{ user.is_admin_display }}
+              </span>
+            </td>
+            <td>
+              {% if user.last_login_at_formatted and user.last_login_at_formatted != 'Никогда' %}
+              <span class="text-success">
+                {{ user.last_login_at_formatted }}
+              </span>
+              {% elif user.last_login_at_formatted == 'Никогда' %}
+              <span class="text-muted">{{ user.last_login_at_formatted }}</span>
+              {% else %}
+              <small class="text-muted">{{ user.last_login_at|default:"Не указана" }}</small>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
           {% else %}
-            <tr>
-              <td colspan="4" class="text-center text-muted py-4">
-                {% if search_query or domain_filter %}
-                  <i class="fas fa-search fa-2x mb-3"></i>
-                  <p>Пользователи не найдены по заданным критериям</p>
-                  <a href="{% url 'users' %}" class="btn btn-outline-primary btn-sm">
-                    Сбросить фильтры
-                  </a>
-                {% else %}
-                  <i class="fas fa-users fa-2x mb-3"></i>
-                  <p>Пользователи не найдены</p>
-                {% endif %}
-              </td>
-            </tr>
+          <tr>
+            <td colspan="4" class="text-center text-muted py-4">
+              {% if search_query or domain_filter %}
+              <i class="fas fa-search fa-2x mb-3"></i>
+              <p>Пользователи не найдены по заданным критериям</p>
+              <a href="{% url 'users' %}" class="btn btn-outline-primary btn-sm">
+                Сбросить фильтры
+              </a>
+              {% else %}
+              <i class="fas fa-users fa-2x mb-3"></i>
+              <p>Пользователи не найдены</p>
+              {% endif %}
+            </td>
+          </tr>
           {% endif %}
         </tbody>
       </table>
     </div>
-    
+
     <!-- Пагинация -->
     {% if total_pages > 1 %}
     <div class="card-footer">
@@ -144,36 +139,40 @@
         <ul class="pagination justify-content-center mb-0">
           <!-- Кнопка "Назад" -->
           <li class="page-item {% if current_page <= 1 %}disabled{% endif %}">
-            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if domain_filter %}domain={{ domain_filter }}&{% endif %}page={{ current_page|add:'-1' }}&page_size={{ page_size }}">
+            <a class="page-link"
+              href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if domain_filter %}domain={{ domain_filter }}&{% endif %}page={{ current_page|add:'-1' }}&page_size={{ page_size }}">
               <i class="fas fa-chevron-left"></i>
             </a>
           </li>
-          
+
           <!-- Номера страниц -->
           {% for page_num in total_pages|get_range %}
-            {% if page_num == current_page %}
-              <li class="page-item active">
-                <span class="page-link">{{ page_num }}</span>
-              </li>
-            {% elif page_num <= 3 or page_num > total_pages|add:'-3' or page_num|add:'-2' <= current_page and page_num|add:'2' >= current_page %}
+          {% if page_num == current_page %}
+          <li class="page-item active">
+            <span class="page-link">{{ page_num }}</span>
+          </li>
+          {% elif page_num <= 3 or page_num> total_pages|add:'-3' or page_num|add:'-2' <= current_page and
+              page_num|add:'2'>= current_page %}
               <li class="page-item">
-                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if domain_filter %}domain={{ domain_filter }}&{% endif %}page={{ page_num }}&page_size={{ page_size }}">
+                <a class="page-link"
+                  href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if domain_filter %}domain={{ domain_filter }}&{% endif %}page={{ page_num }}&page_size={{ page_size }}">
                   {{ page_num }}
                 </a>
               </li>
-            {% elif page_num == 4 and current_page > 6 or page_num == total_pages|add:'-3' and current_page < total_pages|add:'-5' %}
-              <li class="page-item disabled">
+              {% elif page_num == 4 and current_page > 6 or page_num == total_pages|add:'-3' and current_page <
+                total_pages|add:'-5' %} <li class="page-item disabled">
                 <span class="page-link">...</span>
-              </li>
-            {% endif %}
-          {% endfor %}
-          
-          <!-- Кнопка "Вперед" -->
-          <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
-            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if domain_filter %}domain={{ domain_filter }}&{% endif %}page={{ current_page|add:'1' }}&page_size={{ page_size }}">
-              <i class="fas fa-chevron-right"></i>
-            </a>
-          </li>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                <!-- Кнопка "Вперед" -->
+                <li class="page-item {% if current_page >= total_pages %}disabled{% endif %}">
+                  <a class="page-link"
+                    href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if domain_filter %}domain={{ domain_filter }}&{% endif %}page={{ current_page|add:'1' }}&page_size={{ page_size }}">
+                    <i class="fas fa-chevron-right"></i>
+                  </a>
+                </li>
         </ul>
       </nav>
     </div>
@@ -191,7 +190,7 @@
       </div>
       <div class="modal-body">
         <div class="row">
-            <div class="col-md-6">
+          <div class="col-md-6">
             <h6>Основная информация</h6>
             <table class="table table-sm">
               <tr>
@@ -216,7 +215,7 @@
               </tr>
             </table>
           </div>
-            <div class="col-md-6">
+          <div class="col-md-6">
             <h6>Права и статус</h6>
             <table class="table table-sm">
               <tr>
@@ -246,8 +245,8 @@
               </tr>
             </table>
           </div>
-          </div>
-          
+        </div>
+
         <!-- Секция владения справочниками -->
         <div id="dictionaryOwnershipSection" style="display: none;">
           <hr>
@@ -266,7 +265,8 @@
                   <option value="">Загрузка справочников...</option>
                 </select>
               </div>
-              <button type="button" id="addDictionaryBtn" class="btn btn-primary btn-sm" disabled>
+              <button type="button" id="addDictionaryBtn" class="btn btn-primary btn-sm" disabled
+                onclick="addDictionaryOwnership()">
                 <i class="fas fa-plus"></i> Добавить
               </button>
             </div>
@@ -290,127 +290,133 @@
     background-color: #f8f9fa;
     border-bottom: 2px solid #dee2e6;
   }
-  
+
   .table td {
     vertical-align: middle;
   }
-  
+
   .badge {
     font-size: 0.8em;
   }
-  
+
   code {
     background-color: #f8f9fa;
     padding: 2px 4px;
     border-radius: 3px;
     font-size: 0.85em;
   }
-  
+
   .pagination-info {
     font-size: 0.9em;
   }
-  
+
   .card {
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     border: 1px solid rgba(0, 0, 0, 0.125);
   }
-  
+
   .card-header {
     background-color: #f8f9fa;
     border-bottom: 1px solid rgba(0, 0, 0, 0.125);
   }
-  
+
   .table-responsive {
     max-height: 600px;
     overflow-y: auto;
   }
-  
+
   /* Дополнительные стили для корректного отображения с Bootstrap */
   .btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
   }
-  
-  .form-control, .form-select {
+
+  .form-control,
+  .form-select {
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   }
-  
-  .form-control:focus, .form-select:focus {
+
+  .form-control:focus,
+  .form-select:focus {
     border-color: #86b7fe;
     outline: 0;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
   }
-  
+
   .row {
     margin-left: -0.75rem;
     margin-right: -0.75rem;
   }
-  
-  .col-md-2, .col-md-3, .col-md-4, .col-md-6, .col-md-8 {
+
+  .col-md-2,
+  .col-md-3,
+  .col-md-4,
+  .col-md-6,
+  .col-md-8 {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
-  
+
   .mb-3 {
     margin-bottom: 1rem !important;
   }
-  
+
   .mt-4 {
     margin-top: 1.5rem !important;
   }
-  
+
   .text-end {
     text-align: right !important;
   }
-  
+
   .text-muted {
     color: #6c757d !important;
   }
-  
+
   /* Стили для переключателя администратора */
   .form-check-input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
+
   .form-check-input:not(:disabled) {
     opacity: 1;
     cursor: pointer;
   }
-  
+
   .form-check-input:not(:disabled):hover {
     transform: scale(1.1);
     transition: transform 0.2s ease;
   }
-  
+
   .form-check-label:has(+ .form-check-input:disabled) {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
+
   .form-check-label:has(+ .form-check-input:not(:disabled)) {
     opacity: 1;
     cursor: pointer;
   }
-  
+
   /* Принудительная активация для администраторов безопасности */
   .container[data-is-security-admin="true"] .form-check-input {
     pointer-events: auto !important;
     cursor: pointer !important;
     opacity: 1 !important;
   }
-  
+
   .container[data-is-security-admin="true"] .form-check-input:disabled {
     pointer-events: auto !important;
     cursor: pointer !important;
     opacity: 1 !important;
   }
-  
+
   /* Стили для активного состояния */
   .form-check-input.active {
     pointer-events: auto !important;
@@ -419,7 +425,7 @@
     background-color: #0d6efd !important;
     border-color: #0d6efd !important;
   }
-  
+
   /* Дополнительные принудительные стили */
   .form-check-input[enabled="true"] {
     pointer-events: auto !important;
@@ -428,18 +434,18 @@
     background-color: #0d6efd !important;
     border-color: #0d6efd !important;
   }
-  
+
   /* Принудительно убираем disabled состояние */
   .form-check-input:not([disabled]) {
     pointer-events: auto !important;
     cursor: pointer !important;
   }
-  
+
   /* Специальные стили для модального окна */
   #userCardModal .form-check-input {
     pointer-events: auto !important;
   }
-  
+
   #userCardModal .form-check-input:disabled {
     pointer-events: auto !important;
     cursor: pointer !important;
@@ -448,306 +454,309 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  let currentUser = null;
-  let isSecurityAdmin = false; // Инициализируем как false, потом обновим
-  
-  // Получаем элементы DOM - ищем контейнер с атрибутом data-is-security-admin
-  const container = document.querySelector('.container[data-is-security-admin]');
-  
-  if (!container) {
-    console.error('Container с атрибутом data-is-security-admin не найден!');
-    console.log('Все .container элементы:', document.querySelectorAll('.container'));
-    return;
-  }
-  
-  // Определяем статус администратора безопасности
-  isSecurityAdmin = container.getAttribute('data-is-security-admin') === 'true';
-  
-  // Автоматическое обновление при изменении размера страницы
-  document.querySelector('select[name="page_size"]').addEventListener('change', function() {
-    this.form.submit();
-  });
-  
-  // Подсветка строк при наведении
-  const tableRows = document.querySelectorAll('tbody tr');
-  tableRows.forEach(row => {
-    row.addEventListener('mouseenter', function() {
-      this.style.backgroundColor = '#f8f9fa';
-    });
-    row.addEventListener('mouseleave', function() {
-      this.style.backgroundColor = '';
-    });
-  });
-  
-  // Открытие карточки пользователя по клику на имя
-  document.querySelectorAll('tbody tr').forEach(row => {
-    const nameCell = row.querySelector('td:first-child strong');
-    if (nameCell) {
-      nameCell.style.cursor = 'pointer';
-      nameCell.addEventListener('click', function() {
-        const userId = this.closest('tr').getAttribute('data-user-id');
-        if (userId) {
-          openUserCard(userId);
-        }
-      });
+  document.addEventListener('DOMContentLoaded', function () {
+    let currentUser = null;
+    let isSecurityAdmin = false; // Инициализируем как false, потом обновим
+
+    // Получаем элементы DOM - ищем контейнер с атрибутом data-is-security-admin
+    const container = document.querySelector('.container[data-is-security-admin]');
+
+    if (!container) {
+      console.error('Container с атрибутом data-is-security-admin не найден!');
+      console.log('Все .container элементы:', document.querySelectorAll('.container'));
+      return;
     }
-  });
-  
-  // Функция открытия карточки пользователя
-  function openUserCard(userId) {
-    fetch(`/accounts/users/${userId}/data/`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          currentUser = data.user;
-          fillUserCard(data.user);
-          
-          // Дополнительная проверка состояния переключателя
-          const userIsAdminField = document.getElementById('userIsAdmin');
-          
-          if (isSecurityAdmin) {
-            userIsAdminField.disabled = false;
-            userIsAdminField.style.opacity = '1';
-            userIsAdminField.style.cursor = 'pointer';
-            
-            // Принудительно убираем все атрибуты disabled
-            userIsAdminField.removeAttribute('disabled');
-            userIsAdminField.setAttribute('enabled', 'true');
-            
-            // Добавляем класс active для принудительной активации
-            userIsAdminField.classList.add('active');
-            userIsAdminField.classList.remove('disabled');
-            
-            // Принудительно включаем pointer-events
-            userIsAdminField.style.pointerEvents = 'auto';
-            userIsAdminField.style.userSelect = 'auto';
-          } else {
-            userIsAdminField.disabled = true;
-            userIsAdminField.style.opacity = '0.6';
-            userIsAdminField.style.cursor = 'not-allowed';
+
+    // Определяем статус администратора безопасности
+    isSecurityAdmin = container.getAttribute('data-is-security-admin') === 'true';
+
+    // Автоматическое обновление при изменении размера страницы
+    document.querySelector('select[name="page_size"]').addEventListener('change', function () {
+      this.form.submit();
+    });
+
+    // Подсветка строк при наведении
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach(row => {
+      row.addEventListener('mouseenter', function () {
+        this.style.backgroundColor = '#f8f9fa';
+      });
+      row.addEventListener('mouseleave', function () {
+        this.style.backgroundColor = '';
+      });
+    });
+
+    // Открытие карточки пользователя по клику на имя
+    document.querySelectorAll('tbody tr').forEach(row => {
+      const nameCell = row.querySelector('td:first-child strong');
+      if (nameCell) {
+        nameCell.style.cursor = 'pointer';
+        nameCell.addEventListener('click', function () {
+          const userId = this.closest('tr').getAttribute('data-user-id');
+          if (userId) {
+            openUserCard(userId);
           }
-          
-          showSaveButton();
-          const modal = new bootstrap.Modal(document.getElementById('userCardModal'));
-          
-          // Добавляем обработчик события показа модального окна
-          document.getElementById('userCardModal').addEventListener('shown.bs.modal', function() {
+        });
+      }
+    });
+
+    // Функция открытия карточки пользователя
+    function openUserCard(userId) {
+      fetch(`/accounts/users/${userId}/data/`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            currentUser = data.user;
+            fillUserCard(data.user);
+
+            // Дополнительная проверка состояния переключателя
+            const userIsAdminField = document.getElementById('userIsAdmin');
+
             if (isSecurityAdmin) {
-              const userIsAdminField = document.getElementById('userIsAdmin');
               userIsAdminField.disabled = false;
-              userIsAdminField.removeAttribute('disabled');
-              userIsAdminField.classList.add('active');
-              userIsAdminField.style.pointerEvents = 'auto';
               userIsAdminField.style.opacity = '1';
               userIsAdminField.style.cursor = 'pointer';
+
+              // Принудительно убираем все атрибуты disabled
+              userIsAdminField.removeAttribute('disabled');
+              userIsAdminField.setAttribute('enabled', 'true');
+
+              // Добавляем класс active для принудительной активации
+              userIsAdminField.classList.add('active');
+              userIsAdminField.classList.remove('disabled');
+
+              // Принудительно включаем pointer-events
+              userIsAdminField.style.pointerEvents = 'auto';
+              userIsAdminField.style.userSelect = 'auto';
+            } else {
+              userIsAdminField.disabled = true;
+              userIsAdminField.style.opacity = '0.6';
+              userIsAdminField.style.cursor = 'not-allowed';
             }
-            
-            // Загружаем данные о владении справочниками
-            loadUserDictionaryOwnership(userId);
-          }, { once: true }); // once: true означает, что обработчик выполнится только один раз
-          
-          modal.show();
-        } else {
-          alert('Ошибка загрузки данных пользователя: ' + data.error);
+
+            showSaveButton();
+            const modal = new bootstrap.Modal(document.getElementById('userCardModal'));
+
+            // Добавляем обработчик события показа модального окна
+            document.getElementById('userCardModal').addEventListener('shown.bs.modal', function () {
+              if (isSecurityAdmin) {
+                const userIsAdminField = document.getElementById('userIsAdmin');
+                userIsAdminField.disabled = false;
+                userIsAdminField.removeAttribute('disabled');
+                userIsAdminField.classList.add('active');
+                userIsAdminField.style.pointerEvents = 'auto';
+                userIsAdminField.style.opacity = '1';
+                userIsAdminField.style.cursor = 'pointer';
+              }
+
+              // Загружаем данные о владении справочниками
+              loadUserDictionaryOwnership(userId);
+            }, { once: true }); // once: true означает, что обработчик выполнится только один раз
+
+            modal.show();
+          } else {
+            alert('Ошибка загрузки данных пользователя: ' + data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка:', error);
+          alert('Ошибка загрузки данных пользователя');
+        });
+    }
+
+    // Заполнение карточки пользователя данными
+    function fillUserCard(user) {
+      console.log('Заполнение карточки пользователя:', user);
+
+      // Заполняем основную информацию
+      document.getElementById('user-id').textContent = user.id || 'Не указано';
+      document.getElementById('user-guid').textContent = user.guid || 'Не указано';
+      document.getElementById('userName').value = user.username || 'Не указано'; // Изменяем поле ввода
+      document.getElementById('userDepartment').value = user.department || 'Не указано';
+
+      // Заполняем права и статус
+      document.getElementById('user-is-active').textContent = user.is_active ? 'Да' : 'Нет';
+      document.getElementById('userIsAdmin').checked = user.is_admin;
+      document.getElementById('user-is-admin-text').textContent = user.is_admin ? 'Да' : 'Нет';
+      document.getElementById('user-is-user').textContent = user.is_user ? 'Да' : 'Нет';
+
+      // Форматируем даты
+      if (user.created_at) {
+        try {
+          const createdDate = new Date(user.created_at);
+          document.getElementById('user-created-at').textContent = createdDate.toLocaleString('ru-RU');
+        } catch (e) {
+          document.getElementById('user-created-at').textContent = user.created_at;
         }
-      })
-      .catch(error => {
-        console.error('Ошибка:', error);
-        alert('Ошибка загрузки данных пользователя');
-      });
-  }
-  
-  // Заполнение карточки пользователя данными
-  function fillUserCard(user) {
-    console.log('Заполнение карточки пользователя:', user);
-    
-    // Заполняем основную информацию
-    document.getElementById('user-id').textContent = user.id || 'Не указано';
-    document.getElementById('user-guid').textContent = user.guid || 'Не указано';
-    document.getElementById('userName').value = user.username || 'Не указано'; // Изменяем поле ввода
-    document.getElementById('userDepartment').value = user.department || 'Не указано';
-    
-    // Заполняем права и статус
-    document.getElementById('user-is-active').textContent = user.is_active ? 'Да' : 'Нет';
-    document.getElementById('userIsAdmin').checked = user.is_admin;
-    document.getElementById('user-is-admin-text').textContent = user.is_admin ? 'Да' : 'Нет';
-    document.getElementById('user-is-user').textContent = user.is_user ? 'Да' : 'Нет';
-    
-    // Форматируем даты
-    if (user.created_at) {
-      try {
-        const createdDate = new Date(user.created_at);
-        document.getElementById('user-created-at').textContent = createdDate.toLocaleString('ru-RU');
-      } catch (e) {
-        document.getElementById('user-created-at').textContent = user.created_at;
-      }
-    } else {
-      document.getElementById('user-created-at').textContent = 'Не указано';
-    }
-    
-    if (user.updated_at) {
-      try {
-        const updatedDate = new Date(user.updated_at);
-        document.getElementById('user-updated-at').textContent = updatedDate.toLocaleString('ru-RU');
-      } catch (e) {
-        document.getElementById('user-updated-at').textContent = user.updated_at;
-      }
-    } else {
-      document.getElementById('user-updated-at').textContent = 'Не указано';
-    }
-    
-    // Показываем/скрываем секцию владения справочниками
-    const ownershipSection = document.getElementById('dictionaryOwnershipSection');
-    if (user.is_admin) {
-      ownershipSection.style.display = 'none';
-    } else {
-      ownershipSection.style.display = 'block';
-    }
-  }
-  
-  // Показ/скрытие кнопки сохранения
-  function showSaveButton() {
-    const saveBtn = document.getElementById('saveUserBtn');
-    const userNameField = document.getElementById('userName');
-    const userDepartmentField = document.getElementById('userDepartment');
-    const userIsAdminField = document.getElementById('userIsAdmin');
-    
-    if (isSecurityAdmin) {
-      saveBtn.style.display = 'block';
-      // Делаем поля редактируемыми для администратора безопасности
-      userNameField.readOnly = false;
-      userDepartmentField.readOnly = false;
-      userIsAdminField.disabled = false;
-      
-      // Убираем атрибут disabled и добавляем стили для активного состояния
-      userIsAdminField.removeAttribute('disabled');
-      userIsAdminField.style.opacity = '1';
-      userIsAdminField.style.cursor = 'pointer';
-      
-      // Добавляем класс active для принудительной активации
-      userIsAdminField.classList.add('active');
-      userIsAdminField.classList.remove('disabled');
-      
-      // Принудительно включаем pointer-events
-      userIsAdminField.style.pointerEvents = 'auto';
-      userIsAdminField.style.userSelect = 'auto';
-      
-      // Убираем disabled у label
-      const adminLabel = userIsAdminField.nextElementSibling;
-      if (adminLabel) {
-        adminLabel.style.opacity = '1';
-        adminLabel.style.cursor = 'pointer';
-      }
-    } else {
-      saveBtn.style.display = 'none';
-      // Делаем поля только для чтения для обычных пользователей
-      userNameField.readOnly = true;
-      userDepartmentField.readOnly = true;
-      userIsAdminField.disabled = true;
-      userIsAdminField.style.opacity = '0.6';
-      userIsAdminField.style.cursor = 'not-allowed';
-      
-      // Добавляем disabled у label
-      const adminLabel = userIsAdminField.nextElementSibling;
-      if (adminLabel) {
-        adminLabel.style.opacity = '0.6';
-        adminLabel.style.cursor = 'not-allowed';
-      }
-    }
-  }
-  
-  // Обработчик сохранения
-  document.getElementById('saveUserBtn').addEventListener('click', function() {
-    if (!currentUser) return;
-    
-    const formData = {
-      name: document.getElementById('userName').value,
-      department: document.getElementById('userDepartment').value, // Добавляем подразделение
-      is_admin: document.getElementById('userIsAdmin').checked
-    };
-    
-    // Валидация
-    if (!formData.name.trim()) {
-      alert('Имя пользователя не может быть пустым');
-      return;
-    }
-    
-    if (!formData.department.trim()) {
-      alert('Подразделение не может быть пустым');
-      return;
-    }
-    
-    // Отправка данных на сервер
-    fetch(`/accounts/users/${currentUser.id}/update/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')
-      },
-      body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        alert('Пользователь успешно обновлен');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('userCardModal'));
-        modal.hide();
-        // Обновляем страницу для отображения изменений
-        location.reload();
       } else {
-        alert('Ошибка обновления: ' + (data.error || 'Неизвестная ошибка'));
+        document.getElementById('user-created-at').textContent = 'Не указано';
       }
-    })
-    .catch(error => {
-      console.error('Ошибка:', error);
-      alert('Ошибка обновления пользователя');
-    });
-  });
-  
-  // Загрузка данных о владении справочниками
-  function loadUserDictionaryOwnership(userId) {
-    console.log('Загрузка данных о владении справочниками для пользователя:', userId);
-    
-    // Загружаем текущие справочники пользователя
-    fetch(`/accounts/users/${userId}/with-ownership/`)
-      .then(response => {
-        console.log('Ответ от сервера (with-ownership):', response.status, response.statusText);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+
+      if (user.updated_at) {
+        try {
+          const updatedDate = new Date(user.updated_at);
+          document.getElementById('user-updated-at').textContent = updatedDate.toLocaleString('ru-RU');
+        } catch (e) {
+          document.getElementById('user-updated-at').textContent = user.updated_at;
         }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Данные о владении:', data);
-        if (data.success) {
-          displayCurrentDictionaries(data.user.dictionary_ownership || []);
-        } else {
-          console.error('Ошибка загрузки справочников:', data.error);
-          displayCurrentDictionaries([]);
-        }
-      })
-      .catch(error => {
-        console.error('Ошибка загрузки справочников:', error);
-        displayCurrentDictionaries([]);
-      });
-    
-    // Загружаем доступные справочники для выбора
-    loadAvailableDictionaries();
-  }
-  
-  // Отображение текущих справочников пользователя
-  function displayCurrentDictionaries(dictionaries) {
-    const container = document.getElementById('currentDictionaries');
-    
-    if (dictionaries.length === 0) {
-      container.innerHTML = '<div class="text-muted text-center py-2">Пользователь не владеет ни одним справочником</div>';
-      return;
+      } else {
+        document.getElementById('user-updated-at').textContent = 'Не указано';
+      }
+
+      // Показываем/скрываем секцию владения справочниками
+      const ownershipSection = document.getElementById('dictionaryOwnershipSection');
+      if (user.is_admin) {
+        ownershipSection.style.display = 'none';
+      } else {
+        ownershipSection.style.display = 'block';
+      }
     }
-    
-    let html = '';
-    dictionaries.forEach(dict => {
-      html += `
+
+    // Показ/скрытие кнопки сохранения
+    function showSaveButton() {
+      const saveBtn = document.getElementById('saveUserBtn');
+      const userNameField = document.getElementById('userName');
+      const userDepartmentField = document.getElementById('userDepartment');
+      const userIsAdminField = document.getElementById('userIsAdmin');
+
+      if (isSecurityAdmin) {
+        saveBtn.style.display = 'block';
+        // Делаем поля редактируемыми для администратора безопасности
+        userNameField.readOnly = false;
+        userDepartmentField.readOnly = false;
+        userIsAdminField.disabled = false;
+
+        // Убираем атрибут disabled и добавляем стили для активного состояния
+        userIsAdminField.removeAttribute('disabled');
+        userIsAdminField.style.opacity = '1';
+        userIsAdminField.style.cursor = 'pointer';
+
+        // Добавляем класс active для принудительной активации
+        userIsAdminField.classList.add('active');
+        userIsAdminField.classList.remove('disabled');
+
+        // Принудительно включаем pointer-events
+        userIsAdminField.style.pointerEvents = 'auto';
+        userIsAdminField.style.userSelect = 'auto';
+
+        // Убираем disabled у label
+        const adminLabel = userIsAdminField.nextElementSibling;
+        if (adminLabel) {
+          adminLabel.style.opacity = '1';
+          adminLabel.style.cursor = 'pointer';
+        }
+      } else {
+        saveBtn.style.display = 'none';
+        // Делаем поля только для чтения для обычных пользователей
+        userNameField.readOnly = true;
+        userDepartmentField.readOnly = true;
+        userIsAdminField.disabled = true;
+        userIsAdminField.style.opacity = '0.6';
+        userIsAdminField.style.cursor = 'not-allowed';
+
+        // Добавляем disabled у label
+        const adminLabel = userIsAdminField.nextElementSibling;
+        if (adminLabel) {
+          adminLabel.style.opacity = '0.6';
+          adminLabel.style.cursor = 'not-allowed';
+        }
+      }
+    }
+
+    // Обработчик сохранения
+    document.getElementById('saveUserBtn').addEventListener('click', function () {
+      if (!currentUser) return;
+
+      const formData = {
+        name: document.getElementById('userName').value,
+        department: document.getElementById('userDepartment').value, // Добавляем подразделение
+        is_admin: document.getElementById('userIsAdmin').checked
+      };
+
+      // Валидация
+      if (!formData.name.trim()) {
+        alert('Имя пользователя не может быть пустым');
+        return;
+      }
+
+      if (!formData.department.trim()) {
+        alert('Подразделение не может быть пустым');
+        return;
+      }
+
+      // Отправка данных на сервер
+      fetch(`/accounts/users/${currentUser.id}/update/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(formData)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Пользователь успешно обновлен');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('userCardModal'));
+            modal.hide();
+            // Обновляем страницу для отображения изменений
+            location.reload();
+          } else {
+            alert('Ошибка обновления: ' + (data.error || 'Неизвестная ошибка'));
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка:', error);
+          alert('Ошибка обновления пользователя');
+        });
+    });
+
+    // Загрузка данных о владении справочниками
+    function loadUserDictionaryOwnership(userId) {
+      console.log('Загрузка данных о владении справочниками для пользователя:', userId);
+
+      // Загружаем текущие справочники пользователя
+      fetch(`/accounts/users/${userId}/with-ownership/`)
+        .then(response => {
+          console.log('Ответ от сервера (with-ownership):', response.status, response.statusText);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Данные о владении:', data);
+          if (data.success) {
+            displayCurrentDictionaries(data.user.dictionary_ownership || []);
+          } else if (data.dictionary_ownership !== undefined) {
+            // Прямой ответ от API без обертки success
+            displayCurrentDictionaries(data.dictionary_ownership || []);
+          } else {
+            console.error('Ошибка загрузки справочников:', data.error);
+            displayCurrentDictionaries([]);
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка загрузки справочников:', error);
+          displayCurrentDictionaries([]);
+        });
+
+      // Загружаем доступные справочники для выбора
+      loadAvailableDictionaries();
+    }
+
+    // Отображение текущих справочников пользователя
+    function displayCurrentDictionaries(dictionaries) {
+      const container = document.getElementById('currentDictionaries');
+
+      if (dictionaries.length === 0) {
+        container.innerHTML = '<div class="text-muted text-center py-2">Пользователь не владеет ни одним справочником</div>';
+        return;
+      }
+
+      let html = '';
+      dictionaries.forEach(dict => {
+        html += `
         <div class="d-flex justify-content-between align-items-center border-bottom py-2">
           <div>
             <strong>${dict.dictionary_code}</strong> - ${dict.dictionary_name}
@@ -757,161 +766,157 @@ document.addEventListener('DOMContentLoaded', function() {
           </button>
         </div>
       `;
-    });
-    
-    container.innerHTML = html;
-  }
-  
-  // Загрузка доступных справочников
-  function loadAvailableDictionaries() {
-    console.log('Загрузка доступных справочников');
-    
-    fetch('/accounts/users/dictionaries/available/')
-      .then(response => {
-        console.log('Ответ от сервера (available):', response.status, response.statusText);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Доступные справочники:', data);
-        if (data.success) {
-          populateDictionarySelect(data.dictionaries);
-        } else {
-          console.error('Ошибка загрузки доступных справочников:', data.error);
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Загрузка доступных справочников
+    function loadAvailableDictionaries() {
+      console.log('Загрузка доступных справочников');
+
+      fetch('/accounts/users/dictionaries/available/')
+        .then(response => {
+          console.log('Ответ от сервера (available):', response.status, response.statusText);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Доступные справочники:', data);
+          if (data.success) {
+            populateDictionarySelect(data.dictionaries);
+          } else {
+            console.error('Ошибка загрузки доступных справочников:', data.error);
+            // Показываем сообщение об ошибке
+            const select = document.getElementById('newDictionarySelect');
+            select.innerHTML = '<option value="">Ошибка загрузки справочников</option>';
+            select.disabled = true;
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка загрузки доступных справочников:', error);
           // Показываем сообщение об ошибке
           const select = document.getElementById('newDictionarySelect');
           select.innerHTML = '<option value="">Ошибка загрузки справочников</option>';
           select.disabled = true;
+        });
+    }
+
+    // Заполнение селекта справочников
+    function populateDictionarySelect(dictionaries) {
+      const select = document.getElementById('newDictionarySelect');
+      const addBtn = document.getElementById('addDictionaryBtn');
+
+      // Очищаем существующие опции
+      select.innerHTML = '<option value="">Выберите справочник...</option>';
+
+      // Добавляем новые опции
+      dictionaries.forEach(dict => {
+        const option = document.createElement('option');
+        option.value = dict.id;
+        option.textContent = `${dict.code} - ${dict.name}`;
+        select.appendChild(option);
+      });
+
+      // Включаем кнопку добавления
+      addBtn.disabled = false;
+    }
+
+    // Добавление права владения справочником
+    function addDictionaryOwnership() {
+      const select = document.getElementById('newDictionarySelect');
+      const dictionaryId = select.value;
+
+      if (!dictionaryId) {
+        alert('Выберите справочник для добавления');
+        return;
+      }
+
+      if (!currentUser || !currentUser.id) {
+        alert('Ошибка: пользователь не выбран');
+        return;
+      }
+
+      fetch(`/accounts/users/${currentUser.id}/dictionary-ownership/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ dictionary_id: parseInt(dictionaryId) })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Право владения добавлено');
+            // Перезагружаем данные
+            loadUserDictionaryOwnership(currentUser.id);
+            // Сбрасываем селект
+            select.value = '';
+          } else {
+            alert('Ошибка добавления права владения: ' + data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка:', error);
+          alert('Ошибка добавления права владения');
+        });
+    }
+
+    // Удаление права владения справочником
+    function removeDictionaryOwnership(dictionaryId) {
+      if (!currentUser || !currentUser.id) {
+        alert('Ошибка: пользователь не выбран');
+        return;
+      }
+
+      if (!confirm('Вы уверены, что хотите убрать право владения этим справочником?')) {
+        return;
+      }
+
+      fetch(`/accounts/users/${currentUser.id}/dictionary-ownership/${dictionaryId}/`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken')
         }
       })
-      .catch(error => {
-        console.error('Ошибка загрузки доступных справочников:', error);
-        // Показываем сообщение об ошибке
-        const select = document.getElementById('newDictionarySelect');
-        select.innerHTML = '<option value="">Ошибка загрузки справочников</option>';
-        select.disabled = true;
-      });
-  }
-  
-  // Заполнение селекта справочников
-  function populateDictionarySelect(dictionaries) {
-    const select = document.getElementById('newDictionarySelect');
-    const addBtn = document.getElementById('addDictionaryBtn');
-    
-    // Очищаем существующие опции
-    select.innerHTML = '<option value="">Выберите справочник...</option>';
-    
-    // Добавляем новые опции
-    dictionaries.forEach(dict => {
-      const option = document.createElement('option');
-      option.value = dict.id;
-      option.textContent = `${dict.code} - ${dict.name}`;
-      select.appendChild(option);
-    });
-    
-    // Включаем кнопку добавления
-    addBtn.disabled = false;
-  }
-  
-  // Добавление права владения справочником
-  function addDictionaryOwnership() {
-    const select = document.getElementById('newDictionarySelect');
-    const dictionaryId = select.value;
-    
-    if (!dictionaryId) {
-      alert('Выберите справочник для добавления');
-      return;
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Право владения удалено');
+            // Перезагружаем данные
+            loadUserDictionaryOwnership(currentUser.id);
+          } else {
+            alert('Ошибка удаления права владения: ' + data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка:', error);
+          alert('Ошибка удаления права владения');
+        });
     }
-    
-    if (!currentUser || !currentUser.id) {
-      alert('Ошибка: пользователь не выбран');
-      return;
-    }
-    
-    fetch(`/accounts/users/${currentUser.id}/dictionary-ownership/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')
-      },
-      body: JSON.stringify({ dictionary_id: parseInt(dictionaryId) })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        alert('Право владения добавлено');
-        // Перезагружаем данные
-        loadUserDictionaryOwnership(currentUser.id);
-        // Сбрасываем селект
-        select.value = '';
-      } else {
-        alert('Ошибка добавления права владения: ' + data.error);
-      }
-    })
-    .catch(error => {
-      console.error('Ошибка:', error);
-      alert('Ошибка добавления права владения');
-    });
-  }
-  
-  // Удаление права владения справочником
-  function removeDictionaryOwnership(dictionaryId) {
-    if (!currentUser || !currentUser.id) {
-      alert('Ошибка: пользователь не выбран');
-      return;
-    }
-    
-    if (!confirm('Вы уверены, что хотите убрать право владения этим справочником?')) {
-      return;
-    }
-    
-    fetch(`/accounts/users/${currentUser.id}/dictionary-ownership/${dictionaryId}/`, {
-      method: 'DELETE',
-      headers: {
-        'X-CSRFToken': getCookie('csrftoken')
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        alert('Право владения удалено');
-        // Перезагружаем данные
-        loadUserDictionaryOwnership(currentUser.id);
-      } else {
-        alert('Ошибка удаления права владения: ' + data.error);
-      }
-    })
-    .catch(error => {
-      console.error('Ошибка:', error);
-      alert('Ошибка удаления права владения');
-    });
-  }
-  
-  // Получение CSRF токена
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+
+    // Получение CSRF токена
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
       }
+      return cookieValue;
     }
-    return cookieValue;
-  }
-  
-  // Обработчик события для кнопки добавления справочника
-  document.addEventListener('DOMContentLoaded', function() {
-    const addDictionaryBtn = document.getElementById('addDictionaryBtn');
-    if (addDictionaryBtn) {
-      addDictionaryBtn.addEventListener('click', addDictionaryOwnership);
-    }
+
+    // Глобальная функция для привязки к кнопке добавления справочника
+    window.addDictionaryOwnership = addDictionaryOwnership;
+    window.removeDictionaryOwnership = removeDictionaryOwnership;
   });
-});
 </script>
 {% endblock %}

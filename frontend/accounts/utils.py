@@ -353,18 +353,46 @@ def update_user_in_backend(user_id: int, user_data: Dict[str, Any]) -> Optional[
     """
     try:
         base_v1 = _backend_base_v1()
-        url = f"{base_v1}/users/{user_id}"
-        logger.info(f"USERS PUT → {url} data={user_data}")
+        
+        # Сначала получаем существующего пользователя
+        get_url = f"{base_v1}/users/{user_id}"
+        logger.info(f"USERS GET → {get_url}")
         
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
-        resp = requests.put(url, json=user_data, headers=headers, timeout=15)
+        get_resp = requests.get(get_url, headers=headers, timeout=15)
         
-        logger.info(f"USERS PUT ← status={resp.status_code}")
-        if resp.status_code != 200:
-            logger.warning(f"Ошибка обновления пользователя: {resp.text}")
+        if get_resp.status_code != 200:
+            logger.warning(f"Ошибка получения пользователя для обновления: {get_resp.text}")
             return None
             
-        data = resp.json()
+        existing_user = get_resp.json()
+        logger.info(f"USERS GET ← status={get_resp.status_code}")
+        
+        # Создаем полную модель для обновления, объединяя существующие данные с новыми
+        full_user_data = {
+            "guid": existing_user.get("guid"),
+            "name": existing_user.get("name"),
+            "is_active": existing_user.get("is_active", True),
+            "is_admin": existing_user.get("is_admin", False),
+            "department": existing_user.get("department"),
+            "is_user": existing_user.get("is_user", False)
+        }
+        
+        # Обновляем только переданные поля
+        full_user_data.update(user_data)
+        
+        # Отправляем PUT запрос с полными данными
+        put_url = f"{base_v1}/users/{user_id}"
+        logger.info(f"USERS PUT → {put_url} data={full_user_data}")
+        
+        put_resp = requests.put(put_url, json=full_user_data, headers=headers, timeout=15)
+        
+        logger.info(f"USERS PUT ← status={put_resp.status_code}")
+        if put_resp.status_code != 200:
+            logger.warning(f"Ошибка обновления пользователя: {put_resp.text}")
+            return None
+            
+        data = put_resp.json()
         if isinstance(data, dict) and 'id' in data:
             return data
         return None
@@ -408,6 +436,55 @@ def create_or_update_user_in_backend(username, domain, department, guid, is_user
     except Exception as e:
         logger.error(f"Ошибка создания/обновления пользователя {username}@{domain}: {e}")
         return None
+
+
+def update_user_last_login(guid):
+    """Обновляет время последнего входа пользователя по GUID"""
+    try:
+        from django.conf import settings
+        
+        backend_api_url = getattr(settings, 'BACKEND_API_URL', 'http://127.0.0.1:8000/api/v2')
+        
+        # Получаем пользователя по GUID
+        get_url = backend_api_url.replace('/api/v2', '/api/v1') + f"/users/guid/{guid}"
+        
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        get_resp = requests.get(get_url, headers=headers, timeout=15)
+        
+        if get_resp.status_code != 200:
+            logger.warning(f"Не удалось найти пользователя с GUID {guid} для обновления last_login")
+            return False
+            
+        user_data = get_resp.json()
+        user_id = user_data.get('id')
+        
+        if not user_id:
+            logger.warning(f"Не найден ID пользователя с GUID {guid}")
+            return False
+        
+        # Обновляем пользователя с новым временем входа
+        full_user_data = {
+            "guid": user_data.get("guid"),
+            "name": user_data.get("name"),
+            "is_active": user_data.get("is_active", True),
+            "is_admin": user_data.get("is_admin", False),
+            "department": user_data.get("department"),
+            "is_user": user_data.get("is_user", False)
+        }
+        
+        put_url = backend_api_url.replace('/api/v2', '/api/v1') + f"/users/{user_id}"
+        put_resp = requests.put(put_url, json=full_user_data, headers=headers, timeout=15)
+        
+        if put_resp.status_code == 200:
+            logger.info(f"Время последнего входа обновлено для пользователя с GUID {guid}")
+            return True
+        else:
+            logger.warning(f"Ошибка обновления времени входа: {put_resp.status_code} - {put_resp.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Ошибка обновления времени последнего входа для GUID {guid}: {e}")
+        return False
 
 def fetch_user_by_guid_from_backend(guid):
     """Получение данных пользователя по GUID из backend API"""
@@ -565,7 +642,7 @@ def add_dictionary_ownership_to_backend(user_id, dictionary_id):
         # Заменяем /api/v2 на /api/v1 для users endpoints
         url = backend_api_url.replace('/api/v2', '/api/v1') + f"/users/{user_id}/dictionary-ownership"
         
-        data = {"id_dictionary": dictionary_id}
+        data = {"id_dictionary": dictionary_id, "id_user": user_id}
         
         logger.info(f"Добавление права владения: {url}, данные: {data}")
         

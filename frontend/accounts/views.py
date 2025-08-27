@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 import requests
 import logging
 from django.conf import settings
@@ -12,7 +13,7 @@ from accounts.forms import LoginForm
 from accounts.utils import api_post
 from accounts.models import LoginAudit, UserGroup
 from accounts.permissions import check_user_access
-from .utils import log_auth_event, log_user_action, log_system_event, post_login_audit_to_backend, fetch_audit_logs_from_backend
+from .utils import log_auth_event, log_user_action, log_system_event, post_login_audit_to_backend, fetch_audit_logs_from_backend, fetch_user_with_ownership_from_backend
 
 logger = logging.getLogger(__name__)
 
@@ -504,6 +505,15 @@ def login_view(request):
                             )
                         except Exception:
                             pass
+                        
+                        # Обновляем время последнего входа пользователя
+                        user_guid = user_info.get('guid') if isinstance(user_info, dict) else None
+                        if user_guid:
+                            try:
+                                from accounts.utils import update_user_last_login
+                                update_user_last_login(user_guid)
+                            except Exception as e:
+                                logger.warning(f"Не удалось обновить время последнего входа: {e}")
 
                         # Логируем действие пользователя
                         log_user_action(
@@ -984,23 +994,21 @@ def get_user_data_view(request, user_id):
         return JsonResponse({'error': 'Внутренняя ошибка сервера'}, status=500)
 
 
+@csrf_exempt
 def update_user_view(request, user_id):
     """Обновление пользователя через POST запрос"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Метод не поддерживается'}, status=405)
     
-    # Проверяем, входит ли пользователь в группу EISGS_Users
-    if not request.session.get('in_users', False):
-        return JsonResponse({'success': False, 'error': 'Недостаточно прав'}, status=403)
+    # Проверяем права доступа: должен быть администратор безопасности (EISGS_AppSecurity)
+    # для назначения роли "Администратор системы"
+    has_security_access = request.session.get('in_security', False)
+    if not has_security_access:
+        return JsonResponse({'success': False, 'error': 'Недостаточно прав для назначения администраторов'}, status=403)
     
     try:
         import json
         data = json.loads(request.body)
-        
-        # Проверяем права доступа
-        has_audit_access = request.session.get('has_audit_access', False)
-        if not has_audit_access:
-            return JsonResponse({'success': False, 'error': 'Недостаточно прав'}, status=403)
         
         # Обновляем пользователя через backend API
         from accounts.utils import update_user_in_backend
@@ -1040,7 +1048,7 @@ def get_user_with_ownership_view(request, user_id):
     
     try:
         # Получаем данные пользователя с владением из backend
-        user_data = fetch_user_from_backend(user_id) # Changed from fetch_user_with_ownership_from_backend
+        user_data = fetch_user_with_ownership_from_backend(user_id)
         
         if user_data:
             # Получаем подразделение из сессии, если не указано в данных пользователя

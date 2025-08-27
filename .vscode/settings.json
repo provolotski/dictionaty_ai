@@ -8,7 +8,8 @@
   "python.testing.pytestPath": "pytest",
   "python.testing.cwd": "${workspaceFolder}",
   "python.linting.enabled": true,
-  "python.linting.pylintEnabled": true,
+  "python.linting.pylintEnabled": false,
   "editor.formatOnSave": true,
-  "python.formatting.provider": "black"
+  "python.formatting.provider": "black",
+  "python.linting.flake8Enabled": true
 }

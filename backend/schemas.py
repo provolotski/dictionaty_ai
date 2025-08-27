@@ -260,6 +260,7 @@ class UserOut(BaseModel):
     is_user: bool = Field(..., description="Входит ли в группу EISGS_Users")
     created_at: datetime = Field(..., description="Дата создания")
     updated_at: datetime = Field(..., description="Дата последнего обновления")
+    last_login_at: Optional[datetime] = Field(None, description="Дата последнего входа в систему")
 
     class Config:
         from_attributes = True

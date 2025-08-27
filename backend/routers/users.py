@@ -35,7 +35,7 @@ async def get_users(
         # Базовый запрос
         base_query = """
             SELECT id, guid, name, is_active, is_admin, department, is_user, 
-                   created_at, updated_at
+                   created_at, updated_at, last_login_at
             FROM users
             WHERE 1=1
         """
@@ -97,7 +97,7 @@ async def get_user(user_id: int, db: Database = Depends(get_database)) -> Any:
     try:
         query = """
             SELECT id, guid, name, is_active, is_admin, department, is_user, 
-                   created_at, updated_at
+                   created_at, updated_at, last_login_at
             FROM users 
             WHERE id = :user_id
         """
@@ -132,7 +132,7 @@ async def get_user_by_guid(guid: str, db: Database = Depends(get_database)) -> A
         
         query = """
             SELECT id, guid, name, is_active, is_admin, department, is_user, 
-                   created_at, updated_at
+                   created_at, updated_at, last_login_at
             FROM users 
             WHERE guid = :guid
         """
@@ -192,7 +192,7 @@ async def upsert_user(user_data: dict, db: Database = Depends(get_database)) -> 
                     is_active = :is_active, is_admin = :is_admin, updated_at = NOW()
                 WHERE guid = :guid
                 RETURNING id, guid, name, is_active, is_admin, department, is_user, 
-                          created_at, updated_at
+                          created_at, updated_at, last_login_at
             """
             
             values = {
@@ -213,7 +213,7 @@ async def upsert_user(user_data: dict, db: Database = Depends(get_database)) -> 
                 INSERT INTO users (guid, name, is_active, is_admin, department, is_user, created_at, updated_at, last_login_at)
                 VALUES (:guid, :name, :is_active, :is_admin, :department, :is_user, NOW(), NOW(), NOW())
                 RETURNING id, guid, name, is_active, is_admin, department, is_user, 
-                          created_at, updated_at
+                          created_at, updated_at, last_login_at
             """
             
             values = {
@@ -259,7 +259,7 @@ async def create_user(user_data: UserIn, db: Database = Depends(get_database)) -
             INSERT INTO users (guid, name, is_active, is_admin, department, is_user)
             VALUES (:guid, :name, :is_active, :is_admin, :department, :is_user)
             RETURNING id, guid, name, is_active, is_admin, department, is_user, 
-                      created_at, updated_at
+                      created_at, updated_at, last_login_at
         """
         
         values = {
@@ -295,7 +295,7 @@ async def update_user(
     try:
         # Проверяем существование пользователя
         existing_user = await db.fetch_one(
-            query="SELECT id FROM users WHERE id = :user_id",
+            query="SELECT id, guid FROM users WHERE id = :user_id",
             values={"user_id": user_id}
         )
         
@@ -327,7 +327,7 @@ async def update_user(
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = :user_id
             RETURNING id, guid, name, is_active, is_admin, department, is_user, 
-                      created_at, updated_at
+                      created_at, updated_at, last_login_at
         """
         
         values = {
@@ -460,7 +460,7 @@ async def get_user_with_ownership(
         # Получаем основную информацию о пользователе
         user_query = """
             SELECT id, guid, name, is_active, is_admin, department, is_user, 
-                   created_at, updated_at
+                   created_at, updated_at, last_login_at
             FROM users WHERE id = :user_id
         """
         
@@ -514,7 +514,7 @@ async def get_user_by_guid(
         
         query = f"""
             SELECT id, guid, name, is_active, is_admin, department, is_user, 
-                   created_at, updated_at
+                   created_at, updated_at, last_login_at
             FROM users WHERE {where_clause}
         """
         
@@ -536,7 +536,7 @@ async def get_user_by_guid(
         raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера")
 
 
-@users_router.patch("/users/update-department")
+@users_router.patch("/update-department")
 async def update_user_department(
     update_data: dict,
     db: Database = Depends(get_database)
@@ -601,7 +601,7 @@ async def update_user_department(
             detail="Внутренняя ошибка сервера"
         )
 
-@users_router.post("/users/sync-departments")
+@users_router.post("/sync-departments")
 async def sync_user_departments(
     sync_data: dict,
     db: Database = Depends(get_database)

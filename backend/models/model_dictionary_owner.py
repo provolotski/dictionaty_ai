@@ -116,28 +116,55 @@ class DictionaryOwnerService:
             Список справочников с информацией
         """
         try:
-            query = """
+            # Сначала получаем базовые записи владения
+            ownership_query = """
                 SELECT 
                     do.id,
                     do.id_dictionary,
-                    d.code as dictionary_code,
-                    d.name as dictionary_name,
                     do.id_user,
-                    u.name as user_name,
                     do.created_at,
                     do.updated_at
                 FROM dictionary_owner do
-                JOIN dictionary d ON do.id_dictionary = d.id
-                JOIN users u ON do.id_user = u.id
                 WHERE do.id_user = :user_id
-                ORDER BY d.name
+                ORDER BY do.id_dictionary
             """
             
-            rows = await database.fetch_all(query, {"user_id": user_id})
+            ownership_rows = await database.fetch_all(ownership_query, {"user_id": user_id})
+            logger.debug(f"Найдено {len(ownership_rows)} записей владения для пользователя {user_id}")
             
-            result = [DictionaryOwnerWithInfo(**row) for row in rows]
-            logger.debug(f"Получено {len(result)} справочников для пользователя {user_id}")
+            if not ownership_rows:
+                return []
             
+            # Получаем информацию о справочниках и пользователе
+            result = []
+            for row in ownership_rows:
+                try:
+                    # Получаем информацию о справочнике
+                    dict_query = "SELECT code, name FROM dictionary WHERE id = :dict_id"
+                    dict_row = await database.fetch_one(dict_query, {"dict_id": row["id_dictionary"]})
+                    
+                    # Получаем информацию о пользователе
+                    user_query = "SELECT name FROM users WHERE id = :user_id"
+                    user_row = await database.fetch_one(user_query, {"user_id": row["id_user"]})
+                    
+                    if dict_row and user_row:
+                        result.append(DictionaryOwnerWithInfo(
+                            id=row["id"],
+                            id_dictionary=row["id_dictionary"],
+                            dictionary_code=dict_row["code"] or "",
+                            dictionary_name=dict_row["name"] or f"Справочник #{row['id_dictionary']}",
+                            id_user=row["id_user"],
+                            user_name=user_row["name"],
+                            created_at=row["created_at"],
+                            updated_at=row["updated_at"]
+                        ))
+                    else:
+                        logger.warning(f"Не найдены данные для словаря {row['id_dictionary']} или пользователя {row['id_user']}")
+                except Exception as inner_e:
+                    logger.error(f"Ошибка обработки записи владения {row['id']}: {inner_e}")
+                    continue
+            
+            logger.info(f"Получено {len(result)} справочников для пользователя {user_id}")
             return result
             
         except Exception as e:

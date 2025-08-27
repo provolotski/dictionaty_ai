@@ -365,8 +365,69 @@ class PermissionChecker:
                 f"удалено login={del_login_count}, guid={del_guid_count}; "
                 f"добавлено login={added_login}, guid={added_guid}. Список: {groups}"
             )
+            
+            # Обновляем поле is_user в backend на основе принадлежности к группе EISGS_Users
+            self._update_is_user_field(username, domain, groups, guid)
+            
         except Exception as e:
             logger.error(f"Ошибка при сохранении групп для {username}@{domain}: {e}")
+    
+    def _update_is_user_field(self, username, domain, groups, guid=None):
+        """
+        Обновляет поле is_user в backend на основе принадлежности к группе EISGS_Users
+        """
+        try:
+            # Проверяем, входит ли пользователь в группу EISGS_Users
+            is_user = 'EISGS_Users' in groups
+            
+            logger.debug(f"Обновление поля is_user для {username}@{domain}: {is_user} (группы: {groups})")
+            
+            # Если есть GUID, используем endpoint обновления по GUID
+            if guid:
+                from django.conf import settings
+                import requests
+                
+                backend_api_url = getattr(settings, 'BACKEND_API_URL', 'http://127.0.0.1:8000/api/v2')
+                url = backend_api_url.replace('/api/v2', '/api/v1') + f"/users/guid/{guid}"
+                
+                # Получаем текущие данные пользователя
+                try:
+                    response = requests.get(url, timeout=15)
+                    if response.status_code == 200:
+                        user_data = response.json()
+                        
+                        # Обновляем только поле is_user, если оно изменилось
+                        if user_data.get('is_user') != is_user:
+                            # Подготавливаем данные для обновления
+                            update_data = {
+                                "guid": user_data.get("guid"),
+                                "name": user_data.get("name"),
+                                "is_active": user_data.get("is_active", True),
+                                "is_admin": user_data.get("is_admin", False),
+                                "department": user_data.get("department"),
+                                "is_user": is_user
+                            }
+                            
+                            # Отправляем PUT запрос для обновления
+                            put_url = backend_api_url.replace('/api/v2', '/api/v1') + f"/users/{user_data['id']}"
+                            put_response = requests.put(put_url, json=update_data, timeout=15)
+                            
+                            if put_response.status_code == 200:
+                                logger.info(f"Поле is_user обновлено для {username}@{domain}: {is_user}")
+                            else:
+                                logger.warning(f"Ошибка обновления is_user: {put_response.status_code} - {put_response.text}")
+                        else:
+                            logger.debug(f"Поле is_user уже актуально для {username}@{domain}: {is_user}")
+                    else:
+                        logger.warning(f"Не удалось получить данные пользователя для обновления is_user: {response.status_code}")
+                        
+                except requests.RequestException as e:
+                    logger.warning(f"Ошибка при обновлении is_user для {username}@{domain}: {e}")
+            else:
+                logger.debug(f"GUID не найден для {username}@{domain}, пропускаем обновление is_user")
+                
+        except Exception as e:
+            logger.error(f"Ошибка при обновлении is_user для {username}@{domain}: {e}")
     
     def _log_permission_check(self, username, domain, has_access, groups, request):
         """
