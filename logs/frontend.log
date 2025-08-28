@@ -1,22 +1,114 @@
 INFO Watching for file changes with StatReloader
-INFO "GET /accounts/audit/ HTTP/1.1" 200 77948
-INFO - Broken pipe from ('127.0.0.1', 49268)
-INFO "GET /accounts/audit/ HTTP/1.1" 200 77948
-INFO - Broken pipe from ('127.0.0.1', 49260)
-INFO "GET /analytics HTTP/1.1" 301 0
-INFO "GET /analytics/ HTTP/1.1" 200 47251
-INFO "GET /accounts/users/ HTTP/1.1" 200 79020
-INFO "GET /accounts/users/3/data/ HTTP/1.1" 200 324
-INFO "GET /accounts/users/dictionaries/available/ HTTP/1.1" 200 1390
-INFO "GET /accounts/users/3/with-ownership/ HTTP/1.1" 200 352
-INFO "GET /accounts/users/14/data/ HTTP/1.1" 200 506
-INFO "GET /accounts/users/dictionaries/available/ HTTP/1.1" 200 1390
-INFO "GET /accounts/users/14/with-ownership/ HTTP/1.1" 200 534
-INFO "POST /accounts/users/14/dictionary-ownership/ HTTP/1.1" 200 166
-INFO "GET /accounts/users/dictionaries/available/ HTTP/1.1" 200 1390
-INFO "GET /accounts/users/14/with-ownership/ HTTP/1.1" 200 534
-INFO "POST /accounts/users/14/update/ HTTP/1.1" 200 550
-INFO "GET /accounts/users/ HTTP/1.1" 200 79020
-INFO "GET /static/css/main.css HTTP/1.1" 304 0
-INFO "GET /static/css/bootstrap.min.css HTTP/1.1" 304 0
-INFO "GET /static/js/bootstrap.bundle.min.js HTTP/1.1" 304 0
+INFO "POST /accounts/logout/ HTTP/1.1" 302 0
+INFO "GET / HTTP/1.1" 302 0
+INFO "GET /accounts/login/ HTTP/1.1" 200 60277
+INFO "GET /login/ HTTP/1.1" 200 60277
+INFO "POST /accounts/login/ HTTP/1.1" 200 162
+INFO "GET / HTTP/1.1" 200 52541
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 258794
+INFO "GET /dictionary/17/edit/ HTTP/1.1" 200 63389
+INFO "GET / HTTP/1.1" 200 52541
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 258280
+INFO "GET /dictionaries/ HTTP/1.1" 200 258280
+INFO "GET /dictionary/25/edit/ HTTP/1.1" 302 0
+INFO "GET /dictionary/25/description/ HTTP/1.1" 200 56245
+INFO "GET / HTTP/1.1" 200 52541
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 258794
+INFO /Users/provolotski/PycharmProjects/dictionary_belstat/dictionaty_ai/frontend/Dictionary/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 27, 2025 - 18:03:51
+Django version 5.2.5, using settings 'DictionaryFront.settings'
+Starting development server at http://0.0.0.0:8001/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+INFO Watching for file changes with StatReloader
+INFO "GET /dictionary/35/edit/ HTTP/1.1" 200 63343
+INFO /Users/provolotski/PycharmProjects/dictionary_belstat/dictionaty_ai/frontend/Dictionary/templatetags/__init__.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 27, 2025 - 18:16:35
+Django version 5.2.5, using settings 'DictionaryFront.settings'
+Starting development server at http://0.0.0.0:8001/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+INFO Watching for file changes with StatReloader
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 258280
+INFO "GET /dictionary/24/edit/ HTTP/1.1" 302 0
+INFO "GET /dictionary/24/description/ HTTP/1.1" 200 55858
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 258794
+INFO "GET /dictionary/21/edit/ HTTP/1.1" 302 0
+INFO "GET /dictionary/21/description/ HTTP/1.1" 200 55036
+INFO "GET / HTTP/1.1" 200 52541
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 258794
+INFO /Users/provolotski/PycharmProjects/dictionary_belstat/dictionaty_ai/frontend/Dictionary/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 27, 2025 - 18:17:04
+Django version 5.2.5, using settings 'DictionaryFront.settings'
+Starting development server at http://0.0.0.0:8001/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+INFO Watching for file changes with StatReloader
+INFO "GET /dictionary/91/edit/ HTTP/1.1" 302 0
+INFO "GET /dictionary/91/description/ HTTP/1.1" 200 56084
+INFO "GET /dictionary/91/tree/ HTTP/1.1" 200 59129
+INFO "GET /dictionary/91/table/ HTTP/1.1" 200 66882
+INFO /Users/provolotski/PycharmProjects/dictionary_belstat/dictionaty_ai/frontend/Dictionary/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+August 27, 2025 - 18:17:46
+Django version 5.2.5, using settings 'DictionaryFront.settings'
+Starting development server at http://0.0.0.0:8001/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+INFO Watching for file changes with StatReloader
+INFO "POST /accounts/login/ HTTP/1.1" 200 162
+INFO "GET / HTTP/1.1" 200 52201
+INFO "GET /static/css/main.css HTTP/1.1" 200 19477
+INFO "GET /static/js/bootstrap.bundle.min.js HTTP/1.1" 200 80821
+INFO "GET /static/css/bootstrap.min.css HTTP/1.1" 200 232018
+INFO "POST /accounts/logout/ HTTP/1.1" 302 0
+INFO "GET / HTTP/1.1" 302 0
+INFO "GET /accounts/login/ HTTP/1.1" 200 60277
+INFO "GET /login/ HTTP/1.1" 200 60277
+INFO "POST /accounts/login/ HTTP/1.1" 200 162
+INFO "GET / HTTP/1.1" 200 52541
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 258794
+INFO "GET /dictionaries/ HTTP/1.1" 200 258280
+INFO "GET /dictionary/17/edit/ HTTP/1.1" 200 63389
+INFO "POST /dictionary/17/edit/ HTTP/1.1" 200 390
+INFO "GET /dictionary/list/ HTTP/1.1" 200 145341
+INFO "GET / HTTP/1.1" 200 52541
+INFO "GET /dictionaries HTTP/1.1" 301 0
+INFO "GET /dictionaries/ HTTP/1.1" 200 258280
+INFO "GET / HTTP/1.1" 200 52541
+INFO "GET /search HTTP/1.1" 301 0
+INFO "GET /search/ HTTP/1.1" 200 42417
+INFO "GET / HTTP/1.1" 200 52541
+INFO "GET /dictionaries/ HTTP/1.1" 200 258280
+INFO "GET /dictionary/17/edit/ HTTP/1.1" 200 63389
+INFO "POST /dictionary/17/edit/ HTTP/1.1" 200 149
+INFO "POST /dictionary/17/edit/ HTTP/1.1" 200 390
+INFO "GET / HTTP/1.1" 200 52541
+INFO "GET /dictionaries/ HTTP/1.1" 200 258280
+INFO "GET /dictionary/create/ HTTP/1.1" 200 81961

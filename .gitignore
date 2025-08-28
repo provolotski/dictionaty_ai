@@ -1,10 +1,56 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.env/
+.venv/
+
+# VSCode settings
+.vscode/
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# Environment variables
+.env
+
+# Django specific
+db.sqlite3
+/staticfiles/
+/media/
+
+
+# Django migrations
+**/migrations/
+!**/migrations/__init__.py
+
+# FastAPI / Uvicorn
+*.pid
+
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Pytest cache
+.pytest_cache/
+
+# MyPy cache
+.mypy_cache/
+.dmypy.json
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+
 context.md
-frontend/Dictionary/__pycache__/
-logs/backend.log
-logs/frontend.log
-logs/backend.log
-frontend/logs/belstat.log
-frontend/logs/auth.log
-frontend/accounts/__pycache__/
-frontend/logs/belstat.log
-frontend/db.sqlite3
+frontend/.DS_Store
+.DS_Store

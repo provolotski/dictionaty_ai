@@ -138,6 +138,9 @@ h2 {
                     <a href="{% url 'dictionary_list' %}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Назад к списку
                     </a>
+                    <a href="{% url 'dictionary_description' dictionary_id %}" class="btn btn-outline-success">
+                        <i class="bi bi-file-text"></i> Описание
+                    </a>
                     <a href="{% url 'dictionary_table' dictionary_id %}" class="btn btn-outline-info">
                         <i class="bi bi-table"></i> Таблица
                     </a>

@@ -119,14 +119,14 @@ class DictionaryOwnerService:
             # Сначала получаем базовые записи владения
             ownership_query = """
                 SELECT 
-                    do.id,
-                    do.id_dictionary,
-                    do.id_user,
-                    do.created_at,
-                    do.updated_at
-                FROM dictionary_owner do
-                WHERE do.id_user = :user_id
-                ORDER BY do.id_dictionary
+                    id,
+                    id_dictionary,
+                    id_user,
+                    created_at,
+                    updated_at
+                FROM dictionary_owner
+                WHERE id_user = :user_id
+                ORDER BY id_dictionary
             """
             
             ownership_rows = await database.fetch_all(ownership_query, {"user_id": user_id})
@@ -185,18 +185,18 @@ class DictionaryOwnerService:
         try:
             query = """
                 SELECT 
-                    do.id,
-                    do.id_dictionary,
+                    dictionary_owner.id,
+                    dictionary_owner.id_dictionary,
                     d.code as dictionary_code,
                     d.name as dictionary_name,
-                    do.id_user,
+                    dictionary_owner.id_user,
                     u.name as user_name,
-                    do.created_at,
-                    do.updated_at
-                FROM dictionary_owner do
-                JOIN dictionary d ON do.id_dictionary = d.id
-                JOIN users u ON do.id_user = u.id
-                WHERE do.id_dictionary = :dict_id
+                    dictionary_owner.created_at,
+                    dictionary_owner.updated_at
+                FROM dictionary_owner
+                JOIN dictionary d ON dictionary_owner.id_dictionary = d.id
+                JOIN users u ON dictionary_owner.id_user = u.id
+                WHERE dictionary_owner.id_dictionary = :dict_id
                 ORDER BY u.name
             """
             

@@ -159,7 +159,7 @@ def audit_view(request):
             if c:
                 q |= Q(username__iexact=c)
         user_groups = UserGroup.objects.filter(q, domain__iexact=sel_domain_lc)
-        logger.debug(f"user_groups: {user_groups}")
+        logger.info(f"user_groups: {user_groups}")
         group_names = list(user_groups.values_list('group_name', flat=True))
         logger.debug(f"User {sel_guid or username}@{sel_domain_lc} groups: {group_names}")
         has_audit_access = user_groups.filter(group_name='EISGS_AppSecurity').exists()

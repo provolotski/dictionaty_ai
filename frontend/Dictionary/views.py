@@ -19,6 +19,7 @@ import logging
 from .models import Dictionary, DictionaryIn
 from .forms import DictionaryForm, DictionaryDescriptionForm
 from accounts.utils import api_get, api_post, api_post_create_dict,api_post_dict
+from .permissions import can_edit_dictionary
 
 logger = logging.getLogger('myapp')
 
@@ -52,8 +53,31 @@ def dictionary_list_view(request):
         messages.error(request, 'Ошибка загрузки списка справочников')
 
     logger.debug(f'Загружено справочников: {len(dictionaries)}')
+    
+    # Получаем информацию о правах пользователя для каждого справочника
+    user_permissions = {}
+    for dictionary in dictionaries:
+        dictionary_id = dictionary.get('id')
+        if dictionary_id:
+            permissions = can_edit_dictionary(request, dictionary_id)
+            user_permissions[dictionary_id] = permissions
+    
+    # Проверяем права пользователя на создание справочников (только администраторы)
+    user_info = request.session.get('user_info', {})
+    guid = user_info.get('guid')
+    can_create = False
+    
+    if guid:
+        try:
+            from .permissions import check_if_admin
+            can_create = check_if_admin(guid, user_info.get('username'))
+        except Exception as e:
+            logger.warning(f"Ошибка проверки прав на создание: {e}")
+    
     return render(request, 'dictionaryList.html', {
-        'dictionaries': dictionaries
+        'dictionaries': dictionaries,
+        'user_permissions': user_permissions,
+        'can_create': can_create
     })
 
 
@@ -162,6 +186,12 @@ def dictionary_edit(request, pk):
     """Редактирование существующего справочника"""
     logger.debug(f'dictionary_edit pk={pk}')
 
+    # Проверяем права пользователя на редактирование
+    permissions = can_edit_dictionary(request, pk)
+    if not permissions['can_edit']:
+        messages.error(request, f'У вас нет прав на редактирование этого справочника: {permissions["reason"]}')
+        return redirect('dictionary_description', dictionary_id=pk)
+
     # Получаем данные справочника из API
     response = api_get(request, f'/models/getMetaDictionary?dictionary_id={pk}', service='dict')
     if response.status_code != 200:
@@ -228,7 +258,36 @@ def dictionary_edit(request, pk):
             'dictionary_data': dictionary_data
         })
 
-    return render(request, 'dictionaries/edit.html', {
+    return render(request, 'dictionaries/edit_form_full.html', {
+        'form': form,
+        'dictionary_id': pk,
+        'dictionary_data': dictionary_data
+    })
+
+
+@require_users_group
+def dictionary_view_view(request, pk):
+    """Просмотр справочника (только для чтения)"""
+    logger.debug(f'dictionary_view_view pk={pk}')
+
+    # Получаем данные справочника из API
+    response = api_get(request, f'/models/getMetaDictionary?dictionary_id={pk}', service='dict')
+    if response.status_code != 200:
+        error_msg = 'Справочник не найден'
+        messages.error(request, error_msg)
+        return redirect('dictionary_list')
+
+    dictionary_data = response.json()
+
+    # Создаем форму с данными, но делаем её только для чтения
+    form = DictionaryForm(initial=dictionary_data)
+    
+    # Делаем все поля формы недоступными для редактирования
+    for field_name in form.fields:
+        form.fields[field_name].widget.attrs['readonly'] = True
+        form.fields[field_name].widget.attrs['disabled'] = True
+
+    return render(request, 'dictionaries/view_form_full.html', {
         'form': form,
         'dictionary_id': pk,
         'dictionary_data': dictionary_data
@@ -686,3 +745,56 @@ def build_tree_from_data(data):
                 item['level'] = parent['level'] + 1
     
     return root_items
+
+
+@require_users_group
+def dictionary_description_view(request, dictionary_id):
+    """Отображение страницы описания справочника"""
+    try:
+        # Получаем метаданные справочника
+        meta_response = api_get(request, f'/models/getMetaDictionary?dictionary_id={dictionary_id}', service='dict')
+        
+        if meta_response.status_code != 200:
+            messages.error(request, 'Ошибка загрузки метаданных справочника')
+            return redirect('dictionary_list')
+        
+        meta_data = meta_response.json()
+        
+        # Получаем статистику справочника
+        stats_response = api_get(request, f'/models/dictionary/?dictionary={dictionary_id}', service='dict')
+        total_items = 0
+        if stats_response.status_code == 200:
+            total_items = len(stats_response.json())
+        
+        # Формируем данные для отображения
+        dictionary_info = {
+            'id': dictionary_id,
+            'name': meta_data.get('name', 'Название не указано'),
+            'code': meta_data.get('code', 'Код не указан'),
+            'description': meta_data.get('description', 'Описание не указано'),
+            'name_eng': meta_data.get('name_eng', ''),
+            'name_bel': meta_data.get('name_bel', ''),
+            'description_eng': meta_data.get('description_eng', ''),
+            'description_bel': meta_data.get('description_bel', ''),
+            'start_date': meta_data.get('start_date', ''),
+            'finish_date': meta_data.get('finish_date', ''),
+            'gko': meta_data.get('gko', ''),
+            'classifier': meta_data.get('classifier', ''),
+            'organization': meta_data.get('organization', ''),
+            'status': meta_data.get('status', ''),
+            'type': meta_data.get('type', ''),
+            'total_items': total_items
+        }
+        
+        # Проверяем права пользователя на редактирование
+        permissions = can_edit_dictionary(request, dictionary_id)
+        
+        return render(request, 'dictionaryDescription.html', {
+            'dictionary': dictionary_info,
+            'permissions': permissions
+        })
+        
+    except requests.RequestException as e:
+        logger.error(f'Ошибка загрузки описания справочника: {e}')
+        messages.error(request, 'Ошибка загрузки описания справочника')
+        return redirect('dictionary_list')

@@ -20,7 +20,7 @@ class PermissionChecker:
     """Класс для проверки прав доступа пользователей"""
     
     REQUIRED_GROUPS = ['EISGS_AppSecurity', 'EISGS_Users']
-    SECURITY_GROUPS = ['EISGS_AppSecurity', 'Администраторы безопасности ЦИТ']  # Альтернативные названия для админов безопасности
+    SECURITY_GROUPS = ['EISGS_AppSecurity']  # Альтернативные названия для админов безопасности
     USER_GROUPS = ['EISGS_Users']  # Группы пользователей
     
     def __init__(self):

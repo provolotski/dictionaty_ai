@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование справочника | BelStat{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* CSS переменные для навигации */
+    :root {
+        --primary-green: #14a856;
+        --primary-green-light: #16c065;
+        --primary-green-dark: #0f8a45;
+        --white: #ffffff;
+        --gray-100: #f8f9fa;
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    /* Основные стили страницы */
+    .edit-dictionary-page {
+        background: linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 100%);
+        min-height: calc(100vh - 80px);
+        padding: 2rem 0;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+        border-radius: 0 0 2rem 2rem;
+        box-shadow: 0 4px 20px rgba(20, 168, 86, 0.3);
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .page-subtitle {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    /* Стили для формы */
+    .form-container {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-section {
+        border: 1px solid #d4edda;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        background: #f8fdf8;
+        transition: all 0.3s ease;
+    }
+    
+    .form-section:hover {
+        border-color: var(--primary-green);
+        box-shadow: 0 4px 15px rgba(20, 168, 86, 0.1);
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-green-dark);
+        margin: 0;
+    }
+    
+    /* Стили для полей формы */
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 0.2rem rgba(20, 168, 86, 0.25);
+        outline: none;
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    /* Кнопки */
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-green-dark), var(--primary-green));
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(20, 168, 86, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+        
+        .form-container {
+            padding: 1rem;
+        }
+        
+        .form-section {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-dictionary-page">
+    <div class="container">
+        <!-- Заголовок страницы -->
+        <div class="page-header text-center">
+            <h1 class="page-title">Редактирование справочника</h1>
+            <p class="page-subtitle">Внесите изменения в существующий справочник</p>
+        </div>
+        
+        <!-- Форма редактирования -->
+        <div class="form-container">
+            <form id="editDictionaryForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="id" value="{{ dictionary_id }}">
+                
+                <!-- Основная информация -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <h3 class="section-title">Основная информация</h3>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Название *</label>
+                                <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                       id="name" name="name" value="{{ form.name.value|default:'' }}" required>
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="code" class="form-label">Код *</label>
+                                <input type="text" class="form-control {% if form.code.errors %}is-invalid{% endif %}" 
+                                       id="code" name="code" value="{{ form.code.value|default:'' }}" required>
+                                {% if form.code.errors %}
+                                    <div class="invalid-feedback">{{ form.code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Описание</label>
+                                <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                                          id="description" name="description" rows="3">{{ form.description.value|default:'' }}</textarea>
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_type" class="form-label">Тип словаря *</label>
+                                <select class="form-select {% if form.id_type.errors %}is-invalid{% endif %}" 
+                                        id="id_type" name="id_type" required>
+                                    <option value="">Выберите тип</option>
+                                    <option value="0" {% if form.id_type.value == '0' %}selected{% endif %}>На основе классификатора</option>
+                                    <option value="1" {% if form.id_type.value == '1' %}selected{% endif %}>Локальный справочник</option>
+                                </select>
+                                {% if form.id_type.errors %}
+                                    <div class="invalid-feedback">{{ form.id_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_status" class="form-label">Статус *</label>
+                                <select class="form-select {% if form.id_status.errors %}is-invalid{% endif %}" 
+                                        id="id_status" name="id_status" required>
+                                    <option value="">Выберите статус</option>
+                                    <option value="0" {% if form.id_status.value == '0' %}selected{% endif %}>Не действующий</option>
+                                    <option value="1" {% if form.id_status.value == '1' %}selected{% endif %}>Действующий</option>
+                                </select>
+                                {% if form.id_status.errors %}
+                                    <div class="invalid-feedback">{{ form.id_status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Период действия -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h3 class="section-title">Период действия</h3>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="start_date" class="form-label">Дата начала *</label>
+                                <input type="date" class="form-control {% if form.start_date.errors %}is-invalid{% endif %}" 
+                                       id="start_date" name="start_date" 
+                                       value="{% if form.start_date.value %}{{ form.start_date.value|date:'Y-m-d' }}{% endif %}" required>
+                                {% if form.start_date.errors %}
+                                    <div class="invalid-feedback">{{ form.start_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="finish_date" class="form-label">Дата окончания</label>
+                                <input type="date" class="form-control {% if form.finish_date.errors %}is-invalid{% endif %}" 
+                                       id="finish_date" name="finish_date" 
+                                       value="{% if form.finish_date.value %}{{ form.finish_date.value|date:'Y-m-d' }}{% endif %}">
+                                <small class="text-muted">Оставьте пустым для бессрочного действия</small>
+                                {% if form.finish_date.errors %}
+                                    <div class="invalid-feedback">{{ form.finish_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="classifier" class="form-label">Базовый классификатор</label>
+                                <input type="text" class="form-control {% if form.classifier.errors %}is-invalid{% endif %}" 
+                                       id="classifier" name="classifier" value="{{ form.classifier.value|default:'' }}">
+                                {% if form.classifier.errors %}
+                                    <div class="invalid-feedback">{{ form.classifier.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="gko" class="form-label">ГКО</label>
+                                <input type="text" class="form-control {% if form.gko.errors %}is-invalid{% endif %}" 
+                                       id="gko" name="gko" value="{{ form.gko.value|default:'' }}">
+                                {% if form.gko.errors %}
+                                    <div class="invalid-feedback">{{ form.gko.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Многоязычные названия -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-language"></i>
+                        </div>
+                        <h3 class="section-title">Многоязычные названия</h3>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name_bel" class="form-label">Название (бел.)</label>
+                                <input type="text" class="form-control {% if form.name_bel.errors %}is-invalid{% endif %}" 
+                                       id="name_bel" name="name_bel" value="{{ form.name_bel.value|default:'' }}">
+                                {% if form.name_bel.errors %}
+                                    <div class="invalid-feedback">{{ form.name_bel.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="description_bel" class="form-label">Описание (бел.)</label>
+                                <textarea class="form-control {% if form.description_bel.errors %}is-invalid{% endif %}" 
+                                          id="description_bel" name="description_bel" rows="3">{{ form.description_bel.value|default:'' }}</textarea>
+                                {% if form.description_bel.errors %}
+                                    <div class="invalid-feedback">{{ form.description_bel.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name_eng" class="form-label">Название (англ.)</label>
+                                <input type="text" class="form-control {% if form.name_eng.errors %}is-invalid{% endif %}" 
+                                       id="name_eng" name="name_eng" value="{{ form.name_eng.value|default:'' }}">
+                                {% if form.name_eng.errors %}
+                                    <div class="invalid-feedback">{{ form.name_eng.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="description_eng" class="form-label">Описание (англ.)</label>
+                                <textarea class="form-control {% if form.description_eng.errors %}is-invalid{% endif %}" 
+                                          id="description_eng" name="description_eng" rows="3">{{ form.description_eng.value|default:'' }}</textarea>
+                                {% if form.description_eng.errors %}
+                                    <div class="invalid-feedback">{{ form.description_eng.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Дополнительная информация -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <h3 class="section-title">Дополнительная информация</h3>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="organization" class="form-label">Ответственная организация</label>
+                                <input type="text" class="form-control {% if form.organization.errors %}is-invalid{% endif %}" 
+                                       id="organization" name="organization" value="{{ form.organization.value|default:'' }}">
+                                {% if form.organization.errors %}
+                                    <div class="invalid-feedback">{{ form.organization.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Кнопки действий -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div>
+                        <a href="{% url 'dictionary_description' dictionary_id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Назад к описанию
+                        </a>
+                        <a href="{% url 'dictionary_list' %}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-list"></i> К списку
+                        </a>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Сохранить изменения
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('editDictionaryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Показываем индикатор загрузки
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Сохранение...';
+    submitBtn.disabled = true;
+    
+    const formData = new FormData(this);
+    const url = this.action;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Показываем сообщение об успехе
+            showAlert('success', data.message);
+            
+            // Перенаправляем на список справочников через 2 секунды
+            setTimeout(() => {
+                window.location.href = '{% url "dictionary_list" %}';
+            }, 2000);
+        } else {
+            // Показываем ошибки
+            showAlert('danger', data.error || 'Произошла ошибка при сохранении');
+            
+            // Восстанавливаем кнопку
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        showAlert('danger', 'Ошибка соединения с сервером');
+        
+        // Восстанавливаем кнопку
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.form-container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Автоматически скрываем через 5 секунд
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

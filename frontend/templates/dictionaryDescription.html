@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ dictionary.name }} - Описание справочника | BelStat{% endblock %}
+
+{% block meta_description %}Описание справочника {{ dictionary.name }} - код: {{ dictionary.code }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .description-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+    }
+    
+    .description-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .description-header .code {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .description-content {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        border-left: 4px solid #667eea;
+    }
+    
+    .info-card h3 {
+        color: #495057;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+        min-width: 120px;
+    }
+    
+    .info-value {
+        color: #495057;
+        text-align: right;
+        flex: 1;
+        margin-left: 1rem;
+    }
+    
+    .description-text {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .description-text h3 {
+        color: #495057;
+        margin-bottom: 1rem;
+    }
+    
+    .description-text p {
+        color: #6c757d;
+        line-height: 1.6;
+        margin-bottom: 0;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-number {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-label {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .btn-custom {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary-custom {
+        background: #667eea;
+        color: white;
+        border: none;
+    }
+    
+    .btn-primary-custom:hover {
+        background: #5a6fd8;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary-custom {
+        background: #6c757d;
+        color: white;
+        border: none;
+    }
+    
+    .btn-secondary-custom:hover {
+        background: #5a6268;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .btn-success-custom {
+        background: #28a745;
+        color: white;
+        border: none;
+    }
+    
+    .btn-success-custom:hover {
+        background: #218838;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .btn-warning-custom {
+        background: #ffc107;
+        color: #212529;
+        border: none;
+    }
+    
+    .btn-warning-custom:hover {
+        background: #e0a800;
+        color: #212529;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+    }
+    
+    .btn-info-custom {
+        background: #17a2b8;
+        color: white;
+        border: none;
+    }
+    
+    .btn-info-custom:hover {
+        background: #138496;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(23, 162, 184, 0.4);
+    }
+    
+    .empty-value {
+        color: #adb5bd;
+        font-style: italic;
+    }
+    
+    @media (max-width: 768px) {
+        .description-header h1 {
+            font-size: 2rem;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn-custom {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Заголовок страницы -->
+    <div class="description-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1>{{ dictionary.name }}</h1>
+                <div class="code">Код: {{ dictionary.code }}</div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="stats-card">
+                    <div class="stats-number">{{ dictionary.total_items }}</div>
+                    <div class="stats-label">элементов</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основное описание -->
+    {% if dictionary.description %}
+    <div class="description-content">
+        <div class="description-text">
+            <h3><i class="fas fa-info-circle"></i> Описание справочника</h3>
+            <p>{{ dictionary.description }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Основная информация -->
+    <div class="description-content">
+        <h3 class="mb-4"><i class="fas fa-list-alt"></i> Основная информация</h3>
+        <div class="info-grid">
+            <div class="info-card">
+                <h3><i class="fas fa-calendar-alt"></i> Даты действия</h3>
+                <div class="info-item">
+                    <span class="info-label">Дата начала:</span>
+                    <span class="info-value">
+                        {% if dictionary.start_date %}
+                            {{ dictionary.start_date }}
+                        {% else %}
+                            <span class="empty-value">Не указана</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Дата окончания:</span>
+                    <span class="info-value">
+                        {% if dictionary.finish_date %}
+                            {{ dictionary.finish_date }}
+                        {% else %}
+                            <span class="empty-value">Не указана</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3><i class="fas fa-tags"></i> Классификация</h3>
+                <div class="info-item">
+                    <span class="info-label">Статус:</span>
+                    <span class="info-value">
+                        {% if dictionary.status %}
+                            {{ dictionary.status }}
+                        {% else %}
+                            <span class="empty-value">Не указан</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Тип:</span>
+                    <span class="info-value">
+                        {% if dictionary.type %}
+                            {{ dictionary.type }}
+                        {% else %}
+                            <span class="empty-value">Не указан</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">ГКО:</span>
+                    <span class="info-value">
+                        {% if dictionary.gko %}
+                            {{ dictionary.gko }}
+                        {% else %}
+                            <span class="empty-value">Не указан</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3><i class="fas fa-building"></i> Организация</h3>
+                <div class="info-item">
+                    <span class="info-label">Ответственная:</span>
+                    <span class="info-value">
+                        {% if dictionary.organization %}
+                            {{ dictionary.organization }}
+                        {% else %}
+                            <span class="empty-value">Не указана</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Классификатор:</span>
+                    <span class="info-value">
+                        {% if dictionary.classifier %}
+                            {{ dictionary.classifier }}
+                        {% else %}
+                            <span class="empty-value">Не указан</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Многоязычная информация -->
+    {% if dictionary.name_eng or dictionary.name_bel or dictionary.description_eng or dictionary.description_bel %}
+    <div class="description-content">
+        <h3 class="mb-4"><i class="fas fa-language"></i> Многоязычная информация</h3>
+        <div class="info-grid">
+            {% if dictionary.name_eng or dictionary.description_eng %}
+            <div class="info-card">
+                <h3><i class="fas fa-flag-usa"></i> Английский язык</h3>
+                {% if dictionary.name_eng %}
+                <div class="info-item">
+                    <span class="info-label">Название:</span>
+                    <span class="info-value">{{ dictionary.name_eng }}</span>
+                </div>
+                {% endif %}
+                {% if dictionary.description_eng %}
+                <div class="info-item">
+                    <span class="info-label">Описание:</span>
+                    <span class="info-value">{{ dictionary.description_eng }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if dictionary.name_bel or dictionary.description_bel %}
+            <div class="info-card">
+                <h3><i class="fas fa-flag"></i> Белорусский язык</h3>
+                {% if dictionary.name_bel %}
+                <div class="info-item">
+                    <span class="info-label">Название:</span>
+                    <span class="info-value">{{ dictionary.name_bel }}</span>
+                </div>
+                {% endif %}
+                {% if dictionary.description_bel %}
+                <div class="info-item">
+                    <span class="info-label">Описание:</span>
+                    <span class="info-value">{{ dictionary.description_bel }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Кнопки действий -->
+    <div class="description-content">
+        <div class="action-buttons">
+            <a href="{% url 'dictionary_table' dictionary.id %}" class="btn-custom btn-primary-custom">
+                <i class="fas fa-table"></i>
+                Просмотр таблицы
+            </a>
+            <a href="{% url 'dictionary_tree' dictionary.id %}" class="btn-custom btn-success-custom">
+                <i class="fas fa-sitemap"></i>
+                Просмотр дерева
+            </a>
+            {% if permissions.can_edit %}
+                <a href="{% url 'dictionary_edit' dictionary.id %}" class="btn-custom btn-warning-custom">
+                    <i class="fas fa-edit"></i>
+                    Редактировать справочник
+                </a>
+            {% else %}
+                <a href="{% url 'dictionary_view' dictionary.id %}" class="btn-custom btn-info-custom">
+                    <i class="fas fa-eye"></i>
+                    Просмотреть справочник
+                </a>
+            {% endif %}
+            <a href="{% url 'dictionary_list' %}" class="btn-custom btn-secondary-custom">
+                <i class="fas fa-arrow-left"></i>
+                К списку справочников
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
