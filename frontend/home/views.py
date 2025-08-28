@@ -42,10 +42,25 @@ def dictionaries_page(request):
         dictionaries = []
         messages.error(request, f'Ошибка при получении словарей: {str(e)}')
     
+    # Получаем информацию о правах пользователя для каждого справочника
+    user_permissions = {}
+    if isinstance(dictionaries, list):
+        for dictionary in dictionaries:
+            dictionary_id = dictionary.get('id')
+            if dictionary_id:
+                try:
+                    from Dictionary.permissions import can_edit_dictionary
+                    permissions = can_edit_dictionary(request, dictionary_id)
+                    user_permissions[dictionary_id] = permissions
+                except Exception as e:
+                    # В случае ошибки предполагаем только просмотр
+                    user_permissions[dictionary_id] = {'can_edit': False, 'can_view': True}
+    
     context = {
         'dictionaries': dictionaries,
         'total_count': len(dictionaries) if isinstance(dictionaries, list) else 0,
-        'access_token': request.session.get('access', '')  # Добавляем токен в контекст
+        'access_token': request.session.get('access', ''),  # Добавляем токен в контекст
+        'user_permissions': user_permissions  # Добавляем права пользователя
     }
     
     return render(request, 'dictionaries.html', context)

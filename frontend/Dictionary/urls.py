@@ -16,6 +16,7 @@ urlpatterns =[
     path('<int:dictionary_id>/tree/', views.dictionary_tree_view, name='dictionary_tree'),
     path('<int:pk>/edit/', views.dictionary_edit, name='dictionary_edit'),
     path('<int:pk>/edit-description/', views.dictionary_edit_description, name='dictionary_edit_description'),
+    path('<int:pk>/view-modal/', views.dictionary_view_modal, name='dictionary_view_modal'),
     path('<int:pk>/test-description/', views.test_description_url, name='test_description_url'),
     path('<int:pk>/delete/', views.dictionary_delete, name='dictionary_delete'),
     path('save/', views.save_dictionary_view, name='save_dictionary'),

@@ -11,7 +11,9 @@
   "python.linting.pylintEnabled": false,
   "editor.formatOnSave": true,
   "python.formatting.provider": "black",
-  "python.linting.flake8Enabled": true
+  "python.linting.flake8Enabled": true,
+  "html.format.enable": false,
+  "html.suggest.html5": false,
   "editor.formatOnSave": false,
   "editor.formatOnSaveMode": "modifications",
   "[html]": {

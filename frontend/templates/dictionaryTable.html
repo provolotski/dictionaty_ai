@@ -320,24 +320,28 @@ h2 {
                 <table class="table table-striped table-hover" id="dictionaryTable">
                     <thead class="table-dark">
                         <tr>
-                            <th>Код</th>
-                            <th>Наименование</th>
-                            <th>Аббревиатура</th>
-                            <th>Множитель</th>
-                            <th>Шкала</th>
-                            <th>Код родительской позиции</th>
+                            <th>ID</th>
+                            <th>Parent ID</th>
+                            {% if items %}
+                                {% for key, value in items.0.items %}
+                                    {% if key != 'id' and key != 'parent_id' and key != 'parent_code' %}
+                                        <th>{{ key }}</th>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
                             <th>Действия</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in items %}
                         <tr data-item-id="{{ item.id }}">
-                            <td><strong>{{ item.Код|default:"-" }}</strong></td>
-                            <td>{{ item.Наименование|default:"-" }}</td>
-                            <td>{{ item.Аббревиатура|default:"-" }}</td>
-                            <td>{{ item.Множитель|default:"-" }}</td>
-                            <td>{{ item.Шкала|default:"-" }}</td>
-                            <td>{{ item.Код_родительской_позиции|default:"-" }}</td>
+                            <td><strong>{{ item.id }}</strong></td>
+                            <td>{{ item.parent_id|default:"-" }}</td>
+                            {% for key, value in item.items %}
+                                {% if key != 'id' and key != 'parent_id' and key != 'parent_code' %}
+                                    <td>{{ value|default:"-" }}</td>
+                                {% endif %}
+                            {% endfor %}
                             <td>
                                 <button class="btn btn-sm btn-outline-info" onclick="showItemDetails({{ item.id }})">
                                     <i class="bi bi-eye"></i>
@@ -346,7 +350,7 @@ h2 {
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center text-muted">
+                            <td colspan="20" class="text-center text-muted">
                                 <i class="bi bi-inbox"></i> Нет данных для отображения
                             </td>
                         </tr>

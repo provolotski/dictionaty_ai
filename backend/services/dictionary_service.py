@@ -300,6 +300,31 @@ class DictionaryService:
         except Exception as e:
             logger.error(f"Ошибка получения значений справочника {dictionary_id}: {e}")
             return []
+
+    @cached("dictionary_values_with_attrs", ttl=600)  # 10 минут
+    async def get_dictionary_values_with_attrs(
+        self, 
+        dictionary_id: int, 
+        target_date: datetime.date = None
+    ) -> list[dict]:
+        """
+        Получение значений справочника с атрибутами в JSON формате
+        
+        Args:
+            dictionary_id: ID справочника
+            target_date: Дата (опционально)
+            
+        Returns:
+            list[dict]: Список элементов с полями id, parent_id, parent_code, attrs
+        """
+        try:
+            if target_date is None:
+                target_date = date.today()
+            
+            return await self.model.get_dictionary_values_with_attrs(dictionary_id, target_date)
+        except Exception as e:
+            logger.error(f"Ошибка получения значений справочника с attrs {dictionary_id}: {e}")
+            return []
     
     @invalidate_cache("dictionary_values")  # Инвалидируем кэш значений справочника
     async def import_csv_data(

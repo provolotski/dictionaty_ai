@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,7 @@
             min-height: 100vh;
             background: var(--gray-50);
         }
-        
+
         .navbar {
             background: var(--white);
             box-shadow: var(--shadow-sm);
@@ -21,14 +22,14 @@
             top: 0;
             z-index: 1000;
         }
-        
+
         .navbar-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 1rem 0;
         }
-        
+
         .navbar-brand {
             font-size: 1.5rem;
             font-weight: 700;
@@ -38,18 +39,18 @@
             align-items: center;
             gap: 0.75rem;
         }
-        
+
         .navbar-brand i {
             font-size: 2rem;
         }
-        
+
         .navbar-nav {
             display: flex;
             list-style: none;
             gap: 2rem;
             align-items: center;
         }
-        
+
         .nav-link {
             color: var(--gray-600);
             font-weight: 500;
@@ -59,22 +60,22 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .nav-link:hover {
             color: var(--primary-green);
         }
-        
+
         .nav-link.active {
             color: var(--primary-green);
         }
-        
+
         .user-menu {
             position: relative;
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
-        
+
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -88,15 +89,15 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        
+
         .user-avatar:hover {
             transform: scale(1.05);
         }
-        
+
         .main-content {
             padding: 2rem 0;
         }
-        
+
         .search-header {
             background: var(--gradient-primary);
             color: var(--white);
@@ -105,7 +106,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .search-header::before {
             content: '';
             position: absolute;
@@ -116,26 +117,26 @@
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
             opacity: 0.3;
         }
-        
+
         .search-header-content {
             position: relative;
             z-index: 1;
             text-align: center;
         }
-        
+
         .search-title {
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .search-subtitle {
             font-size: 1.125rem;
             opacity: 0.9;
             margin-bottom: 2rem;
         }
-        
+
         .search-form-container {
             background: var(--white);
             border-radius: 1rem;
@@ -145,22 +146,22 @@
             max-width: 800px;
             margin: 0 auto;
         }
-        
+
         .search-form {
             display: grid;
             gap: 1.5rem;
         }
-        
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
         }
-        
+
         .form-group {
             margin-bottom: 0;
         }
-        
+
         .form-label {
             display: block;
             font-size: 0.875rem;
@@ -168,7 +169,7 @@
             color: var(--gray-700);
             margin-bottom: 0.5rem;
         }
-        
+
         .form-input {
             width: 100%;
             padding: 0.875rem 1rem;
@@ -179,13 +180,13 @@
             color: var(--gray-900);
             transition: all 0.2s ease;
         }
-        
+
         .form-input:focus {
             outline: none;
             border-color: var(--primary-green);
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
-        
+
         .form-select {
             width: 100%;
             padding: 0.875rem 1rem;
@@ -197,13 +198,13 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        
+
         .form-select:focus {
             outline: none;
             border-color: var(--primary-green);
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
-        
+
         .search-btn {
             background: var(--gradient-primary);
             color: var(--white);
@@ -217,21 +218,21 @@
             box-shadow: var(--shadow-md);
             width: 100%;
         }
-        
+
         .search-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: var(--shadow-lg);
         }
-        
+
         .search-btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
         }
-        
+
         .search-btn.loading {
             pointer-events: none;
         }
-        
+
         .search-btn.loading::after {
             content: '';
             position: absolute;
@@ -245,11 +246,11 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         .search-results {
             margin-top: 3rem;
         }
-        
+
         .results-header {
             display: flex;
             justify-content: space-between;
@@ -258,23 +259,23 @@
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--gray-200);
         }
-        
+
         .results-title {
             font-size: 1.5rem;
             font-weight: 600;
             color: var(--gray-900);
         }
-        
+
         .results-count {
             color: var(--gray-600);
             font-size: 0.875rem;
         }
-        
+
         .results-grid {
             display: grid;
             gap: 1.5rem;
         }
-        
+
         .result-card {
             background: var(--white);
             border-radius: 1rem;
@@ -285,7 +286,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .result-card::before {
             content: '';
             position: absolute;
@@ -295,26 +296,26 @@
             height: 4px;
             background: var(--gradient-primary);
         }
-        
+
         .result-card:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-lg);
         }
-        
+
         .result-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 1rem;
         }
-        
+
         .result-title {
             font-size: 1.125rem;
             font-weight: 600;
             color: var(--gray-900);
             margin-bottom: 0.5rem;
         }
-        
+
         .result-code {
             background: var(--gradient-accent);
             color: var(--white);
@@ -324,13 +325,13 @@
             font-weight: 600;
             font-family: 'Courier New', monospace;
         }
-        
+
         .result-description {
             color: var(--gray-600);
             line-height: 1.6;
             margin-bottom: 1rem;
         }
-        
+
         .result-meta {
             display: flex;
             gap: 1rem;
@@ -338,23 +339,23 @@
             font-size: 0.875rem;
             color: var(--gray-500);
         }
-        
+
         .meta-item {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .meta-item i {
             color: var(--primary-green);
         }
-        
+
         .result-actions {
             margin-top: 1rem;
             display: flex;
             gap: 0.75rem;
         }
-        
+
         .action-btn {
             background: transparent;
             color: var(--primary-green);
@@ -369,29 +370,29 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .action-btn:hover {
             background: var(--primary-green);
             color: var(--white);
         }
-        
+
         .no-results {
             text-align: center;
             padding: 3rem 2rem;
             color: var(--gray-600);
         }
-        
+
         .no-results i {
             font-size: 4rem;
             color: var(--gray-300);
             margin-bottom: 1rem;
         }
-        
+
         .no-results h3 {
             color: var(--gray-700);
             margin-bottom: 1rem;
         }
-        
+
         .filters-panel {
             background: var(--white);
             border-radius: 1rem;
@@ -400,7 +401,7 @@
             border: 1px solid var(--gray-200);
             margin-bottom: 2rem;
         }
-        
+
         .filters-header {
             display: flex;
             justify-content: space-between;
@@ -409,13 +410,13 @@
             padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--gray-200);
         }
-        
+
         .filters-title {
             font-size: 1.125rem;
             font-weight: 600;
             color: var(--gray-900);
         }
-        
+
         .clear-filters {
             background: transparent;
             color: var(--gray-500);
@@ -424,17 +425,17 @@
             font-size: 0.875rem;
             text-decoration: underline;
         }
-        
+
         .clear-filters:hover {
             color: var(--primary-green);
         }
-        
+
         .filters-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
         }
-        
+
         .pagination {
             display: flex;
             justify-content: center;
@@ -442,7 +443,7 @@
             gap: 0.5rem;
             margin-top: 2rem;
         }
-        
+
         .page-btn {
             background: var(--white);
             color: var(--gray-600);
@@ -453,43 +454,44 @@
             transition: all 0.2s ease;
             text-decoration: none;
         }
-        
+
         .page-btn:hover {
             background: var(--gray-50);
             border-color: var(--primary-green);
             color: var(--primary-green);
         }
-        
+
         .page-btn.active {
             background: var(--primary-green);
             color: var(--white);
             border-color: var(--primary-green);
         }
-        
+
         .page-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         @media (max-width: 768px) {
             .navbar-nav {
                 display: none;
             }
-            
+
             .search-title {
                 font-size: 2rem;
             }
-            
+
             .form-row {
                 grid-template-columns: 1fr;
             }
-            
+
             .filters-grid {
                 grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
+
 <body>
     <!-- Навигация -->
     <nav class="navbar">
@@ -499,30 +501,30 @@
                     <i class="fas fa-chart-line"></i>
                     BelStat
                 </a>
-                
+
                 <ul class="navbar-nav">
                     <li><a href="/" class="nav-link">
-                        <i class="fas fa-home"></i>
-                        Главная
-                    </a></li>
+                            <i class="fas fa-home"></i>
+                            Главная
+                        </a></li>
                     <li><a href="/dictionaries" class="nav-link">
-                        <i class="fas fa-book"></i>
-                        Словари
-                    </a></li>
+                            <i class="fas fa-book"></i>
+                            Словари
+                        </a></li>
                     <li><a href="/search" class="nav-link active">
-                        <i class="fas fa-search"></i>
-                        Поиск
-                    </a></li>
+                            <i class="fas fa-search"></i>
+                            Поиск
+                        </a></li>
                     <li><a href="/import" class="nav-link">
-                        <i class="fas fa-upload"></i>
-                        Импорт
-                    </a></li>
+                            <i class="fas fa-upload"></i>
+                            Импорт
+                        </a></li>
                     <li><a href="/export" class="nav-link">
-                        <i class="fas fa-download"></i>
-                        Экспорт
-                    </a></li>
+                            <i class="fas fa-download"></i>
+                            Экспорт
+                        </a></li>
                 </ul>
-                
+
                 <div class="user-menu">
                     <div class="user-avatar" title="Пользователь">
                         A
@@ -535,7 +537,7 @@
             </div>
         </div>
     </nav>
-    
+
     <!-- Основной контент -->
     <main class="main-content">
         <!-- Заголовок поиска -->
@@ -544,51 +546,43 @@
                 <div class="search-header-content">
                     <h1 class="search-title">Поиск по словарям</h1>
                     <p class="search-subtitle">Найдите нужные позиции в иерархических словарях и классификаторах</p>
-                    
+
                     <!-- Форма поиска -->
                     <div class="search-form-container">
                         <form class="search-form" id="searchForm">
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="searchQuery" class="form-label">Поисковый запрос</label>
-                                    <input type="text" 
-                                           id="searchQuery" 
-                                           name="query" 
-                                           class="form-input" 
-                                           placeholder="Введите название, код или описание"
-                                           required>
+                                    <input type="text" id="searchQuery" name="query" class="form-input"
+                                        placeholder="Введите название, код или описание" required>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="dictionary" class="form-label">Словарь</label>
                                     <select id="dictionary" name="dictionary" class="form-select">
-                                        <option value="">Все словари</option>
+                                        <option value="">Все справочники</option>
                                         <option value="okrb">ОКРБ - Общероссийский классификатор</option>
                                         <option value="okpd">ОКПД - Общероссийский классификатор продукции</option>
-                                        <option value="okved">ОКВЭД - Общероссийский классификатор видов экономической деятельности</option>
-                                        <option value="okato">ОКАТО - Общероссийский классификатор административно-территориальных объектов</option>
+                                        <option value="okved">ОКВЭД - Общероссийский классификатор видов экономической
+                                            деятельности</option>
+                                        <option value="okato">ОКАТО - Общероссийский классификатор
+                                            административно-территориальных объектов</option>
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="dateFrom" class="form-label">Дата начала периода</label>
-                                    <input type="date" 
-                                           id="dateFrom" 
-                                           name="date_from" 
-                                           class="form-input">
+                                    <input type="date" id="dateFrom" name="date_from" class="form-input">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="dateTo" class="form-label">Дата окончания периода</label>
-                                    <input type="date" 
-                                           id="dateTo" 
-                                           name="date_to" 
-                                           class="form-input">
+                                    <input type="date" id="dateTo" name="date_to" class="form-input">
                                 </div>
                             </div>
-                            
+
                             <button type="submit" class="search-btn" id="searchBtn">
                                 <i class="fas fa-search"></i>
                                 Начать поиск
@@ -598,7 +592,7 @@
                 </div>
             </div>
         </section>
-        
+
         <div class="container">
             <!-- Панель фильтров -->
             <div class="filters-panel" id="filtersPanel" style="display: none;">
@@ -606,7 +600,7 @@
                     <h3 class="filters-title">Дополнительные фильтры</h3>
                     <button class="clear-filters" onclick="clearFilters()">Очистить фильтры</button>
                 </div>
-                
+
                 <div class="filters-grid">
                     <div class="form-group">
                         <label for="positionType" class="form-label">Тип позиции</label>
@@ -619,7 +613,7 @@
                             <option value="item">Позиция</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="completeness" class="form-label">Полнота</label>
                         <select id="completeness" name="completeness" class="form-select">
@@ -628,7 +622,7 @@
                             <option value="incomplete">Неполные</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="language" class="form-label">Язык</label>
                         <select id="language" name="language" class="form-select">
@@ -638,7 +632,7 @@
                             <option value="en">Английский</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="sortBy" class="form-label">Сортировка</label>
                         <select id="sortBy" name="sort_by" class="form-select">
@@ -650,34 +644,34 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Результаты поиска -->
             <div class="search-results" id="searchResults" style="display: none;">
                 <div class="results-header">
                     <h2 class="results-title">Результаты поиска</h2>
                     <span class="results-count" id="resultsCount">0 результатов</span>
                 </div>
-                
+
                 <div class="results-grid" id="resultsGrid">
                     <!-- Результаты будут добавлены динамически -->
                 </div>
-                
+
                 <!-- Пагинация -->
                 <div class="pagination" id="pagination" style="display: none;">
                     <button class="page-btn" id="prevPage" onclick="changePage(-1)">
                         <i class="fas fa-chevron-left"></i>
                         Назад
                     </button>
-                    
+
                     <div id="pageNumbers"></div>
-                    
+
                     <button class="page-btn" id="nextPage" onclick="changePage(1)">
                         Вперед
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
             </div>
-            
+
             <!-- Сообщение об отсутствии результатов -->
             <div class="no-results" id="noResults" style="display: none;">
                 <i class="fas fa-search"></i>
@@ -686,7 +680,7 @@
             </div>
         </div>
     </main>
-    
+
     <script>
         class SearchForm {
             constructor() {
@@ -698,50 +692,50 @@
                 this.resultsGrid = document.getElementById('resultsGrid');
                 this.resultsCount = document.getElementById('resultsCount');
                 this.pagination = document.getElementById('pagination');
-                
+
                 this.currentPage = 1;
                 this.totalPages = 1;
                 this.searchPerformed = false;
-                
+
                 this.init();
             }
-            
+
             init() {
                 this.setupEventListeners();
                 this.setupAnimations();
             }
-            
+
             setupEventListeners() {
                 this.form.addEventListener('submit', (e) => this.handleSubmit(e));
-                
+
                 // Показать/скрыть дополнительные фильтры
                 const showFiltersBtn = document.createElement('button');
                 showFiltersBtn.type = 'button';
                 showFiltersBtn.className = 'btn btn-secondary btn-sm';
                 showFiltersBtn.innerHTML = '<i class="fas fa-filter"></i> Дополнительные фильтры';
                 showFiltersBtn.onclick = () => this.toggleFilters();
-                
+
                 this.form.appendChild(showFiltersBtn);
             }
-            
+
             setupAnimations() {
                 // Анимация появления формы
                 this.form.style.opacity = '0';
                 this.form.style.transform = 'translateY(20px)';
-                
+
                 setTimeout(() => {
                     this.form.style.transition = 'all 0.6s ease-out';
                     this.form.style.opacity = '1';
                     this.form.style.transform = 'translateY(0)';
                 }, 100);
             }
-            
+
             toggleFilters() {
                 if (this.filtersPanel.style.display === 'none') {
                     this.filtersPanel.style.display = 'block';
                     this.filtersPanel.style.opacity = '0';
                     this.filtersPanel.style.transform = 'translateY(-10px)';
-                    
+
                     setTimeout(() => {
                         this.filtersPanel.style.transition = 'all 0.3s ease';
                         this.filtersPanel.style.opacity = '1';
@@ -750,27 +744,27 @@
                 } else {
                     this.filtersPanel.style.opacity = '0';
                     this.filtersPanel.style.transform = 'translateY(-10px)';
-                    
+
                     setTimeout(() => {
                         this.filtersPanel.style.display = 'none';
                     }, 300);
                 }
             }
-            
+
             async handleSubmit(e) {
                 e.preventDefault();
-                
+
                 if (!this.validateForm()) {
                     return;
                 }
-                
+
                 this.setLoadingState(true);
                 this.currentPage = 1;
-                
+
                 try {
                     const formData = new FormData(this.form);
                     formData.append('page', this.currentPage);
-                    
+
                     // Добавляем дополнительные фильтры
                     const additionalFilters = this.getAdditionalFilters();
                     Object.keys(additionalFilters).forEach(key => {
@@ -778,7 +772,7 @@
                             formData.append(key, additionalFilters[key]);
                         }
                     });
-                    
+
                     const response = await fetch('/api/search/', {
                         method: 'POST',
                         body: formData,
@@ -787,15 +781,15 @@
                             'X-CSRFToken': this.getCSRFToken()
                         }
                     });
-                    
+
                     const result = await response.json();
-                    
+
                     if (response.ok) {
                         this.handleSearchResults(result);
                     } else {
                         this.handleError(result.error || 'Ошибка поиска');
                     }
-                    
+
                 } catch (error) {
                     console.error('Ошибка при поиске:', error);
                     this.handleError('Ошибка сети. Проверьте подключение к интернету.');
@@ -803,18 +797,18 @@
                     this.setLoadingState(false);
                 }
             }
-            
+
             validateForm() {
                 const query = this.form.querySelector('#searchQuery').value.trim();
-                
+
                 if (!query) {
                     this.showFieldError('searchQuery', 'Введите поисковый запрос');
                     return false;
                 }
-                
+
                 return true;
             }
-            
+
             showFieldError(fieldId, message) {
                 const field = this.form.querySelector(`#${fieldId}`);
                 const errorDiv = document.createElement('div');
@@ -828,16 +822,16 @@
                     gap: 0.25rem;
                 `;
                 errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i>${message}`;
-                
+
                 // Удаляем существующую ошибку
                 const existingError = field.parentElement.querySelector('.field-error');
                 if (existingError) {
                     existingError.remove();
                 }
-                
+
                 field.parentElement.appendChild(errorDiv);
                 field.style.borderColor = 'var(--error)';
-                
+
                 // Автоматически убираем ошибку через 3 секунды
                 setTimeout(() => {
                     if (errorDiv.parentElement) {
@@ -846,7 +840,7 @@
                     }
                 }, 3000);
             }
-            
+
             getAdditionalFilters() {
                 return {
                     position_type: document.getElementById('positionType').value,
@@ -855,7 +849,7 @@
                     sort_by: document.getElementById('sortBy').value
                 };
             }
-            
+
             setLoadingState(loading) {
                 if (loading) {
                     this.searchBtn.classList.add('loading');
@@ -867,43 +861,43 @@
                     this.searchBtn.innerHTML = '<i class="fas fa-search"></i> Начать поиск';
                 }
             }
-            
+
             handleSearchResults(result) {
                 this.searchPerformed = true;
-                
+
                 if (result.results && result.results.length > 0) {
                     this.showResults(result);
                 } else {
                     this.showNoResults();
                 }
             }
-            
+
             showResults(result) {
                 this.searchResults.style.display = 'block';
                 this.noResults.style.display = 'none';
-                
+
                 this.resultsCount.textContent = `${result.total || result.results.length} результатов`;
-                
+
                 // Очищаем предыдущие результаты
                 this.resultsGrid.innerHTML = '';
-                
+
                 // Добавляем новые результаты
                 result.results.forEach(item => {
                     const resultCard = this.createResultCard(item);
                     this.resultsGrid.appendChild(resultCard);
                 });
-                
+
                 // Показываем пагинацию если есть
                 if (result.total_pages > 1) {
                     this.showPagination(result.total_pages, result.current_page);
                 } else {
                     this.pagination.style.display = 'none';
                 }
-                
+
                 // Анимация появления результатов
                 this.animateResults();
             }
-            
+
             createResultCard(item) {
                 const card = document.createElement('div');
                 card.className = 'result-card';
@@ -947,30 +941,30 @@
                         </button>
                     </div>
                 `;
-                
+
                 return card;
             }
-            
+
             showNoResults() {
                 this.searchResults.style.display = 'none';
                 this.noResults.style.display = 'block';
                 this.pagination.style.display = 'none';
             }
-            
+
             showPagination(totalPages, currentPage) {
                 this.totalPages = totalPages;
                 this.currentPage = currentPage;
-                
+
                 this.pagination.style.display = 'flex';
-                
+
                 // Обновляем кнопки
                 document.getElementById('prevPage').disabled = currentPage <= 1;
                 document.getElementById('nextPage').disabled = currentPage >= totalPages;
-                
+
                 // Обновляем номера страниц
                 const pageNumbers = document.getElementById('pageNumbers');
                 pageNumbers.innerHTML = '';
-                
+
                 for (let i = 1; i <= totalPages; i++) {
                     if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
                         const pageBtn = document.createElement('button');
@@ -986,31 +980,31 @@
                     }
                 }
             }
-            
+
             async goToPage(page) {
                 this.currentPage = page;
                 await this.performSearch();
             }
-            
+
             async changePage(delta) {
                 const newPage = this.currentPage + delta;
                 if (newPage >= 1 && newPage <= this.totalPages) {
                     await this.goToPage(newPage);
                 }
             }
-            
+
             async performSearch() {
                 // Повторяем поиск с новой страницей
                 const formData = new FormData(this.form);
                 formData.append('page', this.currentPage);
-                
+
                 const additionalFilters = this.getAdditionalFilters();
                 Object.keys(additionalFilters).forEach(key => {
                     if (additionalFilters[key]) {
                         formData.append(key, additionalFilters[key]);
                     }
                 });
-                
+
                 try {
                     const response = await fetch('/api/search/', {
                         method: 'POST',
@@ -1020,26 +1014,26 @@
                             'X-CSRFToken': this.getCSRFToken()
                         }
                     });
-                    
+
                     const result = await response.json();
-                    
+
                     if (response.ok) {
                         this.handleSearchResults(result);
                         // Прокручиваем к результатам
                         document.getElementById('searchResults').scrollIntoView({ behavior: 'smooth' });
                     }
-                    
+
                 } catch (error) {
                     console.error('Ошибка при смене страницы:', error);
                 }
             }
-            
+
             animateResults() {
                 const cards = this.resultsGrid.querySelectorAll('.result-card');
                 cards.forEach((card, index) => {
                     card.style.opacity = '0';
                     card.style.transform = 'translateY(20px)';
-                    
+
                     setTimeout(() => {
                         card.style.transition = 'all 0.6s ease-out';
                         card.style.opacity = '1';
@@ -1047,43 +1041,43 @@
                     }, index * 100);
                 });
             }
-            
+
             handleError(message) {
                 // Показываем ошибку
                 alert(message);
             }
-            
+
             getCSRFToken() {
                 return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
             }
         }
-        
+
         // Глобальные функции для действий с результатами
         function viewDetails(id) {
             window.open(`/dictionary/position/${id}`, '_blank');
         }
-        
+
         function viewHistory(id) {
             window.open(`/dictionary/position/${id}/history`, '_blank');
         }
-        
+
         function exportItem(id) {
             window.open(`/api/export/position/${id}`, '_blank');
         }
-        
+
         function changePage(delta) {
             if (window.searchForm) {
                 window.searchForm.changePage(delta);
             }
         }
-        
+
         function clearFilters() {
             document.getElementById('positionType').value = '';
             document.getElementById('completeness').value = '';
             document.getElementById('language').value = '';
             document.getElementById('sortBy').value = 'relevance';
         }
-        
+
         function logout() {
             if (confirm('Вы уверены, что хотите выйти из системы?')) {
                 fetch('/logout/', {
@@ -1099,11 +1093,12 @@
                 });
             }
         }
-        
+
         // Инициализация формы при загрузке страницы
         document.addEventListener('DOMContentLoaded', () => {
             window.searchForm = new SearchForm();
         });
     </script>
 </body>
+
 </html>

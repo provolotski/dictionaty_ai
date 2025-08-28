@@ -382,8 +382,13 @@ class DictionaryService:
         positions = []
         for row in rows:
             row_dict = dict(row)
-            logger.debug(f"row_dict: {row_dict}")
+            logger.debug(f"row_dict is: {row_dict}")            
             # Извлекаем данные из атрибутов
+            if 'attrs' in row_dict:
+                if isinstance(row_dict['attrs'], str):
+                    attrs = json.loads(row_dict['attrs'])
+                else:
+                    attrs = row_dict['attrs']
             if isinstance(row_dict['attrs'], str):
                 attrs = json.loads(row_dict['attrs'])
             else:
@@ -396,7 +401,7 @@ class DictionaryService:
             for attr in attrs:
                 attr_name = attr.get('name', '').lower()
                 attr_value = attr.get('value')
-                
+                logger.debug(f"attr_name is: {attr_name} attr_value is: {attr_value}")
                 if attr_name == 'код':
                     code = attr_value
                 elif attr_name == 'наименование':
@@ -415,9 +420,91 @@ class DictionaryService:
                 parent_id=row_dict['parent_id'],
                 dictionary_id=dictionary_id  # Используем переданный dictionary_id
             )
+       
             positions.append(position)
         
         return positions
+
+    @staticmethod
+    async def get_dictionary_values_with_attrs(
+        dictionary_id: int, date: datetime.date
+    ) -> list[dict]:
+        """
+        Получение справочника с атрибутами в JSON формате
+        :param dictionary_id: ID справочника
+        :param date: Дата
+        :return: Список словарей с полями id, parent_id, parent_code, attrs
+        """
+        logger.info(
+            f"получение всех значений справочника с attrs для id ={dictionary_id} на дату {date}"
+        )
+
+        sql = """
+        WITH position_data AS (
+ select
+    dp.id,
+    t1.id_parent_positions AS parent_id,
+    t1.value AS parent_code,
+    dp.id_dictionary
+            FROM dictionary_positions dp
+            left join
+            ( select dr.id_positions, dr.id_parent_positions,dd1.value
+            from  dictionary_relations dr
+            JOIN dictionary_data dd1 ON dd1.id_position = dr.id_positions
+            JOIN dictionary_attribute da1
+            ON dd1.id_attribute = da1.id AND da1.alt_name = 'PARENT_CODE'
+            where  :dt between dr.start_date and dr.finish_date
+            and  :dt  between dd1.start_date and dd1.finish_date
+            ) t1 on (dp.id = t1.id_positions)
+            WHERE dp.id_dictionary = :id_dictionary
+   ),
+        attributes AS (
+   select  pd.id,
+                pd.parent_id,
+                pd.parent_code,
+                da.name AS attr_name,
+                dd.value AS attr_value from position_data pd
+   join dictionary_attribute da  on pd.id_dictionary =da.id_dictionary
+   left outer join dictionary_data dd
+   on (dd.id_position =pd.id and dd.id_attribute =da.id )
+   where  :dt between dd.start_date and dd.finish_date
+         )
+        SELECT
+            id,
+            parent_id,
+            parent_code,
+            json_agg(
+                json_build_object('name', attr_name, 'value', attr_value)
+            ) AS attrs
+        FROM attributes
+        GROUP BY id, parent_id, parent_code
+        ORDER BY id
+        """
+        rows = await database.fetch_all(
+            sql, {"id_dictionary": dictionary_id, "dt": date}
+        )
+        logger.debug("количество строк %d", len(rows))
+        
+        # Возвращаем данные в формате с attrs как JSON строка
+        result = []
+        for row in rows:
+            row_dict = dict(row)
+            logger.debug(f"row_dict: {row_dict}")
+            
+            # Преобразуем attrs в JSON строку если нужно
+            attrs = row_dict['attrs']
+            if not isinstance(attrs, str):
+                attrs = json.dumps(attrs, ensure_ascii=False)
+            
+            result.append({
+                'id': row_dict['id'],
+                'parent_id': row_dict['parent_id'],
+                'parent_code': row_dict['parent_code'],
+                'attrs': attrs
+            })
+            
+        logger.info(f"Возвращаем {len(result)} элементов с attrs")
+        return result
 
     @staticmethod
     async def get_dictionary_structure(dictionary_id: int) -> list[schemas.AttributeIn]:

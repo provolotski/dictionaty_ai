@@ -10,35 +10,35 @@
             <p class="welcome-subtitle">Заполните форму для создания нового справочника или классификатора</p>
         </div>
     </div>
-    
+
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">Форма создания словаря</h2>
             <p class="card-subtitle">Все поля, отмеченные звездочкой (*), обязательны для заполнения</p>
         </div>
-        
+
         <div class="card-body">
             <form id="createDictionaryForm">
                 <!-- Основная информация -->
                 <div class="row">
                     <div class="col-md-6">
                         <h5 class="mb-3"><i class="fas fa-info-circle"></i> Основная информация</h5>
-                        
+
                         <div class="mb-3">
                             <label for="name" class="form-label">Название *</label>
                             <input type="text" class="form-control" id="name" name="name" required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="code" class="form-label">Код *</label>
                             <input type="text" class="form-control" id="code" name="code" required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="description" class="form-label">Описание</label>
                             <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="id_type" class="form-label">Тип словаря *</label>
                             <select class="form-select" id="id_type" name="id_type" required>
@@ -49,70 +49,72 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <h5 class="mb-3"><i class="fas fa-calendar-alt"></i> Период действия</h5>
-                        
+
                         <div class="mb-3">
                             <label for="start_date" class="form-label">Дата начала *</label>
                             <input type="date" class="form-control" id="start_date" name="start_date" required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="finish_date" class="form-label">Дата окончания</label>
                             <input type="date" class="form-control" id="finish_date" name="finish_date">
                             <small class="text-muted">Оставьте пустым для бессрочного действия</small>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="classifier" class="form-label">Базовый классификатор</label>
                             <input type="text" class="form-control" id="classifier" name="classifier">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="gko" class="form-label">ГКО</label>
                             <input type="text" class="form-control" id="gko" name="gko">
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Многоязычные названия -->
                 <div class="row mt-4">
                     <div class="col-12">
                         <h5 class="mb-3"><i class="fas fa-language"></i> Многоязычные названия</h5>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="name_bel" class="form-label">Название (бел.)</label>
                             <input type="text" class="form-control" id="name_bel" name="name_bel">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="description_bel" class="form-label">Описание (бел.)</label>
-                            <textarea class="form-control" id="description_bel" name="description_bel" rows="3"></textarea>
+                            <textarea class="form-control" id="description_bel" name="description_bel"
+                                rows="3"></textarea>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="name_eng" class="form-label">Название (англ.)</label>
                             <input type="text" class="form-control" id="name_eng" name="name_eng">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="description_eng" class="form-label">Описание (англ.)</label>
-                            <textarea class="form-control" id="description_eng" name="description_eng" rows="3"></textarea>
+                            <textarea class="form-control" id="description_eng" name="description_eng"
+                                rows="3"></textarea>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Организация -->
                 <div class="row mt-4">
                     <div class="col-12">
                         <h5 class="mb-3"><i class="fas fa-building"></i> Организационная информация</h5>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="organization" class="form-label">Ответственная организация</label>
@@ -120,7 +122,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Кнопки действий -->
                 <div class="row mt-4">
                     <div class="col-12">
@@ -143,7 +145,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Информация о заполнении -->
                 <div class="row mt-4">
                     <div class="col-12">
@@ -151,7 +153,8 @@
                             <h6><i class="fas fa-info-circle"></i> Информация о заполнении</h6>
                             <ul class="mb-0">
                                 <li><strong>Название:</strong> Укажите полное название словаря на русском языке</li>
-                                <li><strong>Код:</strong> Используйте латинские буквы, цифры, дефисы и подчеркивания</li>
+                                <li><strong>Код:</strong> Используйте латинские буквы, цифры, дефисы и подчеркивания
+                                </li>
                                 <li><strong>Описание:</strong> Краткое описание назначения и содержания словаря</li>
                                 <li><strong>Тип:</strong> Выберите соответствующий тип из списка</li>
                                 <li><strong>Даты:</strong> Укажите период действия словаря</li>
@@ -159,18 +162,19 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Информация об API -->
                 <div class="row mt-3">
                     <div class="col-12">
                         <div class="alert alert-warning">
                             <h6><i class="fas fa-exclamation-triangle"></i> Важная информация</h6>
-                            <p class="mb-2">Словарь будет создан через Django API endpoint: <code>/api/v2/models/newDictionary</code></p>
+                            <p class="mb-2">Словарь будет создан через Django API endpoint:
+                                <code>/api/v2/models/newDictionary</code></p>
                             <p class="mb-0 small">Django проксирует запрос к backend FastAPI серверу.</p>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Статус подключения к API -->
                 <div class="row mt-3">
                     <div class="col-12">
@@ -185,11 +189,12 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Кнопка обновления статуса API -->
                 <div class="row mt-2">
                     <div class="col-12">
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" onclick="checkApiAvailability()">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
+                            onclick="checkApiAvailability()">
                             <i class="fas fa-sync-alt"></i> Обновить статус API
                         </button>
                         <button type="button" class="btn btn-outline-warning btn-sm me-2" onclick="toggleDebugInfo()">
@@ -200,7 +205,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Информация о токене -->
                 <div class="row mt-3">
                     <div class="col-12">
@@ -208,19 +213,19 @@
                             <h6><i class="fas fa-key"></i> Информация об аутентификации</h6>
                             <p class="mb-2">Для создания словаря используется токен доступа из вашей сессии.</p>
                             <p class="mb-0 small">
-                                <strong>Токен:</strong> 
+                                <strong>Токен:</strong>
                                 <span id="tokenStatus">
                                     {% if access_token %}
-                                        <span class="text-success">Доступен</span>
+                                    <span class="text-success">Доступен</span>
                                     {% else %}
-                                        <span class="text-danger">Не найден</span>
+                                    <span class="text-danger">Не найден</span>
                                     {% endif %}
                                 </span>
                             </p>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Отладочная информация -->
                 <div class="row mt-3" id="debugInfo" style="display: none;">
                     <div class="col-12">
@@ -234,15 +239,17 @@
                                     <strong>Content-Type:</strong> application/json
                                 </div>
                                 <div class="col-md-6">
-                                    <strong>Токен:</strong> <span id="debugToken">{{ access_token|truncatechars:20|default:"Не найден" }}</span><br>
+                                    <strong>Токен:</strong> <span id="debugToken">{{
+                                        access_token|truncatechars:20|default:"Не найден" }}</span><br>
                                     <strong>Статус API:</strong> <span id="debugApiStatus">Проверяется...</span><br>
-                                    <strong>Время проверки:</strong> <span id="debugTime">{{ "now"|date:"H:i:s" }}</span>
+                                    <strong>Время проверки:</strong> <span id="debugTime">{{ "now"|date:"H:i:s"
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Логи запросов -->
                 <div class="row mt-3" id="requestLogs" style="display: none;">
                     <div class="col-12">
@@ -258,7 +265,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Информация о системе -->
                 <div class="row mt-4">
                     <div class="col-12">
@@ -281,18 +288,20 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Справка по типам -->
                 <div class="row mt-3">
                     <div class="col-12">
                         <div class="accordion" id="helpAccordion">
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="helpOne">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseOne">
                                         Типы словарей
                                     </button>
                                 </h2>
-                                <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                <div id="collapseOne" class="accordion-collapse collapse"
+                                    data-bs-parent="#helpAccordion">
                                     <div class="accordion-body">
                                         <div class="row">
                                             <div class="col-md-4">
@@ -314,35 +323,39 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Контакты поддержки -->
                 <div class="row mt-4">
                     <div class="col-12">
                         <div class="alert alert-warning">
                             <h6><i class="fas fa-question-circle"></i> Нужна помощь?</h6>
-                            <p class="mb-2">Если у вас возникли вопросы по созданию словаря, обратитесь к администратору системы.</p>
+                            <p class="mb-2">Если у вас возникли вопросы по созданию словаря, обратитесь к администратору
+                                системы.</p>
                             <div class="row">
                                 <div class="col-md-6">
                                     <strong>Администратор:</strong> admin@belstat.by<br>
                                     <strong>Телефон:</strong> +375 (17) 123-45-67
                                 </div>
                                 <div class="col-md-6">
-                                    <strong>Документация:</strong> <a href="#" class="text-decoration-none">Руководство пользователя</a><br>
-                                    <strong>Примеры:</strong> <a href="#" class="text-decoration-none">Шаблоны словарей</a>
+                                    <strong>Документация:</strong> <a href="#" class="text-decoration-none">Руководство
+                                        пользователя</a><br>
+                                    <strong>Примеры:</strong> <a href="#" class="text-decoration-none">Шаблоны
+                                        словарей</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Футер страницы -->
                 <footer class="mt-5 py-4 border-top">
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Создание словаря</h6>
                             <p class="text-muted small">
-                                Используйте эту форму для создания новых справочников и классификаторов в системе BelStat.
-                                Все созданные словари будут доступны для просмотра и редактирования.
+                                Используйте эту форму для создания новых справочников и классификаторов в системе
+                                BelStat.
+                                Все созданные справочники будут доступны для просмотра и редактирования.
                             </p>
                         </div>
                         <div class="col-md-6 text-md-end">
@@ -355,16 +368,16 @@
                         </div>
                     </div>
                 </footer>
-                
+
                 <!-- Информация о версии -->
                 <div class="mt-4 text-center">
                     <small class="text-muted">
                         <i class="fas fa-info-circle"></i>
-                        Версия системы: 1.0.0 | Последнее обновление: {{ "now"|date:"d.m.Y H:i" }} | 
+                        Версия системы: 1.0.0 | Последнее обновление: {{ "now"|date:"d.m.Y H:i" }} |
                         <a href="#" class="text-decoration-none">История изменений</a>
                     </small>
                 </div>
-                
+
                 <!-- Модальное окно для подтверждения -->
                 <div class="modal fade" id="confirmModal" tabindex="-1">
                     <div class="modal-dialog">
@@ -389,542 +402,542 @@
 </div>
 
 <script>
-// Устанавливаем текущую дату по умолчанию
-document.addEventListener('DOMContentLoaded', function() {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('start_date').value = today;
-    
-    // Устанавливаем тип словаря по умолчанию (0 - классификатор)
-    document.getElementById('id_type').value = '0';
-    
-    // Автоматически устанавливаем дату окончания
-    const startDateField = document.getElementById('start_date');
-    const finishDateField = document.getElementById('finish_date');
-    
-    if (startDateField && finishDateField) {
-        // Устанавливаем дату окончания на 100 лет вперед
-        const startDateObj = new Date(today);
-        const finishDateObj = new Date(startDateObj);
-        finishDateObj.setFullYear(startDateObj.getFullYear() + 100);
-        finishDateField.value = finishDateObj.toISOString().split('T')[0];
-        
-        // Добавляем обработчик изменения даты начала
-        startDateField.addEventListener('change', function() {
-            if (this.value && !finishDateField.value) {
-                const startDate = new Date(this.value);
-                const finishDate = new Date(startDate);
-                finishDate.setFullYear(startDate.getFullYear() + 100);
-                finishDateField.value = finishDate.toISOString().split('T')[0];
-                console.log(`Автоматически обновлена дата окончания: ${finishDateField.value}`);
+    // Устанавливаем текущую дату по умолчанию
+    document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('start_date').value = today;
+
+        // Устанавливаем тип словаря по умолчанию (0 - классификатор)
+        document.getElementById('id_type').value = '0';
+
+        // Автоматически устанавливаем дату окончания
+        const startDateField = document.getElementById('start_date');
+        const finishDateField = document.getElementById('finish_date');
+
+        if (startDateField && finishDateField) {
+            // Устанавливаем дату окончания на 100 лет вперед
+            const startDateObj = new Date(today);
+            const finishDateObj = new Date(startDateObj);
+            finishDateObj.setFullYear(startDateObj.getFullYear() + 100);
+            finishDateField.value = finishDateObj.toISOString().split('T')[0];
+
+            // Добавляем обработчик изменения даты начала
+            startDateField.addEventListener('change', function () {
+                if (this.value && !finishDateField.value) {
+                    const startDate = new Date(this.value);
+                    const finishDate = new Date(startDate);
+                    finishDate.setFullYear(startDate.getFullYear() + 100);
+                    finishDateField.value = finishDate.toISOString().split('T')[0];
+                    console.log(`Автоматически обновлена дата окончания: ${finishDateField.value}`);
+                }
+            });
+        }
+
+        // Добавляем валидацию формы
+        setupFormValidation();
+
+        // Проверяем доступность API
+        checkApiAvailability();
+    });
+
+    function setupFormValidation() {
+        const form = document.getElementById('createDictionaryForm');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (validateForm()) {
+                createDictionary();
             }
         });
     }
-    
-    // Добавляем валидацию формы
-    setupFormValidation();
-    
-    // Проверяем доступность API
-    checkApiAvailability();
-});
 
-function setupFormValidation() {
-    const form = document.getElementById('createDictionaryForm');
-    
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (validateForm()) {
-            createDictionary();
-        }
-    });
-}
+    function validateForm() {
+        const requiredFields = ['name', 'code', 'start_date', 'id_type'];
+        let isValid = true;
 
-function validateForm() {
-    const requiredFields = ['name', 'code', 'start_date', 'id_type'];
-    let isValid = true;
-    
-    // Очищаем предыдущие ошибки
-    clearValidationErrors();
-    
-    requiredFields.forEach(fieldName => {
-        const field = document.getElementById(fieldName);
-        if (!field.value.trim()) {
-            showFieldError(field, 'Это поле обязательно для заполнения');
+        // Очищаем предыдущие ошибки
+        clearValidationErrors();
+
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            if (!field.value.trim()) {
+                showFieldError(field, 'Это поле обязательно для заполнения');
+                isValid = false;
+            }
+        });
+
+        // Проверяем код на уникальность (можно добавить AJAX проверку)
+        const code = document.getElementById('code').value.trim();
+        if (code && !/^[A-Z0-9_-]+$/.test(code)) {
+            showFieldError(document.getElementById('code'), 'Код может содержать только буквы, цифры, дефисы и подчеркивания');
             isValid = false;
         }
-    });
-    
-    // Проверяем код на уникальность (можно добавить AJAX проверку)
-    const code = document.getElementById('code').value.trim();
-    if (code && !/^[A-Z0-9_-]+$/.test(code)) {
-        showFieldError(document.getElementById('code'), 'Код может содержать только буквы, цифры, дефисы и подчеркивания');
-        isValid = false;
-    }
-    
-    // Проверяем даты
-    const startDate = document.getElementById('start_date').value;
-    const finishDate = document.getElementById('finish_date').value;
-    
-    if (finishDate && startDate > finishDate) {
-        showFieldError(document.getElementById('finish_date'), 'Дата окончания не может быть раньше даты начала');
-        isValid = false;
-    }
-    
-    // Проверяем тип словаря
-    const typeField = document.getElementById('id_type');
-    if (typeField && !typeField.value) {
-        showFieldError(typeField, 'Выберите тип словаря');
-        isValid = false;
-    }
-    
-    // Дополнительная проверка: убеждаемся, что finish_date заполнена
-    const finishDateField = document.getElementById('finish_date');
-    if (finishDateField && !finishDateField.value.trim()) {
-        // Автоматически заполняем дату окончания если она пустая
-        const startDateValue = document.getElementById('start_date').value;
-        if (startDateValue) {
-            const startDateObj = new Date(startDateValue);
-            const finishDateObj = new Date(startDateObj);
-            finishDateObj.setFullYear(startDateObj.getFullYear() + 100); // +100 лет
-            finishDateField.value = finishDateObj.toISOString().split('T')[0];
-            console.log(`Автоматически установлена дата окончания: ${finishDateField.value}`);
+
+        // Проверяем даты
+        const startDate = document.getElementById('start_date').value;
+        const finishDate = document.getElementById('finish_date').value;
+
+        if (finishDate && startDate > finishDate) {
+            showFieldError(document.getElementById('finish_date'), 'Дата окончания не может быть раньше даты начала');
+            isValid = false;
         }
-    }
-    
-    return isValid;
-}
 
-function showFieldError(field, message) {
-    field.classList.add('is-invalid');
-    
-    let errorDiv = field.parentNode.querySelector('.invalid-feedback');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.className = 'invalid-feedback';
-        field.parentNode.appendChild(errorDiv);
-    }
-    errorDiv.textContent = message;
-}
-
-function clearValidationErrors() {
-    document.querySelectorAll('.is-invalid').forEach(field => {
-        field.classList.remove('is-invalid');
-    });
-    
-    document.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
-        errorDiv.remove();
-    });
-}
-
-function createDictionary() {
-    // Сначала проверяем доступность API
-    const apiStatusText = document.getElementById('apiStatusText');
-    if (apiStatusText.textContent !== 'API доступен!') {
-        showErrorMessage('API недоступен. Проверьте, что backend сервер запущен.');
-        return;
-    }
-    
-    // Если API доступен, продолжаем создание словаря
-    proceedWithDictionaryCreation();
-}
-
-function proceedWithDictionaryCreation() {
-    const formData = new FormData(document.getElementById('createDictionaryForm'));
-    const data = Object.fromEntries(formData.entries());
-    
-    // Убираем пустые поля
-    Object.keys(data).forEach(key => {
-        if (data[key] === '') {
-            delete data[key];
+        // Проверяем тип словаря
+        const typeField = document.getElementById('id_type');
+        if (typeField && !typeField.value) {
+            showFieldError(typeField, 'Выберите тип словаря');
+            isValid = false;
         }
-    });
-    
-    addLogEntry('Подготовка данных для создания словаря...', 'info');
-    addLogEntry(`Отправка запроса на создание словаря: ${data.name || 'Без названия'}`, 'info');
-    
-    // Показываем индикатор загрузки
-    const submitBtn = document.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
-    submitBtn.disabled = true;
-    
-    // Отправляем запрос на создание словаря
-    // Используем Django API endpoint который проксирует запрос к backend
-    fetch('/api/v2/models/newDictionary', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAccessToken()}`,
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(result => {
-        console.log('Ответ от API:', result);
-        
-        if (result.success || result.id) {
-            addLogEntry('Словарь успешно создан!', 'success');
-            showSuccessMessage('Словарь успешно создан!');
-            setTimeout(() => {
-                window.location.href = '/dictionaries/';
-            }, 2000);
-        } else if (result.error) {
-            addLogEntry(`Ошибка при создании словаря: ${result.error}`, 'danger');
-            showErrorMessage(result.error);
-            
-            // Показываем детали ошибки если есть
-            if (result.missing_fields) {
-                showErrorMessage(`Отсутствуют обязательные поля: ${result.missing_fields.join(', ')}`);
+
+        // Дополнительная проверка: убеждаемся, что finish_date заполнена
+        const finishDateField = document.getElementById('finish_date');
+        if (finishDateField && !finishDateField.value.trim()) {
+            // Автоматически заполняем дату окончания если она пустая
+            const startDateValue = document.getElementById('start_date').value;
+            if (startDateValue) {
+                const startDateObj = new Date(startDateValue);
+                const finishDateObj = new Date(startDateObj);
+                finishDateObj.setFullYear(startDateObj.getFullYear() + 100); // +100 лет
+                finishDateField.value = finishDateObj.toISOString().split('T')[0];
+                console.log(`Автоматически установлена дата окончания: ${finishDateField.value}`);
             }
-            if (result.details) {
-                console.error('Детали ошибки:', result.details);
-            }
-            
-            // Обработка ошибок валидации
-            if (result.validation_errors) {
-                console.error('Ошибки валидации:', result.validation_errors);
-                let validationMessage = 'Ошибки валидации:\n';
-                
-                result.validation_errors.forEach(error => {
-                    const fieldPath = error.loc ? error.loc.join('.') : 'неизвестное поле';
-                    validationMessage += `• ${fieldPath}: ${error.msg}\n`;
-                });
-                
-                showErrorMessage(validationMessage);
-                addLogEntry(`Ошибки валидации: ${validationMessage}`, 'danger');
-            }
-        } else {
-            addLogEntry(`Неожиданный ответ от API: ${JSON.stringify(result)}`, 'warning');
-            showErrorMessage('Неожиданный ответ от API. Проверьте консоль для деталей.');
         }
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
-        let errorMessage = 'Ошибка при создании словаря: ';
-        
-        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            errorMessage += 'Не удалось подключиться к API. Проверьте, что backend сервер запущен.';
-        } else if (error.message.includes('CORS')) {
-            errorMessage += 'Ошибка CORS. Проверьте настройки сервера.';
-        } else {
-            errorMessage += error.message;
-        }
-        
-        addLogEntry(errorMessage, 'danger');
-        showErrorMessage(errorMessage);
-    })
-    .finally(() => {
-        // Восстанавливаем кнопку
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    });
-}
 
-function saveAsDraft() {
-    // Сохраняем как черновик (можно добавить логику)
-    showInfoMessage('Черновик сохранен');
-}
-
-function goBack() {
-    if (confirm('Вы уверены, что хотите покинуть страницу? Все несохраненные данные будут потеряны.')) {
-        window.location.href = '/dictionaries/';
+        return isValid;
     }
-}
 
-function getAccessToken() {
-    // Получаем токен из Django сессии через контекст
-    let token = '{{ access_token }}';
-    
-    if (!token) {
-        console.warn('Токен не найден в сессии');
-    }
-    
-    return token;
-}
+    function showFieldError(field, message) {
+        field.classList.add('is-invalid');
 
-// Функция для получения токена через AJAX (если нужно)
-function fetchAccessToken() {
-    return fetch('/accounts/get_access_token/', {
-        method: 'GET',
-        credentials: 'same-origin'
-    })
-    .then(response => response.json())
-    .then(data => data.access_token)
-    .catch(error => {
-        console.error('Ошибка получения токена:', error);
-        return '';
-    });
-}
-
-// Функция для проверки доступности API
-function checkApiAvailability() {
-    const apiStatusText = document.getElementById('apiStatusText');
-    const apiStatusSpinner = document.getElementById('apiStatusSpinner');
-    const debugApiStatus = document.getElementById('debugApiStatus');
-    
-    apiStatusText.textContent = 'Проверка подключения к API...';
-    apiStatusSpinner.classList.remove('d-none');
-    
-    if (debugApiStatus) {
-        debugApiStatus.textContent = 'Проверяется...';
-    }
-    
-    addLogEntry('Проверка доступности API...', 'info');
-
-    fetch('/api/v2/models/list', {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${getAccessToken()}`,
-            'Accept': 'application/json'
+        let errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            field.parentNode.appendChild(errorDiv);
         }
-    })
-    .then(response => {
-        if (response.ok) {
-            apiStatusText.textContent = 'API доступен!';
-            apiStatusText.classList.remove('text-danger');
-            apiStatusText.classList.add('text-success');
-            apiStatusSpinner.classList.add('d-none');
-            
-            if (debugApiStatus) {
-                debugApiStatus.textContent = 'Доступен';
-            }
-            
-            addLogEntry('API доступен', 'success');
-        } else {
-            apiStatusText.textContent = 'API недоступен. Проверьте настройки сервера.';
-            apiStatusText.classList.remove('text-success');
-            apiStatusText.classList.add('text-danger');
-            apiStatusSpinner.classList.add('d-none');
-            
-            if (debugApiStatus) {
-                debugApiStatus.textContent = 'Недоступен';
-            }
-            
-            addLogEntry(`API недоступен. HTTP ${response.status}`, 'danger');
+        errorDiv.textContent = message;
+    }
+
+    function clearValidationErrors() {
+        document.querySelectorAll('.is-invalid').forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+
+        document.querySelectorAll('.invalid-feedback').forEach(errorDiv => {
+            errorDiv.remove();
+        });
+    }
+
+    function createDictionary() {
+        // Сначала проверяем доступность API
+        const apiStatusText = document.getElementById('apiStatusText');
+        if (apiStatusText.textContent !== 'API доступен!') {
+            showErrorMessage('API недоступен. Проверьте, что backend сервер запущен.');
+            return;
         }
-    })
-    .catch(error => {
-        apiStatusText.textContent = 'API недоступен. Проверьте настройки сервера.';
-        apiStatusText.classList.remove('text-success');
-        apiStatusText.classList.add('text-danger');
-        apiStatusSpinner.classList.add('d-none');
-        
+
+        // Если API доступен, продолжаем создание словаря
+        proceedWithDictionaryCreation();
+    }
+
+    function proceedWithDictionaryCreation() {
+        const formData = new FormData(document.getElementById('createDictionaryForm'));
+        const data = Object.fromEntries(formData.entries());
+
+        // Убираем пустые поля
+        Object.keys(data).forEach(key => {
+            if (data[key] === '') {
+                delete data[key];
+            }
+        });
+
+        addLogEntry('Подготовка данных для создания словаря...', 'info');
+        addLogEntry(`Отправка запроса на создание словаря: ${data.name || 'Без названия'}`, 'info');
+
+        // Показываем индикатор загрузки
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
+        submitBtn.disabled = true;
+
+        // Отправляем запрос на создание словаря
+        // Используем Django API endpoint который проксирует запрос к backend
+        fetch('/api/v2/models/newDictionary', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getAccessToken()}`,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('Ответ от API:', result);
+
+                if (result.success || result.id) {
+                    addLogEntry('Словарь успешно создан!', 'success');
+                    showSuccessMessage('Словарь успешно создан!');
+                    setTimeout(() => {
+                        window.location.href = '/dictionaries/';
+                    }, 2000);
+                } else if (result.error) {
+                    addLogEntry(`Ошибка при создании словаря: ${result.error}`, 'danger');
+                    showErrorMessage(result.error);
+
+                    // Показываем детали ошибки если есть
+                    if (result.missing_fields) {
+                        showErrorMessage(`Отсутствуют обязательные поля: ${result.missing_fields.join(', ')}`);
+                    }
+                    if (result.details) {
+                        console.error('Детали ошибки:', result.details);
+                    }
+
+                    // Обработка ошибок валидации
+                    if (result.validation_errors) {
+                        console.error('Ошибки валидации:', result.validation_errors);
+                        let validationMessage = 'Ошибки валидации:\n';
+
+                        result.validation_errors.forEach(error => {
+                            const fieldPath = error.loc ? error.loc.join('.') : 'неизвестное поле';
+                            validationMessage += `• ${fieldPath}: ${error.msg}\n`;
+                        });
+
+                        showErrorMessage(validationMessage);
+                        addLogEntry(`Ошибки валидации: ${validationMessage}`, 'danger');
+                    }
+                } else {
+                    addLogEntry(`Неожиданный ответ от API: ${JSON.stringify(result)}`, 'warning');
+                    showErrorMessage('Неожиданный ответ от API. Проверьте консоль для деталей.');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                let errorMessage = 'Ошибка при создании словаря: ';
+
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    errorMessage += 'Не удалось подключиться к API. Проверьте, что backend сервер запущен.';
+                } else if (error.message.includes('CORS')) {
+                    errorMessage += 'Ошибка CORS. Проверьте настройки сервера.';
+                } else {
+                    errorMessage += error.message;
+                }
+
+                addLogEntry(errorMessage, 'danger');
+                showErrorMessage(errorMessage);
+            })
+            .finally(() => {
+                // Восстанавливаем кнопку
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+    }
+
+    function saveAsDraft() {
+        // Сохраняем как черновик (можно добавить логику)
+        showInfoMessage('Черновик сохранен');
+    }
+
+    function goBack() {
+        if (confirm('Вы уверены, что хотите покинуть страницу? Все несохраненные данные будут потеряны.')) {
+            window.location.href = '/dictionaries/';
+        }
+    }
+
+    function getAccessToken() {
+        // Получаем токен из Django сессии через контекст
+        let token = '{{ access_token }}';
+
+        if (!token) {
+            console.warn('Токен не найден в сессии');
+        }
+
+        return token;
+    }
+
+    // Функция для получения токена через AJAX (если нужно)
+    function fetchAccessToken() {
+        return fetch('/accounts/get_access_token/', {
+            method: 'GET',
+            credentials: 'same-origin'
+        })
+            .then(response => response.json())
+            .then(data => data.access_token)
+            .catch(error => {
+                console.error('Ошибка получения токена:', error);
+                return '';
+            });
+    }
+
+    // Функция для проверки доступности API
+    function checkApiAvailability() {
+        const apiStatusText = document.getElementById('apiStatusText');
+        const apiStatusSpinner = document.getElementById('apiStatusSpinner');
+        const debugApiStatus = document.getElementById('debugApiStatus');
+
+        apiStatusText.textContent = 'Проверка подключения к API...';
+        apiStatusSpinner.classList.remove('d-none');
+
         if (debugApiStatus) {
-            debugApiStatus.textContent = 'Ошибка подключения';
+            debugApiStatus.textContent = 'Проверяется...';
         }
-        
-        addLogEntry(`Ошибка подключения к API: ${error.message}`, 'danger');
-        console.error('API недоступен:', error);
-    });
-}
 
-function showSuccessMessage(message) {
-    showMessage('success', message);
-}
+        addLogEntry('Проверка доступности API...', 'info');
 
-function showErrorMessage(message) {
-    showMessage('error', message);
-}
+        fetch('/api/v2/models/list', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${getAccessToken()}`,
+                'Accept': 'application/json'
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    apiStatusText.textContent = 'API доступен!';
+                    apiStatusText.classList.remove('text-danger');
+                    apiStatusText.classList.add('text-success');
+                    apiStatusSpinner.classList.add('d-none');
 
-function showInfoMessage(message) {
-    showMessage('info', message);
-}
+                    if (debugApiStatus) {
+                        debugApiStatus.textContent = 'Доступен';
+                    }
 
-function showWarningMessage(message) {
-    showMessage('warning', message);
-}
+                    addLogEntry('API доступен', 'success');
+                } else {
+                    apiStatusText.textContent = 'API недоступен. Проверьте настройки сервера.';
+                    apiStatusText.classList.remove('text-success');
+                    apiStatusText.classList.add('text-danger');
+                    apiStatusSpinner.classList.add('d-none');
 
-function showMessage(type, text) {
-    // Создаем уведомление
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
-    alertDiv.innerHTML = `
+                    if (debugApiStatus) {
+                        debugApiStatus.textContent = 'Недоступен';
+                    }
+
+                    addLogEntry(`API недоступен. HTTP ${response.status}`, 'danger');
+                }
+            })
+            .catch(error => {
+                apiStatusText.textContent = 'API недоступен. Проверьте настройки сервера.';
+                apiStatusText.classList.remove('text-success');
+                apiStatusText.classList.add('text-danger');
+                apiStatusSpinner.classList.add('d-none');
+
+                if (debugApiStatus) {
+                    debugApiStatus.textContent = 'Ошибка подключения';
+                }
+
+                addLogEntry(`Ошибка подключения к API: ${error.message}`, 'danger');
+                console.error('API недоступен:', error);
+            });
+    }
+
+    function showSuccessMessage(message) {
+        showMessage('success', message);
+    }
+
+    function showErrorMessage(message) {
+        showMessage('error', message);
+    }
+
+    function showInfoMessage(message) {
+        showMessage('info', message);
+    }
+
+    function showWarningMessage(message) {
+        showMessage('warning', message);
+    }
+
+    function showMessage(type, text) {
+        // Создаем уведомление
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
         ${text}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
-    // Вставляем в начало страницы
-    const container = document.querySelector('.container');
-    container.insertBefore(alertDiv, container.firstChild);
-    
-    // Автоматически скрываем через 5 секунд
-    setTimeout(() => {
-        alertDiv.remove();
-    }, 5000);
-}
 
-// Функция для предварительного просмотра данных
-function previewDictionary() {
-    const formData = new FormData(document.getElementById('createDictionaryForm'));
-    const data = Object.fromEntries(formData.entries());
-    
-    let preview = 'Предварительный просмотр:\n\n';
-    preview += `Название: ${data.name || 'Не указано'}\n`;
-    preview += `Код: ${data.code || 'Не указан'}\n`;
-    preview += `Описание: ${data.description || 'Не указано'}\n`;
-    preview += `Тип: ${getTypeName(data.id_type)}\n`;
-    preview += `Дата начала: ${data.start_date || 'Не указана'}\n`;
-    preview += `Дата окончания: ${data.finish_date || 'Не указана'}\n`;
-    
-    alert(preview);
-}
+        // Вставляем в начало страницы
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
 
-function getTypeName(typeId) {
-    const types = {
-        '1': 'Классификатор',
-        '2': 'Словарь',
-        '3': 'Справочник'
-    };
-    return types[typeId] || 'Не указан';
-}
+        // Автоматически скрываем через 5 секунд
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
 
-// Функция для переключения отображения отладочной информации
-function toggleDebugInfo() {
-    const debugInfoDiv = document.getElementById('debugInfo');
-    if (debugInfoDiv) {
-        const isVisible = debugInfoDiv.style.display === 'block';
-        debugInfoDiv.style.display = isVisible ? 'none' : 'block';
-        
-        // Обновляем отладочную информацию при показе
-        if (!isVisible) {
-            updateDebugInfo();
+    // Функция для предварительного просмотра данных
+    function previewDictionary() {
+        const formData = new FormData(document.getElementById('createDictionaryForm'));
+        const data = Object.fromEntries(formData.entries());
+
+        let preview = 'Предварительный просмотр:\n\n';
+        preview += `Название: ${data.name || 'Не указано'}\n`;
+        preview += `Код: ${data.code || 'Не указан'}\n`;
+        preview += `Описание: ${data.description || 'Не указано'}\n`;
+        preview += `Тип: ${getTypeName(data.id_type)}\n`;
+        preview += `Дата начала: ${data.start_date || 'Не указана'}\n`;
+        preview += `Дата окончания: ${data.finish_date || 'Не указана'}\n`;
+
+        alert(preview);
+    }
+
+    function getTypeName(typeId) {
+        const types = {
+            '1': 'Классификатор',
+            '2': 'Словарь',
+            '3': 'Справочник'
+        };
+        return types[typeId] || 'Не указан';
+    }
+
+    // Функция для переключения отображения отладочной информации
+    function toggleDebugInfo() {
+        const debugInfoDiv = document.getElementById('debugInfo');
+        if (debugInfoDiv) {
+            const isVisible = debugInfoDiv.style.display === 'block';
+            debugInfoDiv.style.display = isVisible ? 'none' : 'block';
+
+            // Обновляем отладочную информацию при показе
+            if (!isVisible) {
+                updateDebugInfo();
+            }
         }
     }
-}
 
-// Функция для переключения отображения логов запросов
-function toggleRequestLogs() {
-    const requestLogsDiv = document.getElementById('requestLogs');
-    if (requestLogsDiv) {
-        const isVisible = requestLogsDiv.style.display === 'block';
-        requestLogsDiv.style.display = isVisible ? 'none' : 'block';
+    // Функция для переключения отображения логов запросов
+    function toggleRequestLogs() {
+        const requestLogsDiv = document.getElementById('requestLogs');
+        if (requestLogsDiv) {
+            const isVisible = requestLogsDiv.style.display === 'block';
+            requestLogsDiv.style.display = isVisible ? 'none' : 'block';
+        }
     }
-}
 
-// Функция для очистки логов
-function clearLogs() {
-    const logsContainer = document.getElementById('logsContainer');
-    if (logsContainer) {
-        logsContainer.innerHTML = '<p class="text-muted">Логи будут отображаться здесь при выполнении запросов.</p>';
+    // Функция для очистки логов
+    function clearLogs() {
+        const logsContainer = document.getElementById('logsContainer');
+        if (logsContainer) {
+            logsContainer.innerHTML = '<p class="text-muted">Логи будут отображаться здесь при выполнении запросов.</p>';
+        }
     }
-}
 
-// Функция для добавления записи в логи
-function addLogEntry(message, type = 'info') {
-    const logsContainer = document.getElementById('logsContainer');
-    if (!logsContainer) return;
-    
-    const timestamp = new Date().toLocaleTimeString('ru-RU');
-    const logEntry = document.createElement('div');
-    logEntry.className = `alert alert-${type} alert-sm mb-2`;
-    logEntry.innerHTML = `
+    // Функция для добавления записи в логи
+    function addLogEntry(message, type = 'info') {
+        const logsContainer = document.getElementById('logsContainer');
+        if (!logsContainer) return;
+
+        const timestamp = new Date().toLocaleTimeString('ru-RU');
+        const logEntry = document.createElement('div');
+        logEntry.className = `alert alert-${type} alert-sm mb-2`;
+        logEntry.innerHTML = `
         <small><strong>${timestamp}:</strong> ${message}</small>
     `;
-    
-    // Убираем первое сообщение о том, что логи будут отображаться
-    const firstChild = logsContainer.firstChild;
-    if (firstChild && firstChild.textContent.includes('Логи будут отображаться')) {
-        logsContainer.removeChild(firstChild);
-    }
-    
-    logsContainer.appendChild(logEntry);
-    
-    // Ограничиваем количество записей в логах
-    const logEntries = logsContainer.querySelectorAll('.alert');
-    if (logEntries.length > 10) {
-        logsContainer.removeChild(logEntries[0]);
-    }
-}
 
-// Функция для обновления отладочной информации
-function updateDebugInfo() {
-    const debugToken = document.getElementById('debugToken');
-    const debugApiStatus = document.getElementById('debugApiStatus');
-    const debugTime = document.getElementById('debugTime');
-    
-    if (debugToken) {
-        const token = getAccessToken();
-        debugToken.textContent = token ? token.substring(0, 20) + '...' : 'Не найден';
+        // Убираем первое сообщение о том, что логи будут отображаться
+        const firstChild = logsContainer.firstChild;
+        if (firstChild && firstChild.textContent.includes('Логи будут отображаться')) {
+            logsContainer.removeChild(firstChild);
+        }
+
+        logsContainer.appendChild(logEntry);
+
+        // Ограничиваем количество записей в логах
+        const logEntries = logsContainer.querySelectorAll('.alert');
+        if (logEntries.length > 10) {
+            logsContainer.removeChild(logEntries[0]);
+        }
     }
-    
-    if (debugApiStatus) {
-        const apiStatusText = document.getElementById('apiStatusText');
-        debugApiStatus.textContent = apiStatusText ? apiStatusText.textContent : 'Неизвестно';
+
+    // Функция для обновления отладочной информации
+    function updateDebugInfo() {
+        const debugToken = document.getElementById('debugToken');
+        const debugApiStatus = document.getElementById('debugApiStatus');
+        const debugTime = document.getElementById('debugTime');
+
+        if (debugToken) {
+            const token = getAccessToken();
+            debugToken.textContent = token ? token.substring(0, 20) + '...' : 'Не найден';
+        }
+
+        if (debugApiStatus) {
+            const apiStatusText = document.getElementById('apiStatusText');
+            debugApiStatus.textContent = apiStatusText ? apiStatusText.textContent : 'Неизвестно';
+        }
+
+        if (debugTime) {
+            debugTime.textContent = new Date().toLocaleTimeString('ru-RU');
+        }
     }
-    
-    if (debugTime) {
-        debugTime.textContent = new Date().toLocaleTimeString('ru-RU');
-    }
-}
 </script>
 
 <style>
-.welcome-section {
-    background: var(--gradient-primary);
-    color: var(--white);
-    padding: 3rem 0;
-    margin-bottom: 3rem;
-    position: relative;
-    overflow: hidden;
-    border-radius: 1rem;
-}
+    .welcome-section {
+        background: var(--gradient-primary);
+        color: var(--white);
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+    }
 
-.welcome-content {
-    text-align: center;
-}
+    .welcome-content {
+        text-align: center;
+    }
 
-.welcome-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+    .welcome-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-.welcome-subtitle {
-    font-size: 1.125rem;
-    opacity: 0.9;
-    margin-bottom: 2rem;
-}
+    .welcome-subtitle {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+    }
 
-.card {
-    border: none;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    border-radius: 0.75rem;
-}
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border-radius: 0.75rem;
+    }
 
-.card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-    border-radius: 0.75rem 0.75rem 0 0 !important;
-}
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+    }
 
-.form-label {
-    font-weight: 600;
-    color: #495057;
-}
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+    }
 
-.form-control:focus,
-.form-select:focus {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
 
-.btn {
-    border-radius: 0.5rem;
-}
+    .btn {
+        border-radius: 0.5rem;
+    }
 
-.btn-group .btn {
-    margin-right: 0.25rem;
-}
+    .btn-group .btn {
+        margin-right: 0.25rem;
+    }
 
-.btn-group .btn:last-child {
-    margin-right: 0;
-}
+    .btn-group .btn:last-child {
+        margin-right: 0;
+    }
 </style>
 {% endblock %}

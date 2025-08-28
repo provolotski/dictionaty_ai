@@ -493,8 +493,9 @@ async def get_dictionary(
         logger.info(f"dictionary == '': {dictionary == ''}")
         logger.info(f"dictionary == False: {dictionary == False}")
         
-        result = await service.get_dictionary_values(dictionary, date)
-        logger.info(f"Результат: {len(result) if isinstance(result, list) else 'не список'} позиций")
+        # Используем новый метод для получения данных с attrs
+        result = await service.get_dictionary_values_with_attrs(dictionary, date)
+        logger.info(f"Результат с attrs: {len(result) if isinstance(result, list) else 'не список'} позиций")
         return result
     except Exception as e:
         logger.error(f"Ошибка получения значений справочника {dictionary}: {e}")

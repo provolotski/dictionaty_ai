@@ -75,6 +75,17 @@ class DictionaryPosition(BaseModel):
         from_attributes = True
 
 
+class DictionaryPositionWithAttrs(BaseModel):
+    """Схема для позиции справочника с атрибутами в формате JSON"""
+    id: int
+    parent_id: Optional[int]
+    parent_code: Optional[str]
+    attrs: str  # JSON строка с атрибутами
+    
+    class Config:
+        from_attributes = True
+
+
 class AttributeIn(BaseModel):
     """Схема для входящего атрибута справочника"""
     id: int
