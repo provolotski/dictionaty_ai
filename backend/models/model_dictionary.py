@@ -236,11 +236,12 @@ class DictionaryService:
             raise
 
     @staticmethod
-    async def update(dict_id: int, dictionary: schemas.DictionaryIn) -> bool:
+    async def update(dict_id: int, dictionary: schemas.DictionaryIn, id_status: int) -> bool:
         """
         Обновление справочника
         :param dict_id: ID справочника
         :param dictionary: Данные для обновления
+        :param id_status: Статус справочника (0 - не действующий, 1 - действующий)
         :return: True, если обновление прошло успешно
         """
         sql = """
@@ -259,13 +260,16 @@ class DictionaryService:
             organization = :organization,
             classifier = :classifier,
             id_status = :id_status,
-            id_type = :id_type
+            id_type = :id_type,
+            updated_at = current_timestamp
             where id = :dict_id
         """
 
         values = dictionary.model_dump()
         values["dict_id"] = dict_id
+        values["id_status"] = id_status
 
+        logger.debug(f"Обновление справочника {dict_id} с id_status={id_status}")
         await database.execute(sql, values=values)
 
         # Обновляем обязательные атрибуты (если требуется)

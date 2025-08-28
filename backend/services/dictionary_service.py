@@ -107,8 +107,8 @@ class DictionaryService:
             
             return dictionary_id
             
-        except (DictionaryValidationError, DuplicateCodeError):
-            logger.error(f"Известная ошибка валидации: {type(exc).__name__}: {exc}")
+        except (DictionaryValidationError, DuplicateCodeError) as e:
+            logger.error(f"Известная ошибка валидации: {type(e).__name__}: {e}")
             raise
         except Exception as e:
             logger.error(f"=== НЕОЖИДАННАЯ ОШИБКА СОЗДАНИЯ СПРАВОЧНИКА ===")
@@ -183,13 +183,18 @@ class DictionaryService:
                     "Дата начала должна быть меньше даты окончания"
                 )
             
-            # Обновление статуса
-            if dictionary.start_date <= date.today() <= dictionary.finish_date:
-                dictionary.id_status = 1
-            else:
-                dictionary.id_status = 0
+            # Вычисляем статус на основе дат
+            today = date.today()
+            logger.debug(f"Вычисление статуса: start_date={dictionary.start_date}, finish_date={dictionary.finish_date}, today={today}")
             
-            success = await self.model.update(dictionary_id, dictionary)
+            if dictionary.start_date <= today <= dictionary.finish_date:
+                id_status = 1  # действующий
+                logger.debug("Справочник действующий (id_status=1)")
+            else:
+                id_status = 0  # не действующий
+                logger.debug("Справочник не действующий (id_status=0)")
+            
+            success = await self.model.update(dictionary_id, dictionary, id_status)
             if success:
                 logger.info(f"Обновлен справочник с ID: {dictionary_id}")
             
