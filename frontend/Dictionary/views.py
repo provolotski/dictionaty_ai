@@ -204,6 +204,28 @@ def dictionary_edit(request, pk):
 
     dictionary_data = response.json()
 
+    # Обрабатываем даты - преобразуем строки в объекты date
+    if 'start_date' in dictionary_data and dictionary_data['start_date']:
+        try:
+            if isinstance(dictionary_data['start_date'], str):
+                dictionary_data['start_date'] = datetime.strptime(dictionary_data['start_date'], '%Y-%m-%d').date()
+        except ValueError:
+            logger.warning(f"Не удалось преобразовать start_date: {dictionary_data['start_date']}")
+            
+    if 'finish_date' in dictionary_data and dictionary_data['finish_date']:
+        try:
+            if isinstance(dictionary_data['finish_date'], str):
+                dictionary_data['finish_date'] = datetime.strptime(dictionary_data['finish_date'], '%Y-%m-%d').date()
+        except ValueError:
+            logger.warning(f"Не удалось преобразовать finish_date: {dictionary_data['finish_date']}")
+
+    # Обрабатываем поля статуса и типа - преобразуем числа в строки для совместимости с шаблоном
+    if 'id_status' in dictionary_data and dictionary_data['id_status'] is not None:
+        dictionary_data['id_status'] = str(dictionary_data['id_status'])
+        
+    if 'id_type' in dictionary_data and dictionary_data['id_type'] is not None:
+        dictionary_data['id_type'] = str(dictionary_data['id_type'])
+
     if request.method == 'POST':
         form = DictionaryForm(request.POST)
         if form.is_valid():
@@ -279,6 +301,28 @@ def dictionary_view_view(request, pk):
         return redirect('dictionary_list')
 
     dictionary_data = response.json()
+
+    # Обрабатываем даты - преобразуем строки в объекты date
+    if 'start_date' in dictionary_data and dictionary_data['start_date']:
+        try:
+            if isinstance(dictionary_data['start_date'], str):
+                dictionary_data['start_date'] = datetime.strptime(dictionary_data['start_date'], '%Y-%m-%d').date()
+        except ValueError:
+            logger.warning(f"Не удалось преобразовать start_date: {dictionary_data['start_date']}")
+            
+    if 'finish_date' in dictionary_data and dictionary_data['finish_date']:
+        try:
+            if isinstance(dictionary_data['finish_date'], str):
+                dictionary_data['finish_date'] = datetime.strptime(dictionary_data['finish_date'], '%Y-%m-%d').date()
+        except ValueError:
+            logger.warning(f"Не удалось преобразовать finish_date: {dictionary_data['finish_date']}")
+
+    # Обрабатываем поля статуса и типа - преобразуем числа в строки для совместимости с шаблоном
+    if 'id_status' in dictionary_data and dictionary_data['id_status'] is not None:
+        dictionary_data['id_status'] = str(dictionary_data['id_status'])
+        
+    if 'id_type' in dictionary_data and dictionary_data['id_type'] is not None:
+        dictionary_data['id_type'] = str(dictionary_data['id_type'])
 
     # Создаем форму с данными, но делаем её только для чтения
     form = DictionaryForm(initial=dictionary_data)
