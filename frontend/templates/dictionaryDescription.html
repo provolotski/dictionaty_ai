@@ -260,11 +260,27 @@
         <div class="info-grid">
             <div class="info-card">
                 <h3><i class="fas fa-calendar-alt"></i> Даты действия</h3>
+                
+                <!-- Временная отладочная информация -->
+                <div style="background: #ffe6e6; padding: 10px; margin: 10px 0; border: 1px solid #ff9999; font-family: monospace; font-size: 12px;">
+                    <strong>ОТЛАДКА ДАТ:</strong><br>
+                    start_date: "{{ dictionary.start_date }}" (тип: {{ dictionary.start_date|default:"None" }})<br>
+                    finish_date: "{{ dictionary.finish_date }}" (тип: {{ dictionary.finish_date|default:"None" }})<br>
+                    start_date bool: {% if dictionary.start_date %}true{% else %}false{% endif %}<br>
+                    finish_date bool: {% if dictionary.finish_date %}true{% else %}false{% endif %}<br>
+                    {% if dictionary.start_date %}
+                        start_date.year: {{ dictionary.start_date.year|default:"N/A" }}<br>
+                    {% endif %}
+                    {% if dictionary.finish_date %}
+                        finish_date.year: {{ dictionary.finish_date.year|default:"N/A" }}<br>
+                    {% endif %}
+                </div>
+
                 <div class="info-item">
                     <span class="info-label">Дата начала:</span>
                     <span class="info-value">
                         {% if dictionary.start_date %}
-                            {{ dictionary.start_date }}
+                            {{ dictionary.start_date|date:'d.m.Y' }}
                         {% else %}
                             <span class="empty-value">Не указана</span>
                         {% endif %}
@@ -274,7 +290,11 @@
                     <span class="info-label">Дата окончания:</span>
                     <span class="info-value">
                         {% if dictionary.finish_date %}
-                            {{ dictionary.finish_date }}
+                            {% if dictionary.finish_date.year == 9999 %}
+                                <span class="text-muted">Бессрочно</span>
+                            {% else %}
+                                {{ dictionary.finish_date|date:'d.m.Y' }}
+                            {% endif %}
                         {% else %}
                             <span class="empty-value">Не указана</span>
                         {% endif %}

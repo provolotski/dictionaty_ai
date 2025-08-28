@@ -7,6 +7,7 @@
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 
+
 <div class="modal-body">
     <!-- Информация о справочнике -->
     <div class="alert alert-info mb-4">
@@ -84,6 +85,8 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="start_date" class="form-label fw-bold">Дата начала</label>
+                        
+
                         <input type="date" class="form-control" id="start_date" name="start_date"
                             value="{% if dictionary_data.start_date %}{{ dictionary_data.start_date|date:'Y-m-d' }}{% endif %}"
                             readonly disabled>
@@ -93,6 +96,8 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="finish_date" class="form-label fw-bold">Дата окончания</label>
+                        
+
                         <input type="date" class="form-control" id="finish_date" name="finish_date"
                             value="{% if dictionary_data.finish_date %}{{ dictionary_data.finish_date|date:'Y-m-d' }}{% endif %}"
                             readonly disabled>

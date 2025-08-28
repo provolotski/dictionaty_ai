@@ -15,6 +15,7 @@ from pydantic import ValidationError
 import requests
 import json
 import logging
+from datetime import datetime
 
 from .models import Dictionary, DictionaryIn
 from .forms import DictionaryForm, DictionaryDescriptionForm
@@ -829,11 +830,29 @@ def dictionary_description_view(request, dictionary_id):
         
         meta_data = meta_response.json()
         
+
         # Получаем статистику справочника
         stats_response = api_get(request, f'/models/dictionary/?dictionary={dictionary_id}', service='dict')
         total_items = 0
         if stats_response.status_code == 200:
             total_items = len(stats_response.json())
+        
+        # Обрабатываем даты
+        start_date = meta_data.get('start_date', '')
+        finish_date = meta_data.get('finish_date', '')
+        
+        # Конвертируем строки дат в объекты date, если возможно
+        try:
+            if start_date and isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        except ValueError:
+            logger.warning(f"Не удалось преобразовать start_date: {start_date}")
+            
+        try:
+            if finish_date and isinstance(finish_date, str):
+                finish_date = datetime.strptime(finish_date, '%Y-%m-%d').date()
+        except ValueError:
+            logger.warning(f"Не удалось преобразовать finish_date: {finish_date}")
         
         # Формируем данные для отображения
         dictionary_info = {
@@ -845,8 +864,8 @@ def dictionary_description_view(request, dictionary_id):
             'name_bel': meta_data.get('name_bel', ''),
             'description_eng': meta_data.get('description_eng', ''),
             'description_bel': meta_data.get('description_bel', ''),
-            'start_date': meta_data.get('start_date', ''),
-            'finish_date': meta_data.get('finish_date', ''),
+            'start_date': start_date,
+            'finish_date': finish_date,
             'gko': meta_data.get('gko', ''),
             'classifier': meta_data.get('classifier', ''),
             'organization': meta_data.get('organization', ''),
@@ -855,6 +874,22 @@ def dictionary_description_view(request, dictionary_id):
             'total_items': total_items
         }
         
+        # Обрабатываем статус и тип для читаемого отображения
+        if meta_data.get('id_status') == 1:
+            dictionary_info['status'] = 'Действующий'
+        elif meta_data.get('id_status') == 0:
+            dictionary_info['status'] = 'Не действующий'
+        else:
+            dictionary_info['status'] = 'Не указан'
+            
+        if meta_data.get('id_type') == 0:
+            dictionary_info['type'] = 'На основе классификатора'
+        elif meta_data.get('id_type') == 1:
+            dictionary_info['type'] = 'Локальный справочник'
+        else:
+            dictionary_info['type'] = 'Не указан'
+        
+
         # Проверяем права пользователя на редактирование
         permissions = can_edit_dictionary(request, dictionary_id)
         
@@ -884,6 +919,21 @@ def dictionary_view_modal(request, pk):
         return redirect('dictionary_list')
 
     dictionary_data = response.json()
+
+    # Обрабатываем даты - преобразуем строки в объекты date
+    if 'start_date' in dictionary_data and dictionary_data['start_date']:
+        try:
+            if isinstance(dictionary_data['start_date'], str):
+                dictionary_data['start_date'] = datetime.strptime(dictionary_data['start_date'], '%Y-%m-%d').date()
+        except ValueError:
+            logger.warning(f"Не удалось преобразовать start_date: {dictionary_data['start_date']}")
+            
+    if 'finish_date' in dictionary_data and dictionary_data['finish_date']:
+        try:
+            if isinstance(dictionary_data['finish_date'], str):
+                dictionary_data['finish_date'] = datetime.strptime(dictionary_data['finish_date'], '%Y-%m-%d').date()
+        except ValueError:
+            logger.warning(f"Не удалось преобразовать finish_date: {dictionary_data['finish_date']}")
 
     # Создаем форму с данными, но делаем её только для чтения
     form = DictionaryForm(initial=dictionary_data)

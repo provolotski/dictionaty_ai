@@ -54,3 +54,5 @@ __pycache__/
 context.md
 frontend/.DS_Store
 .DS_Store
+logs/backend.log
+logs/frontend.log
